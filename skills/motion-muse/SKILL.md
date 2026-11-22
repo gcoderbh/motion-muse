@@ -1,11 +1,11 @@
 ---
 name: motion-muse
-description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, edits real footage (shot detection, beat-synced auto cut, speed ramps, vertical reframe, colour match, Thai captions from speech), with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
+description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, acts as a code-first universal video director (natural-language brief → capability router → storyboard → stickman/vector characters, 2.5D parallax, procedural 3D with @remotion/three, scientific diagrams, cinematic light/atmosphere, product ads, scene-level cached renders; no AI video generators, no Blender), edits real footage (shot detection, beat-synced auto cut, speed ramps, vertical reframe, colour match, Thai captions from speech), with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
 ---
 
 # Motion Muse (Shotcraft + Remotion + awesome-ai-motion)
 
-Use for any request to make, edit or remix a video, reel, promo, lyric video or motion clip.
+Use for any request to make, edit or remix a video, reel, promo, lyric video, explainer, cartoon, 3D scene, product ad or motion clip. Everything is made with code (React/SVG/CSS/Canvas/Three.js in Remotion + FFmpeg). Never use AI video generators or text/image-to-video APIs, and never require Blender; user or licensed images, fonts, models and audio are fine.
 Works on any machine with bash (Linux, macOS, WSL/Git Bash). `SKILL_DIR` below means the folder that contains this file. If you do not know it:
 `SKILL_DIR=$(dirname "$(find /opt/.devin ~/.claude ~/.agents ~ -path '*motion-muse/scripts/setup.sh' 2>/dev/null | head -1)")/..`
 
@@ -54,6 +54,20 @@ If the user says to just make it ("ทำเลย"), choose defaults and keep g
 
 - Product or website promo: follow Shotcraft's mode selection (template / autonomous / co-creation) in its SKILL.md.
 - General reel, lyric video or motion demo: work on your own without the mode question.
+
+## 1b. Director mode (any brief that is not just footage)
+
+Read `references/director.md`. In short:
+```bash
+python3 "$SKILL_DIR/scripts/director.py" route "<brief>"                       # capabilities → smallest toolset
+python3 "$SKILL_DIR/scripts/director.py" init ~/videos/<slug> --caps <caps>    # starter + only the packages those caps need
+python3 "$SKILL_DIR/scripts/director.py" check src/<slug>/storyboard.json      # scene table to show the user
+python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/storyboard.json   # per-scene cached render + mix + QA
+```
+- Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`; `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`).
+- Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans).
+- Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
+- Steps 2–7 below still apply: gallery references, seam plan and transitions, fresh music, SFX, QA, delivery.
 
 ## 2. Pick techniques
 

@@ -1,0 +1,14 @@
+{
+  "title": "เมืองที่เงียบเกินไป (3D psychological horror)",
+  "comp": "ApocalypseObserver",
+  "fps": 30, "width": 1920, "height": 1080,
+  "brief": "A stylized 3D apocalyptic psychological-horror scene with a third-person observer camera",
+  "style": { "look": "stylized low-poly ruins, cold teal fog, one warm practical light, letterbox, slow dread", "palette": ["#0B1014", "#2A2D33", "#5E7A80", "#FFB566", "#B3261E"], "thaiFont": "Noto Serif Thai", "music": "eerie piano drone, Mixkit 'Piano Horror'" },
+  "caps": ["3d", "atmosphere", "thai-type"],
+  "scenes": [
+    { "id": "approach", "dur": 150, "tech": ["@remotion/three"], "caps": ["3d", "atmosphere", "thai-type"], "shot": "Over-the-shoulder observer camera follows a lone survivor down a ruined street in fog", "motion": "walk cycle, lagged follow camera, handheld drift, ash", "text": "วันที่ 41", "out": "cut" },
+    { "id": "stop", "dur": 120, "tech": ["@remotion/three"], "caps": ["3d", "atmosphere"], "shot": "Survivor stops; camera slowly circles to a low angle; a window light flickers far ahead", "motion": "orbit + dolly, flickering practical, breathing idle", "text": "", "out": "glitch" },
+    { "id": "figure", "dur": 105, "tech": ["@remotion/three"], "caps": ["3d", "atmosphere", "thai-type"], "shot": "Camera pushes past the survivor: a motionless silhouette at the end of the street, it twitches", "motion": "slow push-in, dolly zoom, twitch, light cuts out", "text": "มันไม่ได้ตามเรามา", "out": "smash" },
+    { "id": "turn", "dur": 105, "tech": ["@remotion/three"], "caps": ["3d", "atmosphere", "thai-type"], "shot": "Reverse: the observer camera itself was being watched, figures behind; title", "motion": "whip pan 180°, shake, red light, title reveal", "text": "มันอยู่ข้างหลังเรามาตลอด / เมืองที่เงียบเกินไป" }
+  ]
+}

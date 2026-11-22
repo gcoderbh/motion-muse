@@ -1,0 +1,16 @@
+{
+  "title": "ชีววิทยาซอมบี้ (stickman explainer)",
+  "comp": "ZombieBiology",
+  "fps": 30, "width": 1080, "height": 1920,
+  "brief": "A stickman cartoon explaining zombie biology",
+  "style": { "look": "hand-drawn explainer on graph paper, bright, comic", "palette": ["#FFF8EE", "#1A1A22", "#FF5A36", "#7BC950", "#FFD23F"], "thaiFont": "Mali", "music": "playful comedy, Mixkit 'Comical'" },
+  "caps": ["character-2d", "diagram", "parallax", "thai-type"],
+  "scenes": [
+    { "id": "hook", "dur": 96, "tech": ["svg"], "caps": ["character-2d", "thai-type"], "shot": "Human stickman walks in, zombie shambles in, human freezes", "motion": "walk cycle → scared pose, shamble gait", "text": "ชีววิทยาซอมบี้ / ทำไมศพถึงลุกขึ้นมาเดินได้?", "out": "zoom into the cell" },
+    { "id": "infection", "dur": 120, "tech": ["svg"], "caps": ["diagram", "character-2d"], "shot": "Viruses dock onto a cell, cell turns green; scientist points", "motion": "virus fly-in, colour shift, flow particles, pointing", "text": "ไวรัสยึดเซลล์", "out": "wipe (green)" },
+    { "id": "brain", "dur": 132, "tech": ["svg"], "caps": ["diagram"], "shot": "Brain draws itself; frontal lobe greys out, brainstem glows and fires signals down the spine", "motion": "path draw-on, glow, flow", "text": "สมองส่วนหน้า: ปิด / ก้านสมอง: เปิด", "out": "iris" },
+    { "id": "body", "dur": 120, "tech": ["svg"], "caps": ["character-2d", "diagram"], "shot": "Big zombie with callouts on heart, legs, eyes; ECG flatlines", "motion": "idle shamble, callouts follow the moving joints", "text": "หัวใจแทบไม่เต้น / กล้ามเนื้อเน่า / ตาขุ่น", "out": "whip right" },
+    { "id": "race", "dur": 96, "tech": ["svg", "css"], "caps": ["parallax", "character-2d"], "shot": "Side-scrolling race over a 3-layer parallax landscape", "motion": "run vs shamble gait, camera track", "text": "คนวิ่ง ~20 กม./ชม. / ซอมบี้ ~3 กม./ชม.", "out": "smash" },
+    { "id": "end", "dur": 84, "tech": ["svg"], "caps": ["character-2d", "thai-type"], "shot": "Moral card bounces in while the chase continues", "motion": "spring card, run cycles", "text": "สรุปคือ… วิ่ง!" }
+  ]
+}

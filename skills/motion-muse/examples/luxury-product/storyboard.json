@@ -1,0 +1,14 @@
+{
+  "title": "ALUNA (minimal luxury product ad)",
+  "comp": "LuxuryProduct",
+  "fps": 30, "width": 1080, "height": 1920,
+  "brief": "A minimalist luxury product advertisement featuring Thai sans-serif typography",
+  "style": { "look": "warm ivory studio, one hero object, slow camera, specular sweeps, lots of negative space", "palette": ["#EFE9E1", "#1C1A17", "#C8A46A", "#8C5A2B"], "thaiFont": "IBM Plex Sans Thai (Thin/ExtraLight)", "music": "hypnotic minimal, Mixkit 'Deep Techno Ambience'" },
+  "caps": ["3d", "product", "atmosphere", "thai-type"],
+  "scenes": [
+    { "id": "reveal", "dur": 114, "tech": ["@remotion/three"], "caps": ["3d", "product", "thai-type"], "shot": "Bottle emerges from darkness as the key light rises; low dolly-in", "motion": "light ramp, dolly, slow turntable, tracking-in title", "text": "ALUNA / กลิ่นของแสงแรก", "out": "focus" },
+    { "id": "detail", "dur": 108, "tech": ["@remotion/three"], "caps": ["3d", "product", "thai-type"], "shot": "Macro orbit around the gold cap and shoulder of the glass", "motion": "tight orbit, rack of reflections, light sweep", "text": "ทุกรายละเอียด ขัดเกลาด้วยมือ", "out": "leak" },
+    { "id": "float", "dur": 126, "tech": ["@remotion/three", "css"], "caps": ["3d", "product", "atmosphere", "thai-type"], "shot": "Bottle floats and tilts in warm haze with drifting bokeh", "motion": "float + tilt, bokeh drift, word-by-word Thai", "text": "หอมละมุน อยู่กับคุณยาวนาน", "out": "push up" },
+    { "id": "packshot", "dur": 162, "tech": ["@remotion/three"], "caps": ["3d", "product", "thai-type"], "shot": "Bottle settles on a stone plinth; brand lockup and CTA", "motion": "drop-and-settle, camera ease-out, mask reveals", "text": "ALUNA Eau de Parfum / เปิดตัว 1 ธันวาคม" }
+  ]
+}
