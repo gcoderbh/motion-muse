@@ -43,6 +43,7 @@ if [ -d "$T" ]; then
   if [ ! -d "$T/node_modules/remotion" ]; then (cd "$T" && npm install --no-audit --no-fund --loglevel=error) || ok=0; fi
   (cd "$T" && npx --yes remotion browser ensure >/dev/null 2>&1) && echo "OK   Remotion deps + headless browser" || { echo "FAIL remotion browser ensure"; ok=0; }
 fi
+echo "on demand: director.py init installs @remotion/three / d3 / gsap / lottie only when a video needs them; scripts/thai-fonts.sh fetches extra Thai fonts"
 python3 -c "import librosa" 2>/dev/null && echo "OK   librosa" || echo "optional: pip install librosa (better beat analysis; scripts/beat-grid.py works without it)"
 python3 -c "import faster_whisper" 2>/dev/null && echo "OK   faster-whisper" || echo "optional: pip install faster-whisper (Thai captions from speech in footage; only needed for scripts/transcribe.py)"
 

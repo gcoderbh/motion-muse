@@ -12,8 +12,9 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Plans the edit | Writes a seam plan before coding: where each cut is (on a beat), which transition it uses, and why |
 | Transitions | 12 ready-made kinds (whip, push, zoom, iris, wipe, slices, flash, glitch, light leak, focus, smash, cut) with matching SFX. For the 2–4 key moments it designs custom transitions from the video's own content (match cuts, morphs, hidden cuts) |
 | Avoids the "AI look" | Varies shot lengths, keeps every shot moving, uses springs and easing instead of linear motion, adds film grain, keeps text readable, and runs a 9-point checklist before delivery |
+| Universal director | Describe the video (subject, style, mood, typography, story) and it plans a storyboard, routes each scene to the smallest code toolset (SVG, CSS, Canvas, d3, Three.js via `@remotion/three`, Lottie, GSAP, FFmpeg) and installs only what that needs. Built-in stickman and vector characters with walk/run/shamble gaits, scientific diagrams, 2.5D parallax, procedural 3D cities, products and a third-person observer camera, cinematic light, fog and particles. Renders scene by scene with a cache and QA. No AI video generators, no Blender |
 | Edits your footage | Scans clips (shot changes, motion, camera direction, shake, subject position), scores every shot, makes a beat-synced first cut, reframes 16:9 to 9:16 on the subject, matches colour between clips, adds speed ramps, punch-ins and titles. Talking-head mode removes pauses, hides jump cuts and adds b-roll. Thai captions come from local speech-to-text (faster-whisper), and music ducks under the voice. No footage? It finds free b-roll |
-| Thai typography | Prompt font, animated per grapheme, so vowels and tone marks stay attached to their letters |
+| Thai typography | 15 OFL Thai fonts picked by mood (Prompt, Kanit, IBM Plex Sans Thai, Mali, Noto Serif Thai, …), animated per word or grapheme, so vowels and tone marks stay attached to their letters |
 | Music | Finds a new free track that fits the content for every video (Mixkit via `find-music.py`, or Pixabay, YouTube Audio Library and others). Never reuses a track, and writes the credits for you |
 | Sound effects | Shotcraft's 149 SFX, free SFX sites, or SFX it synthesizes itself with ffmpeg |
 | ElevenLabs | Optional, and only used after asking you |
@@ -28,6 +29,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - มีกฎกันไม่ให้คลิปดูเป็นเอไอ และ checklist ให้ตรวจก่อนส่ง
 - ตัดต่อฟุตเทจได้: หาช็อตเด่น ตัดลงบีทให้อัตโนมัติ ครอปแนวตั้งตามตัวแบบ ปรับสีให้ทุกช็อตโทนเดียวกัน ทำ speed ramp ทำซับไทยจากเสียงพูด และตัดช่วงเงียบในคลิปคนพูด
 - หาเพลงฟรีใหม่ที่เข้ากับคลิปทุกครั้ง ไม่ใช้เพลงซ้ำ และลงเครดิตให้
+- โหมดผู้กำกับ: บอกแค่ว่าอยากได้วิดีโอแบบไหน สไตล์ อารมณ์ ฟอนต์ และเรื่องที่จะเล่า สกิลจะวาง storyboard เลือกเครื่องมือที่เล็กที่สุดที่พอ และทำทั้งคลิปด้วยโค้ด: ตัวละคร stickman/เวกเตอร์ ไดอะแกรมวิทยาศาสตร์ ฉาก 2.5D ฉาก 3D พร้อมกล้อง แสงและหมอก โฆษณาสินค้า ไม่ใช้ AI สร้างวิดีโอ และไม่ต้องใช้ Blender
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
 ## Install
@@ -46,14 +48,16 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 
 - `SKILL.md`: the workflow (brief → techniques → Remotion build → beat sync → render/QA → deliver)
 - `references/editing-craft.md`: which transition fits which scene change, how to design custom transitions, pacing, and the pre-delivery checklist
+- `references/director.md`: brief → capability router → storyboard → scene-cached render; library and font tables
 - `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
-- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut)
-- `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, and `footage.tsx` with the `FootageReel` composition for footage edits
+- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render / qa), `thai-fonts.sh` (Thai Google Fonts)
+- `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `src/lib/` procedural building blocks and `kits/three/` for 3D
+- `examples/`: three code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad)
 
 ElevenLabs is optional and is only used after the agent asks you.
 
 ## License
 
-MIT for this skill. Dependencies keep their own licenses (Shotcraft Apache-2.0, Remotion License, Prompt OFL). Remotion needs a company license for companies with more than 3 employees.
+MIT for this skill. Dependencies keep their own licenses (Shotcraft Apache-2.0, Remotion License, Three.js MIT, Thai fonts OFL). Remotion needs a company license for companies with more than 3 employees.
