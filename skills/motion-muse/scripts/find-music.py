@@ -75,8 +75,10 @@ def get(a):
         sys.exit(f"Track {a.get} was already used in an earlier video. Pick another one (or pass --force if the user asked for it).")
     url = f"https://assets.mixkit.co/music/{a.get}/{a.get}.mp3"
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r, open(a.out, "wb") as f:
-        f.write(r.read())
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+        data = r.read()  # download fully before touching a.out, so a failed download keeps the old file
+    with open(a.out, "wb") as f:
+        f.write(data)
     title = a.title or f"Mixkit track {a.get}"
     try:
         dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", a.out],
