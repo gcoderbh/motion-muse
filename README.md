@@ -1,2 +1,29 @@
 # thai-motion-video
-Agent skill: Thai motion videos with Video Shotcraft + Remotion + awesome-ai-motion, self-installing, royalty-free sound sources
+
+Agent skill for making motion-rich videos with Thai text: Video Shotcraft + Remotion + the awesome-ai-motion gallery, beat-synced, with royalty-free music/SFX sources.
+
+## Install
+
+- Devin: ask Devin to "install the plugin https://github.com/peichh/thai-motion-video".
+- Claude Code: `git clone https://github.com/peichh/thai-motion-video && cp -r thai-motion-video/skills/thai-motion-video ~/.claude/skills/`
+- Any agent that supports `npx skills`: `npx skills add peichh/thai-motion-video`
+- Other agents: copy `skills/thai-motion-video` into the agent's skills folder.
+
+Then ask the agent: "use thai-motion-video to make a 15 s 9:16 reel about ...".
+
+The first time it runs, the skill calls `scripts/setup.sh`, which checks git, Node.js ≥ 20, ffmpeg and curl, then installs whatever is missing into `~/skills`:
+Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome-ai-motion, the Prompt Thai font, Remotion and headless Chrome.
+
+## Inside
+
+- `SKILL.md`: the workflow (brief → techniques → Remotion build → beat sync → render/QA → deliver)
+- `references/sound-sources.md`: royalty-free BGM/SFX sources and licenses, and how to make your own sound
+- `references/motion-sources.md`: where to get effects and techniques, and their licenses
+- `scripts/`: `setup.sh`, `synth-sfx.sh`, `beat-grid.py`
+- `starter/`: a working 15 s 9:16 Thai reel
+
+ElevenLabs is optional and is only used after the agent asks you.
+
+## License
+
+MIT for this skill. Dependencies keep their own licenses (Shotcraft Apache-2.0, Remotion License, Prompt OFL). Remotion needs a company license for companies with more than 3 employees.
