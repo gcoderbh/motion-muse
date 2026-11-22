@@ -71,6 +71,18 @@ def get(a):
             print(f"SKIP {vid}: used in an earlier video (pass --force if the user wants it)")
             continue
         out = os.path.join(a.dir, f"mixkit-{vid}.mp4")
+        try:
+            page = fetch(f"{BASE}clip-{vid}/")
+        except Exception as e:
+            print(f"FAIL {vid}: cannot read clip page to check its license ({e})")
+            continue
+        restricted = "videoRestricted" in page
+        if restricted and not a.personal:
+            print(f"SKIP {vid}: Mixkit Restricted License (personal use only, no commercial or client work). "
+                  "Pick another clip, or pass --personal for a strictly personal video")
+            continue
+        lic = ("Mixkit Restricted License, personal use only (https://mixkit.co/license/#videoRestricted)" if restricted
+               else "Mixkit Stock Video Free License (https://mixkit.co/license/#videoFree)")
         data, url = None, None
         for res in dict.fromkeys([a.res, "1080", "720"]):
             url = f"https://assets.mixkit.co/videos/{vid}/{vid}-{res}.mp4"
@@ -82,7 +94,6 @@ def get(a):
                 continue
         if not data:  # newer clips live under active_storage/...; read the real file URLs from the clip page
             try:
-                page = fetch(f"{BASE}clip-{vid}/")
                 files = sorted(set(re.findall(rf"https://assets\.mixkit\.co/active_storage/video_items/{vid}/\d+/{vid}-video-(\d+)\.mp4", page)), key=int)
                 res = next((r for r in reversed(files) if int(r) <= int(a.res)), files[-1] if files else None)
                 if res:
@@ -97,8 +108,7 @@ def get(a):
         with open(out, "wb") as f:
             f.write(data)
         with open(os.path.join(a.dir, "CREDITS.md"), "a", encoding="utf-8") as f:
-            f.write(f"- Mixkit clip {vid} ({os.path.basename(out)}): {url}. Mixkit Stock Video Free License "
-                    f"(https://mixkit.co/license/#videoFree). Downloaded {today}.\n")
+            f.write(f"- Mixkit clip {vid} ({os.path.basename(out)}): {url}. {lic}. Downloaded {today}.\n")
         os.makedirs(os.path.dirname(LOG), exist_ok=True)
         with open(LOG, "a", encoding="utf-8") as f:
             f.write(f"{vid}\t{today}\t{os.path.abspath(out)}\n")
@@ -115,6 +125,7 @@ ap.add_argument("--get", nargs="+", help="clip ids to download")
 ap.add_argument("--dir", default="footage-raw")
 ap.add_argument("--res", default="1080", help="1080 or 720 (falls back automatically)")
 ap.add_argument("--force", action="store_true")
+ap.add_argument("--personal", action="store_true", help="allow Restricted (personal use only) clips")
 a = ap.parse_args()
 if a.get:
     get(a)
