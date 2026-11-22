@@ -292,6 +292,7 @@ export const Reel: React.FC = () => {
         </Sequence>
       ))}
       <Whips />
+      {/* Placeholder music: replace with a new track from scripts/find-music.py for real videos */}
       <Audio
         src={staticFile('audio/house-vibez.mp3')}
         trimBefore={Math.round(MUSIC_START_SEC * 30)}

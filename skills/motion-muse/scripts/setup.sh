@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks and installs everything thai-motion-video needs. Safe to re-run.
+# Checks and installs everything motion-muse needs. Safe to re-run.
 # Usage: bash setup.sh            (installs into ~/skills)
 #        SKILLS_DIR=/path bash setup.sh
 set -u
