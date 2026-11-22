@@ -72,7 +72,7 @@ const Detail: React.FC = () => {
         <Floor color="#E6DED3" />
       </Stage3D>
       <LightSweep progress={prog(f, 20, 80)} angle={24} width={10} intensity={0.35} />
-      <Type style={{ bottom: 150 }}>
+      <Type style={{ bottom: 120, left: '50%', width: 'auto', transform: 'translateX(-50%)', padding: '26px 56px', borderRadius: 4, background: 'rgba(247,242,234,0.82)', backdropFilter: 'blur(6px)', opacity: prog(f, 6, 22) }}>
         <div style={{ fontSize: 28, letterSpacing: '0.4em', fontWeight: 300, color: '#8C7A62', opacity: prog(f, 10, 30) }}>DETAIL</div>
         <Kinetic text="ทุกรายละเอียด ขัดเกลาด้วยมือ" by="word" anim="blur" delay={18} stagger={6} style={{ fontSize: 50, fontWeight: 200 }} />
       </Type>
@@ -115,11 +115,12 @@ const Packshot: React.FC = () => {
         <StudioLights key_={50} rim={60} fill={5} />
         <group position={[0, 0.15, 0]}>
           <mesh position={[0, 0, 0]} castShadow receiveShadow><cylinderGeometry args={[0.95, 0.95, 0.3, 96]} /><meshStandardMaterial color="#D8CFC2" roughness={0.75} /></mesh>
-          <Bottle y={0.15 + (1 - drop) * 1.2} rot={0.4 + f * 0.007} />
+          <Bottle y={0.15 + (1 - drop) * 1.2} rot={0.4 + f * 0.014} />
         </group>
         <Floor />
       </Stage3D>
       <LightSweep progress={prog(f, 60, 110)} angle={18} width={8} intensity={0.3} />
+      <LightSweep progress={prog(f, 120, 160)} angle={-14} width={6} intensity={0.22} />
       <Type style={{ top: 250 }}><Tracking text="ALUNA" delay={30} dur={50} from={1} to={0.5} style={{ fontSize: 110, fontWeight: 200 }} /></Type>
       <Type style={{ top: 400 }}><MaskReveal delay={52} style={{ fontSize: 30, letterSpacing: '0.45em', fontWeight: 300, color: '#8C7A62' }}>EAU DE PARFUM</MaskReveal></Type>
       <Type style={{ top: 1520 }}><MaskReveal delay={80} style={{ fontSize: 48, fontWeight: 300 }}>เปิดตัว 1 ธันวาคม</MaskReveal></Type>
