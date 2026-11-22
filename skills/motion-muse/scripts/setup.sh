@@ -44,5 +44,6 @@ if [ -d "$T" ]; then
   (cd "$T" && npx --yes remotion browser ensure >/dev/null 2>&1) && echo "OK   Remotion deps + headless browser" || { echo "FAIL remotion browser ensure"; ok=0; }
 fi
 python3 -c "import librosa" 2>/dev/null && echo "OK   librosa" || echo "optional: pip install librosa (better beat analysis; scripts/beat-grid.py works without it)"
+python3 -c "import faster_whisper" 2>/dev/null && echo "OK   faster-whisper" || echo "optional: pip install faster-whisper (Thai captions from speech in footage; only needed for scripts/transcribe.py)"
 
 [ "$ok" = 1 ] && echo "READY: $SKILLS_DIR" || { echo "Setup finished with errors (see FAIL lines)."; exit 1; }
