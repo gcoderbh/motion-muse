@@ -38,6 +38,25 @@ All of these are in `starter/src/transitions.tsx` (`Timeline`, kind = name below
 | match cut / morph | 0–20 | any | Same shape/color/position in both shots (circle → logo, button → card). The most "pro" looking seam; plan it in the layout | Shotcraft `transition-travel`, `ui-to-brand-morph`; motion-cards `match-cut`, `morph-match-cut`, `shape-morph` |
 | hidden cut (foreground wipe) | 10–14 | any | An object passes in front of the camera, cut while it covers the frame | Shotcraft `transition-hidden-cut` A |
 
+## 2b. Design your own transitions (do this for the key seams)
+
+The 12 kinds in `transitions.tsx` are a base set, not the limit. The best seams are designed for the content of this video, so they cannot come from a preset. For the 2–4 most important seams (the hook, chapter starts, the reveal, and the move into the end card), design a custom transition:
+
+1. Look for a link between shot A and shot B: the same shape, color, position, object, word, or direction of motion.
+2. Turn that link into the transition. Examples:
+   - A circle in A grows to fill the frame and becomes the background of B, or the dot in a logo.
+   - A word from A slides into place as the title of B.
+   - A card in A expands to full screen and becomes B. A phone screen zooms in until its UI is the whole frame.
+   - A line being drawn in A becomes the edge of a chart in B, or a liquid fill in A becomes B's background color.
+   - An object (a hand, a product, a big letter) passes close to the camera and covers the frame, and you cut while it covers (hidden cut).
+   - A pattern from the brand (stripes, a logo shape, a texture) is used as the mask or wipe shape.
+3. Mix the base kinds when it helps, but keep one idea per seam: a whip that ends on a smash, a wipe whose edge is the brand shape, or an iris that opens from the exact point the viewer is looking at.
+4. Look through the guanmo gallery (`$SKILLS_DIR/awesome-ai-motion/data/cases.json`, search for "transition", "morph", "reveal" or "mask") and the Shotcraft/motion-card transition cards for ideas. Rebuild the idea yourself; do not copy the work.
+5. Build it as a component in the project (for example `src/seams/CircleToLogo.tsx`). It must be deterministic (driven only by `useCurrentFrame()`), take its frames from both shots, and end with every blur, shake and scale back at its resting value. To make it a new `Timeline` kind, add a case in `look()` and `Overlay`, a `DUR` entry and an `SFX_FOR` entry. Alternatively, put the custom seam inside one scene and use `cut` at that seam.
+6. Check single frames before, during and after the seam. Nothing should pop, jump, or show empty frame edges.
+
+A good video combines plain beat-synced hard cuts, a few base-set transitions, and 2–4 custom seams designed for its content.
+
 ## 3. Choosing the seam (write this table before coding)
 
 For every cut, answer: what is the relation between shot A and shot B, and what is the energy change?
@@ -54,7 +73,7 @@ For every cut, answer: what is the relation between shot A and shot B, and what 
 
 Seam plan format (keep it in the project notes):
 
-| Cut # | Frame (beat) | A → B | Relation | Transition | Why | SFX |
+| Cut # | Frame (beat) | A → B | Relation | Transition (base kind or custom) | Why | SFX |
 |---|---|---|---|---|---|---|
 
 Rules:

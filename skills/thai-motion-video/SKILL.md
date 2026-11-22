@@ -56,7 +56,7 @@ Read `references/motion-sources.md`, then:
 2. Look up the matching effect in `motion-cards` for timing and easing values.
 3. Build it from the matching Shotcraft shot card (`references/shots/<category>/*.md`). Read the whole card and the demo TSX it points to, and keep any "known pitfall" parameters.
 4. Plan one main motion per shot, cut only on beats, and hold the end card for at least 1 s.
-5. Read `references/editing-craft.md` and write the seam plan table: for every cut, the relation between the two shots, the transition kind and why. Use hard cuts for most seams and 4–6 different designed transitions; prefer match cuts when two shots share a shape or color.
+5. Read `references/editing-craft.md` and write the seam plan table: for every cut, the relation between the two shots, the transition kind and why. Use hard cuts for most seams and 4–6 different designed transitions; prefer match cuts when two shots share a shape or color. The 12 kinds in `transitions.tsx` are only a base set: design 2–4 custom seams from this video's content for the most important cuts (guide section 2b).
 
 ## 3. Build the Remotion project
 
