@@ -189,7 +189,8 @@ def cmd_render(a):
         a0, a1 = t, t + s["dur"] - 1
         nb = sb["scenes"][max(0, i - 1):i + 2]
         own = [os.path.join(P, f) for n in nb for f in n.get("files", [])]  # transitions draw the neighbours too
-        files = own + [x for x in lib if "/lib/" in x or x.endswith(("transitions.tsx", "theme.ts", "index.ts", "Root.tsx"))] if all(n.get("files") for n in nb) else lib
+        shared = [x for x in lib if "/lib/" in x or x.endswith(("transitions.tsx", "theme.ts", "index.ts", "Root.tsx"))]
+        files = own + (shared if all(n.get("files") for n in nb) else lib)
         key = sha(files, {"comp": sb["comp"], "range": [a0, a1], "scenes": nb, "props": sb.get("props"), "fmt": fmt, "assets": assets})
         out = os.path.join(sdir, f"{i:02d}-{s['id']}-{key}.mp4")
         if os.path.exists(out) and not a.force:
