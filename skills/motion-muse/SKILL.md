@@ -1,13 +1,13 @@
 ---
-name: thai-motion-video
+name: motion-muse
 description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
 ---
 
-# Thai Motion Video (Shotcraft + Remotion + awesome-ai-motion)
+# Motion Muse (Shotcraft + Remotion + awesome-ai-motion)
 
 Use for any request to make, edit or remix a video, reel, promo, lyric video or motion clip.
 Works on any machine with bash (Linux, macOS, WSL/Git Bash). `SKILL_DIR` below means the folder that contains this file. If you do not know it:
-`SKILL_DIR=$(dirname "$(find /opt/.devin ~/.claude ~/.agents ~ -path '*thai-motion-video/scripts/setup.sh' 2>/dev/null | head -1)")/..`
+`SKILL_DIR=$(dirname "$(find /opt/.devin ~/.claude ~/.agents ~ -path '*motion-muse/scripts/setup.sh' 2>/dev/null | head -1)")/..`
 
 ## 0. Setup check (run every time, before anything else)
 

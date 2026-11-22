@@ -5,14 +5,14 @@ Search:   find-music.py fashion "happy pop" [--path mood/uplifting] [--pages 2] 
 Download: find-music.py --get 839 --out public/audio/bgm.mp3
 
 Mixkit Stock Music Free License: commercial use OK, no credit needed, no standalone resale.
-Used track ids are kept in $THAI_MOTION_MUSIC_LOG (default ~/.config/thai-motion-video/used-music.tsv)
+Used track ids are kept in $MOTION_MUSE_MUSIC_LOG (default ~/.config/motion-muse/used-music.tsv)
 so the next video gets a different track. Stdlib only.
 """
 import argparse, datetime, html, os, re, subprocess, sys, urllib.parse, urllib.request
 
 BASE = "https://mixkit.co/free-stock-music/"
-UA = {"User-Agent": "Mozilla/5.0 (thai-motion-video music finder)"}
-LOG = os.environ.get("THAI_MOTION_MUSIC_LOG", os.path.expanduser("~/.config/thai-motion-video/used-music.tsv"))
+UA = {"User-Agent": "Mozilla/5.0 (motion-muse music finder)"}
+LOG = os.environ.get("MOTION_MUSE_MUSIC_LOG", os.path.expanduser("~/.config/motion-muse/used-music.tsv"))
 SKILLS_DIR = os.environ.get("SKILLS_DIR", os.path.expanduser("~/skills"))
 
 

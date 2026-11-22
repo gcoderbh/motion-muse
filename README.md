@@ -1,15 +1,17 @@
-# thai-motion-video
+# Motion Muse
+
+(Previously named thai-motion-video. Old links redirect here.)
 
 Agent skill for making motion-rich videos with Thai text: Video Shotcraft + Remotion + the awesome-ai-motion gallery, beat-synced, with royalty-free music/SFX sources.
 
 ## Install
 
-- Devin: ask Devin to "install the plugin https://github.com/peichh/thai-motion-video".
-- Claude Code: `git clone https://github.com/peichh/thai-motion-video && cp -r thai-motion-video/skills/thai-motion-video ~/.claude/skills/`
-- Any agent that supports `npx skills`: `npx skills add peichh/thai-motion-video`
-- Other agents: copy `skills/thai-motion-video` into the agent's skills folder.
+- Devin: ask Devin to "install the plugin https://github.com/peichh/motion-muse".
+- Claude Code: `git clone https://github.com/peichh/motion-muse && cp -r motion-muse/skills/motion-muse ~/.claude/skills/`
+- Any agent that supports `npx skills`: `npx skills add peichh/motion-muse`
+- Other agents: copy `skills/motion-muse` into the agent's skills folder.
 
-Then ask the agent: "use thai-motion-video to make a 15 s 9:16 reel about ...".
+Then ask the agent: "use motion-muse to make a 15 s 9:16 reel about ...".
 
 The first time it runs, the skill calls `scripts/setup.sh`, which checks git, Node.js ≥ 20, ffmpeg and curl, then installs whatever is missing into `~/skills`:
 Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome-ai-motion, the Prompt Thai font, Remotion and headless Chrome.
