@@ -1,6 +1,6 @@
 ---
 name: thai-motion-video
-description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
+description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
 ---
 
 # Thai Motion Video (Shotcraft + Remotion + awesome-ai-motion)
@@ -36,7 +36,9 @@ Files that ship with this skill:
 - `scripts/beat-grid.py <song>`: BPM, first-beat offset and loudness per 2 s, without librosa
 - `references/sound-sources.md`: where to get royalty-free music and SFX, the license of each, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, their licenses, and gallery search commands
-- `starter/src/`: a working 15 s 9:16 Thai reel (5 techniques, beat-synced) to copy from
+- `references/editing-craft.md`: which transition to use for which scene change, pacing, and the anti-"AI look" checklist
+- `starter/src/transitions.tsx`: `Timeline` with 12 ready transitions (whip, push, zoom, iris, wipe, slices, flash, glitch, leak, focus, smash, cut) + auto SFX, `Grain`, `Drift`
+- `starter/src/`: working 9:16 Thai examples: `MotionReel` (5 techniques, beat-synced) and `TransitionsDemo` (every transition)
 
 ## 1. Brief (one question at most)
 
@@ -54,6 +56,7 @@ Read `references/motion-sources.md`, then:
 2. Look up the matching effect in `motion-cards` for timing and easing values.
 3. Build it from the matching Shotcraft shot card (`references/shots/<category>/*.md`). Read the whole card and the demo TSX it points to, and keep any "known pitfall" parameters.
 4. Plan one main motion per shot, cut only on beats, and hold the end card for at least 1 s.
+5. Read `references/editing-craft.md` and write the seam plan table: for every cut, the relation between the two shots, the transition kind and why. Use hard cuts for most seams and 4–6 different designed transitions; prefer match cuts when two shots share a shape or color.
 
 ## 3. Build the Remotion project
 
@@ -66,6 +69,12 @@ while read -r a; do cp "$SKILLS_DIR/video-shotcraft/assets/audio/$a" public/audi
 npx remotion render src/index.ts MotionReel out/starter.mp4   # optional: proves the setup works
 ```
 `starter/src/theme.ts` already loads Prompt with `delayRender` + `FontFace`, has the bright palette and the beat helpers `BEAT` / `b(k)`. Change `BPM` for your track. `starter/src/Reel.tsx` shows each technique; replace its scenes with yours.
+Join scenes with `Timeline` from `starter/src/transitions.tsx` (it places the transition SFX too), and put `<Grain />` on top:
+```tsx
+<Timeline scenes={[{ dur: b(4), el: <Hook />, out: { kind: 'smash' } }, { dur: b(3), el: <Feature />, out: { kind: 'whip', dir: -1 } }, { dur: b(5), el: <End /> }]} />
+<Grain opacity={0.07} />
+```
+Wrap still layouts in `<Drift dur={...}>` so no shot is frozen.
 
 - Per-character Thai animation: split with `Intl.Segmenter('th', { granularity: 'grapheme' })` so vowels and tone marks stay on their letter.
 - Thai text needs `lineHeight` ≥ 1.3 or upper vowels get clipped. Check big words fit the frame width.
@@ -100,7 +109,7 @@ npx remotion render src/index.ts <CompositionId> out/video.mp4
 ffmpeg -loglevel error -y -i out/video.mp4 -vf "select='not(mod(n\,40))',scale=270:-1,tile=6x2" -frames:v 1 out/sheet.jpg
 ffmpeg -i out/video.mp4 -af volumedetect -f null - 2>&1 | grep -E "mean|max"
 ```
-Look at `out/sheet.jpg` and single frames around each cut. Fix clipping, overflow, leftover text and unreadable Thai, then render again.
+Run the checklist in `references/editing-craft.md` section 6. Look at `out/sheet.jpg` and single frames around each cut. Fix clipping, overflow, leftover text and unreadable Thai, then render again.
 Check that an audio stream exists and max volume is not above 0 dB.
 For full promos, run Shotcraft's independent final review (`references/final-review.md`).
 If the video has BGM, also offer a version with SFX only.
