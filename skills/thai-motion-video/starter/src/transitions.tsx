@@ -15,17 +15,17 @@ export const DUR: Record<Kind, number> = {
   flash: 8, glitch: 6, leak: 22, focus: 16, smash: 16,
 };
 
-// Shotcraft SFX (paths under assets/audio/sfx/), lead = frames before the cut it starts.
-export const SFX_FOR: Partial<Record<Kind, { file: string; lead: number; vol: number }>> = {
+// Shotcraft SFX (paths under assets/audio/sfx/), lead = frames before the cut it starts, len = frames played (fades out at the end).
+export const SFX_FOR: Partial<Record<Kind, { file: string; lead: number; vol: number; len?: number }>> = {
   whip: { file: 'whoosh-fast.mp3', lead: 8, vol: 0.55 },
   push: { file: 'swoosh-quick.mp3', lead: 6, vol: 0.5 },
   zoom: { file: 'air-zoom-vacuum.mp3', lead: 9, vol: 0.5 },
-  iris: { file: 'sparkle.mp3', lead: 4, vol: 0.35 },
+  iris: { file: 'sparkle.mp3', lead: 4, vol: 0.35, len: 60 },
   wipe: { file: 'transition-snap.mp3', lead: 4, vol: 0.5 },
   slices: { file: 'warp-slide.mp3', lead: 8, vol: 0.45 },
   flash: { file: 'hit-fast-exciting.mp3', lead: 1, vol: 0.5 },
   glitch: { file: 'scifi-click.mp3', lead: 1, vol: 0.6 },
-  leak: { file: 'light-transition-magic.mp3', lead: 10, vol: 0.4 },
+  leak: { file: 'light-transition-magic.mp3', lead: 10, vol: 0.4, len: 75 },
   smash: { file: 'bass-hit-short.mp3', lead: 0, vol: 0.7 },
 };
 
@@ -177,7 +177,12 @@ export const Timeline: React.FC<{ scenes: Scene[]; sfx?: boolean; backdrop?: str
       {scenes.map((_, i) => { const p = prog(i); return p === null ? null : <Overlay key={`o${i}`} o={outOf(i)!} p={p} frame={frame} />; })}
       {sfx && scenes.map((_, i) => {
         const o = outOf(i); const s = o && SFX_FOR[o.kind]; if (!s) return null;
-        return <Sequence key={`s${i}`} from={Math.max(0, starts[i + 1] - s.lead)} durationInFrames={45}><Audio src={staticFile(`audio/${s.file}`)} volume={s.vol} /></Sequence>;
+        const len = s.len ?? 45;
+        return (
+          <Sequence key={`s${i}`} from={Math.max(0, starts[i + 1] - s.lead)} durationInFrames={len}>
+            <Audio src={staticFile(`audio/${s.file}`)} volume={(f) => s.vol * interpolate(f, [len - 12, len], [1, 0], clamp)} />
+          </Sequence>
+        );
       })}
     </AbsoluteFill>
   );
