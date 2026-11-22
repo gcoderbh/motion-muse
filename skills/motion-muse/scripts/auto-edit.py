@@ -25,6 +25,10 @@ THAI_MARK = re.compile(r"^[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]")
 THAI_LEAD = re.compile(r"[\u0E40-\u0E44]$")
 
 
+HANDLE = 0.35         # s of source kept free on both sides of a window for transition overlap
+RAMP_RESERVE = 1.25   # the [[0, 2.2], [0.35, 1], [1, 1]] ramp plays ~1.21x the slot length of footage
+
+
 def beat_info(music, fps):
     out = subprocess.run([sys.executable, os.path.join(HERE, "beat-grid.py"), music, "--fps", str(fps), "--dur", "90"],
                          capture_output=True, text=True, check=True).stdout
@@ -158,21 +162,24 @@ def main():
                 speed = 1.0
                 if peak_sec and s["motion"] / mmax < 0.25 and s["dur"] >= dur_f / fps * 1.8:
                     speed = 1.6  # low-energy shot in the peak: speed it up instead of letting it drag
-                need = dur_f / fps * speed
-                if s["dur"] < need + 0.1:
+                need = dur_f / fps * speed * RAMP_RESERVE  # room for a possible speed ramp
+                lo, hi = s["start"] + HANDLE * speed, s["end"] - HANDLE * speed  # transitions show a few frames past the cut
+                if hi - lo < need:
                     continue
                 # put the motion peak ~35 % into the window: the action starts right after the cut
-                t0 = min(max(s["start"] + 0.05, s["peak"] - 0.35 * need), s["end"] - need - 0.05)
+                t0 = min(max(lo, s["peak"] - 0.35 * need), hi - need)
                 busy = used.get(s["id"], [])
                 if any(t0 < e and t0 + need > b for b, e in busy):
-                    free = [b2 for _, b2 in busy] + [s["start"] + 0.05]
-                    t0 = next((f for f in sorted(free) if f + need <= s["end"] - 0.05 and not any(f < e and f + need > b for b, e in busy)), None)
+                    free = [b2 for _, b2 in busy] + [lo]
+                    t0 = next((f for f in sorted(free) if lo <= f and f + need <= hi and not any(f < e and f + need > b for b, e in busy)), None)
                     if t0 is None:
                         continue
                 chosen = (s, t0, need, speed); break
-            if not chosen:
-                s = max(pool, key=lambda x: x["dur"]); speed = max(1.0, dur_f / fps / max(0.3, s["dur"] - 0.1))
-                chosen = (s, s["start"], dur_f / fps * speed, round(speed, 2))
+            if not chosen:  # nothing long enough: slow the longest shot down so it fills the slot
+                s = max(pool, key=lambda x: x["dur"])
+                speed = round(max(0.5, min(1.0, (s["dur"] - 2 * HANDLE) / (dur_f / fps * RAMP_RESERVE))), 2)
+                need = dur_f / fps * speed * RAMP_RESERVE
+                chosen = (s, s["start"] + max(0.0, (s["dur"] - need) / 2), need, speed)
             s, t0, need, speed = chosen
             used.setdefault(s["id"], []).append((t0, t0 + need)); uses[s["id"]] = uses.get(s["id"], 0) + 1
             extra = {}
@@ -181,7 +188,7 @@ def main():
                 extra["zoom"] = [1.0, 1.06] if i % 2 == 0 else [1.08, 1.02]  # static shot: slow push-in / pull-out
             if prev and prev["clip"] == s["clip"]:
                 extra["zoom"] = [1.12, 1.14]; why += " jump-cut punch-in"
-            if not hero_done and peak_sec and s["motion"] / mmax > 0.5 and dur_f >= round(2 * beat_s * fps) and s["dur"] >= need * 1.6:
+            if not hero_done and peak_sec and speed == 1.0 and s["motion"] / mmax > 0.5 and dur_f >= round(2 * beat_s * fps):
                 extra["ramp"] = [[0, 2.2], [0.35, 1.0], [1, 1.0]]  # fast-to-real-time ramp that lands on the beat
                 hero_done = True; why += " speed ramp"
             if a.natural:
@@ -225,8 +232,12 @@ def main():
         if ar_id not in caps:
             sys.exit(f"Talk mode needs captions for the speaker clip ({ar_id}): run transcribe.py --footage footage.json first.")
         ar = clips[ar_id]; spk = caps[ar_id]
+        ar_shots = [s for s in pool if s["clip"] == ar_id]
+        if not ar_shots:
+            sys.exit(f"Every shot of the speaker clip {ar_id} is excluded.")
+        speech = [(max(s, sh["start"]), min(e, sh["end"])) for s, e in spk["speech"] for sh in ar_shots if s < sh["end"] and e > sh["start"]]
         keep = []
-        for s, e in spk["speech"]:
+        for s, e in sorted(speech):
             s, e = max(0, s - 0.12), min(ar["duration"], e + 0.18)
             if keep and s - keep[-1][1] < 0.25:
                 keep[-1][1] = e
@@ -238,7 +249,7 @@ def main():
                 if acc + (e - s) > a.length: break
                 out.append([s, e]); acc += e - s
             keep = out or keep[:1]
-        ar_shot = max(ar["shots"], key=lambda s: s["dur"])
+        ar_shot = max(ar_shots, key=lambda s: s["dur"])
         t_f = 0
         words = merge_thai([w for sg in spk["segments"] for w in sg["words"]])
         broll = sorted([s for s in pool if s["clip"] != ar_id], key=lambda s: s["score"], reverse=True)
