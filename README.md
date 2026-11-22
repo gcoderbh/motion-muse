@@ -19,6 +19,7 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `SKILL.md`: the workflow (brief → techniques → Remotion build → beat sync → render/QA → deliver)
 - `references/sound-sources.md`: royalty-free BGM/SFX sources and licenses, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
+- `scripts/find-music.py`: finds a free Mixkit track that fits the video and never reuses one
 - `references/editing-craft.md`: which transition fits which scene change, pacing, and a checklist so clips do not look AI-made
 - `scripts/`: `setup.sh`, `synth-sfx.sh`, `beat-grid.py`
 - `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) and a `TransitionsDemo` that shows each one

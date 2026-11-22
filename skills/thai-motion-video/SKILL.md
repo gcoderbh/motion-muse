@@ -84,12 +84,20 @@ Wrap still layouts in `<Drift dur={...}>` so no shot is frozen.
 
 ## 4. Music, SFX and beat sync
 
-Read `references/sound-sources.md`. Order of choice:
-1. The user's own track.
-2. Shotcraft's bundled BGM/SFX (`assets/audio/`, license in `assets/audio/ATTRIBUTION.md`; read `references/sound-design.md`).
-3. A free source from the table in `sound-sources.md` (Mixkit, Pixabay, YouTube Audio Library, Freesound CC0, ...). Check the license page before downloading.
-4. Your own sound: `bash "$SKILL_DIR/scripts/synth-sfx.sh" public/audio/synth`.
-5. ElevenLabs only after asking (section 5).
+Read `references/sound-sources.md`.
+
+**Music (BGM): find a new track for every video.** Do not reuse a track from an earlier video, and do not use Shotcraft's 5 bundled BGM tracks or the starter's `house-vibez.mp3` unless the user asks. Everyone who installs this skill has those tracks, so videos made with them sound the same.
+1. If the user sent a track, use it and skip the rest.
+2. Write 3 English keywords for the music from the brief: mood, genre and topic (use the mood table in `sound-sources.md` section 2b), plus the BPM range.
+3. Search: `python3 "$SKILL_DIR/scripts/find-music.py" <keyword1> <keyword2> <keyword3>`. It lists unused Mixkit tracks with their tags, and skips tracks used before on this machine and Shotcraft's bundled tracks.
+4. Pick 2–3 candidates whose tags match the brief. Check each one with `beat-grid.py`: is the BPM in range, is it at least as long as the video, and is there a phrase start where the hook can sit?
+5. Download the best one: `python3 "$SKILL_DIR/scripts/find-music.py" --get <id> --title "<title>" --out public/audio/bgm.mp3`. This writes `CREDITS.md` and marks the track as used.
+6. If Mixkit has nothing that fits, use another source from `sound-sources.md` (Pixabay Music, YouTube Audio Library, Incompetech, FMA, Uppbeat). Open the page in the browser, check the license, download the track, and add it to `CREDITS.md` and the used-music log yourself.
+7. Tell the user which track you picked and why it fits, so they can ask for another one.
+
+**SFX:** Shotcraft's bundled SFX (`assets/audio/sfx/`, license in `assets/audio/ATTRIBUTION.md`; read `references/sound-design.md`) are fine to reuse. You can also use free SFX sources from `sound-sources.md`, or make your own with `bash "$SKILL_DIR/scripts/synth-sfx.sh" public/audio/synth`.
+
+ElevenLabs only after asking (section 5).
 
 Write every outside file into `public/audio/CREDITS.md` (title, URL, license, date) when you download it, and put the needed credit lines in the delivery message.
 

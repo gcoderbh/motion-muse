@@ -23,6 +23,25 @@ Licenses change. Open the license page and check it again before you use a file 
 | Free Music Archive | https://freemusicarchive.org | Each track has its own CC license. Avoid NC (non-commercial) and ND (no-derivatives) tracks for edits | Depends |
 | Uppbeat | https://uppbeat.io | Free plan has monthly limits and needs a credit line | Yes (free plan) |
 
+## 2b. Matching music to the content
+
+Every video needs a new track that fits the content (see SKILL.md section 4). Search keywords for `scripts/find-music.py`, or for any other site:
+
+| Content | Keywords (mood / genre / topic) | BPM |
+|---|---|---|
+| Product launch, tech, app | technology, electronica, driving | 110–128 |
+| Fashion, beauty, lifestyle | fashion, deep house, sexy | 110–124 |
+| Food, cafe, travel | happy, folk pop, travel | 90–115 |
+| Sale, promo, fast hook | energetic, dance pop, edm | 120–140 |
+| Education, explainer, data | corporate, positive, ambient | 90–110 |
+| Emotional story, brand film | cinematic, inspiring, piano | 70–100 |
+| Kids, cute, playful | children, fun, ukulele | 100–125 |
+| Sports, gaming, street | hip hop, aggressive, rock | 85–100 (hip hop) / 130–160 |
+| Luxury, premium | elegant, chillout, jazz | 80–105 |
+| Funny, meme | quirky, comedy, funk | 100–125 |
+
+Mixkit listings can also be used directly: `--path mood/<mood>` (e.g. `mood/cheerful`, `mood/dramatic`) or `--path <genre>` (e.g. `deep-house`, `corporate-music`, `film-score`).
+
 ## 3. Free sound effects (SFX)
 
 | Source | Link | License in short | Credit needed |

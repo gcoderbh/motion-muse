@@ -68,6 +68,7 @@ export const TransitionsDemo: React.FC = () => {
     <AbsoluteFill>
       <Timeline scenes={scenes} />
       <Grain opacity={0.07} />
+      {/* Placeholder music: replace with a new track from scripts/find-music.py for real videos */}
       <Audio src={staticFile('audio/house-vibez.mp3')} trimBefore={Math.round(MUSIC_START_SEC * 30)} volume={fadeOut} />
     </AbsoluteFill>
   );
