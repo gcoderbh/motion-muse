@@ -1,6 +1,6 @@
 ---
 name: motion-muse
-description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
+description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, edits real footage (shot detection, beat-synced auto cut, speed ramps, vertical reframe, colour match, Thai captions from speech), with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
 ---
 
 # Motion Muse (Shotcraft + Remotion + awesome-ai-motion)
@@ -38,6 +38,12 @@ Files that ship with this skill:
 - `references/motion-sources.md`: where to get effects and techniques, their licenses, and gallery search commands
 - `references/editing-craft.md`: which transition to use for which scene change, pacing, and the anti-"AI look" checklist
 - `starter/src/transitions.tsx`: `Timeline` with 12 ready transitions (whip, push, zoom, iris, wipe, slices, flash, glitch, leak, focus, smash, cut) + auto SFX, `Grain`, `Drift`
+- `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix, footage checklist
+- `scripts/find-footage.py`: free Mixkit b-roll search/download (credits + no reuse)
+- `scripts/footage-scan.py`: proxies, shot detection, motion/pan/shake/focus per shot, shot scores, colour match, contact sheets → `footage.json`
+- `scripts/transcribe.py`: local faster-whisper speech → word-timed Thai captions + speech ranges + SRT
+- `scripts/auto-edit.py`: beat-synced first cut (montage, talking head, or voice-over) → `public/edit.json` + `edit.md` seam plan
+- `starter/src/footage.tsx`: `FootageReel` composition (renders `edit.json`), `Clip` (reframe, speed ramp, colour look, punch-in), `Captions`, `FootageTitle`, `duck()`
 - `starter/src/`: working 9:16 Thai examples: `MotionReel` (5 techniques, beat-synced) and `TransitionsDemo` (every transition)
 
 ## 1. Brief (one question at most)
@@ -82,6 +88,21 @@ Wrap still layouts in `<Drift dur={...}>` so no shot is frozen.
 - Default to a light, bright palette unless the brief or brand says otherwise.
 - Audio: `<Audio src={staticFile('audio/x.mp3')} trimBefore={frames} volume={...} />`; SFX go in `<Sequence from={b(k)}>`.
 
+## 3b. Footage (when the user sends video, or the video needs b-roll)
+
+Read `references/footage-editing.md` and follow its pipeline. In short:
+```bash
+python3 "$SKILL_DIR/scripts/find-footage.py" <keywords> --orientation vertical   # only if footage is missing; then --get <ids> --dir footage-raw
+python3 "$SKILL_DIR/scripts/footage-scan.py" <user files or footage-raw/> [--stabilize]   # proxies + footage.json + out/sheets/*.jpg
+python3 "$SKILL_DIR/scripts/transcribe.py" --footage footage.json                     # if any clip has speech (pip install faster-whisper)
+python3 "$SKILL_DIR/scripts/auto-edit.py" footage.json --music audio/bgm.mp3 --length 20 --look warm   # or --mode talk / --vo audio/vo.mp3
+npx remotion render src/index.ts FootageReel out/video.mp4 --timeout=120000
+```
+- Look at every contact sheet before cutting, and read `edit.md`. The draft is a starting point: swap weak shots, add Thai `titles`, design 2–4 custom seams, and fix the captions by hand.
+- Edit the proxies in `public/footage/`, never the originals (VFR/HEVC phone video drifts out of sync).
+- Slow motion only on 50 fps+ sources; at most one or two speed ramps per video; one colour look per video.
+- Only use footage the user owns or has the rights to; stock clips go into CREDITS.md.
+
 ## 4. Music, SFX and beat sync
 
 Read `references/sound-sources.md`.
@@ -117,7 +138,7 @@ npx remotion render src/index.ts <CompositionId> out/video.mp4
 ffmpeg -loglevel error -y -i out/video.mp4 -vf "select='not(mod(n\,40))',scale=270:-1,tile=6x2" -frames:v 1 out/sheet.jpg
 ffmpeg -i out/video.mp4 -af volumedetect -f null - 2>&1 | grep -E "mean|max"
 ```
-Run the checklist in `references/editing-craft.md` section 6. Look at `out/sheet.jpg` and single frames around each cut. Fix clipping, overflow, leftover text and unreadable Thai, then render again.
+Run the checklist in `references/editing-craft.md` section 6 (and section 9 of `footage-editing.md` for footage). Look at `out/sheet.jpg` and single frames around each cut. Fix clipping, overflow, leftover text and unreadable Thai, then render again.
 Check that an audio stream exists and max volume is not above 0 dB.
 For full promos, run Shotcraft's independent final review (`references/final-review.md`).
 If the video has BGM, also offer a version with SFX only.
