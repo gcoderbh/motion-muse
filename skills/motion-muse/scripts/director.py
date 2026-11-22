@@ -91,10 +91,19 @@ def cmd_init(a):
     for f in os.listdir(os.path.join(SKILLS_DIR, "fonts", "prompt")):
         if f.endswith(".ttf"):
             shutil.copy(os.path.join(SKILLS_DIR, "fonts", "prompt", f), os.path.join(P, "public", "fonts"))
+    # the transition SFX Timeline plays (Shotcraft keeps them in sub-folders; the bundled BGM is not copied)
+    sfx = {f: os.path.join(dp, f) for r in (os.path.join(SKILLS_DIR, "video-shotcraft", "assets", "audio", "sfx"), os.path.join(TEMPLATE, "public", "audio"))
+           for dp, _, fs in os.walk(r) for f in fs}
+    for f in set(re.findall(r"file: '([^']+)'", open(os.path.join(P, "src", "transitions.tsx")).read())):
+        if f in sfx and not os.path.exists(os.path.join(P, "public", "audio", f)):
+            shutil.copy(sfx[f], os.path.join(P, "public", "audio"))
+        elif f not in sfx:
+            print(f"WARN: transition SFX {f} not found (Timeline sfx={{false}} or add it to public/audio)")
     need = [p for p in pk if not installed(p)]
     if need:
         print("installing (only for these caps):", " ".join(need))
-        r = subprocess.run(["npm", "i", "--no-save", "--no-audit", "--no-fund", "--loglevel=error", *need], cwd=TEMPLATE)
+        keep = [x for c in CAPS for x in CAPS[c][2] if installed(x)]  # npm prunes unsaved packages it is not told about
+        r = subprocess.run(["npm", "i", "--no-save", "--no-audit", "--no-fund", "--loglevel=error", *dict.fromkeys(keep + need)], cwd=TEMPLATE)
         if r.returncode: sys.exit("npm install failed")
     print(f"OK {P}  caps={','.join(caps)}  kits={','.join(kits) or '-'}")
 
@@ -169,15 +178,19 @@ def cmd_render(a):
     comp_dir = os.path.dirname(os.path.abspath(a.storyboard))
     roots = [comp_dir, os.path.join(src, "lib")] if comp_dir.startswith(src + os.sep) and comp_dir != src else [src]
     lib = [os.path.join(dp, f) for r in roots for dp, _, fs in os.walk(r) for f in fs if f.endswith((".ts", ".tsx", ".json"))]
-    lib += [os.path.join(src, f) for f in ("transitions.tsx", "theme.ts", "index.ts") if os.path.isfile(os.path.join(src, f))]
+    lib += [os.path.join(src, f) for f in ("transitions.tsx", "theme.ts", "index.ts", "Root.tsx") if os.path.isfile(os.path.join(src, f))]
+    pub = os.path.join(P, "public")  # assets (music, sfx, fonts, footage) by size+mtime, so a replaced file invalidates
+    assets = {os.path.relpath(os.path.join(dp, f), pub): [os.path.getsize(os.path.join(dp, f)), int(os.path.getmtime(os.path.join(dp, f)))]
+              for dp, _, fs in os.walk(pub) for f in fs}
+    fmt = {k: sb[k] for k in ("fps", "width", "height")}
     sdir = os.path.join(P, "out", "scenes", sb["comp"]); os.makedirs(sdir, exist_ok=True)
     parts, t, rendered, cached = [], 0, 0, 0
     for i, s in enumerate(sb["scenes"]):
         a0, a1 = t, t + s["dur"] - 1
-        files = [os.path.join(P, f) for f in s.get("files", [])] or lib
-        if s.get("files"): files += [x for x in lib if "/lib/" in x or x.endswith(("transitions.tsx", "theme.ts"))]
         nb = sb["scenes"][max(0, i - 1):i + 2]
-        key = sha(files, {"comp": sb["comp"], "range": [a0, a1], "scenes": nb, "props": sb.get("props")})
+        own = [os.path.join(P, f) for n in nb for f in n.get("files", [])]  # transitions draw the neighbours too
+        files = own + [x for x in lib if "/lib/" in x or x.endswith(("transitions.tsx", "theme.ts", "index.ts", "Root.tsx"))] if all(n.get("files") for n in nb) else lib
+        key = sha(files, {"comp": sb["comp"], "range": [a0, a1], "scenes": nb, "props": sb.get("props"), "fmt": fmt, "assets": assets})
         out = os.path.join(sdir, f"{i:02d}-{s['id']}-{key}.mp4")
         if os.path.exists(out) and not a.force:
             cached += 1; print(f"CACHED {s['id']} frames {a0}-{a1}")
@@ -202,7 +215,7 @@ def cmd_render(a):
     r = run(["ffmpeg", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", video])
     if r.returncode: sys.exit(r.stderr)
     audio = os.path.join(P, "out", f"{sb['comp']}.audio.wav")
-    akey = sha(lib, {"comp": sb["comp"], "total": t})
+    akey = sha(lib, {"comp": sb["comp"], "total": t, "fmt": fmt, "assets": assets})
     astamp = audio + ".key"
     stale = a.force or not os.path.exists(audio) or not os.path.exists(astamp) or open(astamp).read() != akey
     if stale:
