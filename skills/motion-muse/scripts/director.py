@@ -204,8 +204,9 @@ def cmd_render(a):
     audio = os.path.join(P, "out", f"{sb['comp']}.audio.wav")
     akey = sha(lib, {"comp": sb["comp"], "total": t})
     astamp = audio + ".key"
-    if a.force or not os.path.exists(audio) or open(astamp).read() != akey if os.path.exists(astamp) else True:
-        r = run(["npx", "remotion", "render", "src/index.ts", sb["comp"], audio, "--codec=wav", "--log=error", "--timeout=120000"], cwd=P)
+    stale = a.force or not os.path.exists(audio) or not os.path.exists(astamp) or open(astamp).read() != akey
+    if stale:
+        r = run(["npx", "remotion", "render", "src/index.ts", sb["comp"], audio, "--codec=wav", "--log=error", "--timeout=120000"] + ([f"--gl={gl}"] if gl else []), cwd=P)
         if r.returncode: sys.exit(f"FAIL audio:\n{r.stderr[-2000:]}")
         open(astamp, "w").write(akey)
     final = os.path.join(P, "out", f"{sb['comp']}.mp4")

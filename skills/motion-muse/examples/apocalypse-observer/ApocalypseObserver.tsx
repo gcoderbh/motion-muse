@@ -59,7 +59,7 @@ const Title: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }
 // 1. Observer camera follows the survivor down the street.
 const Approach: React.FC = () => {
   const f = useCurrentFrame();
-  const cam = observer(f, (k) => [X, 0, survivorZ(k)], () => 0.0, { back: 3.4, height: 1.85, side: 0.9, lag: 14, lookAhead: 4 });
+  const cam = observer(f, (k) => [X, 0, survivorZ(k)], () => 0.0, { back: interpolate(f, [0, 150], [6.5, 3.2]), height: interpolate(f, [0, 150], [2.6, 1.8]), side: 0.9, lag: 14, lookAhead: 4 });
   return (
     <AbsoluteFill>
       <Stage3D background={FOG} fog={[FOG, 3, 24]} exposure={1.1}><CameraRig position={cam.position} target={cam.target} shake={0.05} fov={42} /><World windowLight={0.9 * flicker(f, 2, 0.15)} /><Survivor f={f} /></Stage3D>

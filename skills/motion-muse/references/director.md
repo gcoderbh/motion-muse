@@ -90,7 +90,7 @@ Text components: `Kinetic` (word or grapheme reveal, never splits vowels/tone ma
 python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/storyboard.json
 ```
 
-- Renders each scene's frame range separately to `out/scenes/<Comp>/NN-id-<hash>.mp4`. The hash covers the composition folder, `src/lib`, `transitions.tsx` and the neighbouring scenes, so changing one scene re-renders only what changed. `--force` re-renders all.
+- Renders each scene's frame range separately to `out/scenes/<Comp>/NN-id-<hash>.mp4`. The hash covers the scene's code (by default the whole composition folder; list a scene's own files in `"files": ["src/<slug>/Hook.tsx"]` to scope it), `src/lib`, `transitions.tsx`, and the storyboard entries of the scene and its neighbours (transitions overlap them). Put each scene in its own file and list it, and editing one scene re-renders only that scene. `--force` re-renders all.
 - 3D scenes render with `--gl=swangle` automatically (software WebGL; `angle` fails on CPU-only machines). Override with `--gl` or `MOTION_MUSE_GL`.
 - Audio is rendered once for the full timeline, then normalised (-14 LUFS, -1.5 dBTP) and muxed.
 - QA prints per-scene motion score (flags static scenes), duration vs storyboard, loudness/true peak, black stretches, and writes a contact sheet. Look at the sheet and fix anything clipped, unreadable or static, then re-run (cached scenes are reused).
