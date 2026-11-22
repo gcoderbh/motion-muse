@@ -31,11 +31,12 @@ export const RoomEnv: React.FC<{ intensity?: number }> = ({ intensity = 1 }) => 
   const { gl, scene } = useThree();
   useLayoutEffect(() => {
     const pm = new THREE.PMREMGenerator(gl);
-    const tex = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = tex;
-    scene.environmentIntensity = intensity;
-    return () => { tex.dispose(); pm.dispose(); scene.environment = null; };
-  }, [gl, scene, intensity]);
+    const room = new RoomEnvironment();
+    const rt = pm.fromScene(room, 0.04);
+    scene.environment = rt.texture;
+    return () => { scene.environment = null; rt.dispose(); pm.dispose(); room.dispose(); };
+  }, [gl, scene]);
+  useLayoutEffect(() => { scene.environmentIntensity = intensity; }, [scene, intensity]);
   return null;
 };
 
