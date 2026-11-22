@@ -21,6 +21,7 @@ const Bottle: React.FC<{ y?: number; rot?: number; tilt?: number }> = ({ y = 0, 
   <group position={[0, y, 0]} rotation={[tilt, rot, tilt * 0.4]}>
     <Lathe profile={LIQUID}><meshStandardMaterial color="#C98A3E" roughness={0.15} metalness={0.1} emissive="#5A3310" emissiveIntensity={0.25} /></Lathe>
     <Lathe profile={GLASS}><meshStandardMaterial color="#F6F1EA" roughness={0.04} metalness={0.15} transparent opacity={0.26} envMapIntensity={2.4} /></Lathe>
+    <mesh position={[0, 1.27, 0]}><cylinderGeometry args={[0.165, 0.2, 0.2, 64]} /><meshStandardMaterial color="#B89358" metalness={0.9} roughness={0.35} /></mesh>
     <mesh position={[0, 1.36 + 0.26, 0]} castShadow><cylinderGeometry args={[0.2, 0.2, 0.52, 64]} /><meshStandardMaterial color={GOLD} metalness={1} roughness={0.22} /></mesh>
     <mesh position={[0, 1.36 + 0.53, 0]}><cylinderGeometry args={[0.2, 0.2, 0.02, 64]} /><meshStandardMaterial color="#E9D3A2" metalness={1} roughness={0.12} /></mesh>
     <mesh position={[0, 0.95, 0]}><cylinderGeometry args={[0.463, 0.463, 0.035, 96, 1, true]} /><meshStandardMaterial color={GOLD} metalness={1} roughness={0.25} side={2} /></mesh>
@@ -71,7 +72,7 @@ const Detail: React.FC = () => {
         <Floor color="#E6DED3" />
       </Stage3D>
       <LightSweep progress={prog(f, 20, 80)} angle={24} width={10} intensity={0.35} />
-      <Type style={{ bottom: 300 }}>
+      <Type style={{ bottom: 150 }}>
         <div style={{ fontSize: 28, letterSpacing: '0.4em', fontWeight: 300, color: '#8C7A62', opacity: prog(f, 10, 30) }}>DETAIL</div>
         <Kinetic text="ทุกรายละเอียด ขัดเกลาด้วยมือ" by="word" anim="blur" delay={18} stagger={6} style={{ fontSize: 50, fontWeight: 200 }} />
       </Type>
@@ -110,11 +111,11 @@ const Packshot: React.FC = () => {
     <AbsoluteFill>
       <Stage3D background={IVORY} fog={[IVORY, 7, 18]} exposure={1.05}>
         <RoomEnv intensity={0.7} />
-        <CameraRig position={[interpolate(camT, [0, 1], [1.2, 0]), interpolate(camT, [0, 1], [1.6, 0.95]), interpolate(camT, [0, 1], [8.6, 10])]} target={[0, 1.0, 0]} fov={30} />
+        <CameraRig position={[interpolate(camT, [0, 1], [1.2, 0]), interpolate(camT, [0, 1], [1.6, 0.95]), interpolate(camT, [0, 1], [8.6, 10]) - f * 0.004]} target={[0, 1.0, 0]} fov={30} />
         <StudioLights key_={50} rim={60} fill={5} />
         <group position={[0, 0.15, 0]}>
           <mesh position={[0, 0, 0]} castShadow receiveShadow><cylinderGeometry args={[0.95, 0.95, 0.3, 96]} /><meshStandardMaterial color="#D8CFC2" roughness={0.75} /></mesh>
-          <Bottle y={0.15 + (1 - drop) * 1.2} rot={0.4 + f * 0.003} />
+          <Bottle y={0.15 + (1 - drop) * 1.2} rot={0.4 + f * 0.007} />
         </group>
         <Floor />
       </Stage3D>
