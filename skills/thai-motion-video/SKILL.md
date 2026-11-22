@@ -7,7 +7,7 @@ description: One-call video editing skill that combines Video Shotcraft, the Rem
 
 Use for any request to make, edit or remix a video, reel, promo, lyric video or motion clip.
 Works on any machine with bash (Linux, macOS, WSL/Git Bash). `SKILL_DIR` below means the folder that contains this file. If you do not know it:
-`SKILL_DIR=$(dirname "$(find ~ -path '*thai-motion-video/scripts/setup.sh' 2>/dev/null | head -1)")/..`
+`SKILL_DIR=$(dirname "$(find /opt/.devin ~/.claude ~/.agents ~ -path '*thai-motion-video/scripts/setup.sh' 2>/dev/null | head -1)")/..`
 
 ## 0. Setup check (run every time, before anything else)
 
