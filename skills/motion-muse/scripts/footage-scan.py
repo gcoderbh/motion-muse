@@ -281,8 +281,10 @@ def main():
         for clip, err in ex.map(lambda t: one(*t), zip(files, ids)):
             if err:
                 print(err, file=sys.stderr)
-            if clip:
+            if clip and clip["shots"]:
                 clips.append(clip)
+            elif clip:
+                print(f"skip {clip['id']}: too short to analyse", file=sys.stderr)
 
     allshots = [s for c in clips for s in c["shots"]]
     if not allshots:
