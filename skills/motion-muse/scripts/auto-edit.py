@@ -236,6 +236,8 @@ def main():
         if not ar_shots:
             sys.exit(f"Every shot of the speaker clip {ar_id} is excluded.")
         speech = [(max(s, sh["start"]), min(e, sh["end"])) for s, e in spk["speech"] for sh in ar_shots if s < sh["end"] and e > sh["start"]]
+        if not speech:
+            sys.exit(f"No speech left in the speaker clip {ar_id} after --exclude.")
         keep = []
         for s, e in sorted(speech):
             s, e = max(0, s - 0.12), min(ar["duration"], e + 0.18)
