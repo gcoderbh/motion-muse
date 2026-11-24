@@ -202,7 +202,7 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
                 </group>
               ))}
               {L.glasses && <Part geo={rbox(eyeX * 0.6, eyeR * 0.25, eyeR * 0.2, 0.01)} color={L.glasses} ol={0} position={[0, eyeY, eyeZ + eyeR * 0.5]} />}
-              {big && mouth < 0.15 ? <group position={[0, mouthY + hr * 0.06, mouthZ]} rotation={[0, 0, Math.PI]}>
+              {big && mouth < 0.01 ? <group position={[0, mouthY + hr * 0.06, mouthZ]} rotation={[0, 0, Math.PI]}>
                 <mesh geometry={g(`smile${hr}`, () => new THREE.TorusGeometry(hr * 0.1, hr * 0.022, 6, 16, Math.PI))} material={toon('#3A1620')} scale={[1 + smile * 0.3, 0.5 + smile * 0.5, 1]} />
               </group> : <group position={[0, mouthY + (L.eyes === 'bulge' ? -hr * 0.04 : 0), mouthZ]} scale={big ? 0.7 : 1}>
                 <Part geo={sphere(hr * 0.2)} color="#3A1620" ol={0.012} scale={[1.15 + smile * 0.3, 0.12 + 0.85 * mouth, 0.35]} />
