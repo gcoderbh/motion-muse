@@ -17,7 +17,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Thai typography | 15 OFL Thai fonts picked by mood (Prompt, Kanit, IBM Plex Sans Thai, Mali, Noto Serif Thai, …), animated per word or grapheme, so vowels and tone marks stay attached to their letters |
 | Music | Finds a new free track that fits the content for every video (Mixkit via `find-music.py`, or Pixabay, YouTube Audio Library and others). Never reuses a track, and writes the credits for you |
 | Sound effects | Shotcraft's 149 SFX, free SFX sites, or SFX it synthesizes itself with ffmpeg |
-| Cartoon stories | Cel-shaded 3D cartoon characters with ink outlines (zombie, clerk, aunty, guard, kid, or your own variants) that stay the same in every shot and turn 360°, with blinking, eyes, brows and talking mouths. Office, shop, street and graveyard sets with Thai signs. Write the script as lines and SFX in a JSON file: `story.py` times the subtitles, SFX and music and makes the storyboard. No voice-over unless you ask |
+| Cartoon stories | Cel-shaded 3D cartoon characters with ink outlines (zombie, clerk, aunty, guard, kid, princess, or your own: long hair, skirts and gowns, capes, crowns and tiaras; save a character once with `story.py cast save` and reuse it by name) that stay the same in every shot and turn 360°, with blinking, eyes, brows and talking mouths. Office, shop, street and graveyard sets with Thai signs. Write the script as lines and SFX in a JSON file: `story.py` times the subtitles, SFX and music and makes the storyboard. No voice-over unless you ask |
 | OpenFilm | `story.py openfilm` turns the rendered episode into an [OpenFilm](https://github.com/openfilm/openfilm) project: one track of shots, editable captions, SFX and music tracks, ready to edit in OpenFilm Studio. The repo is also an OpenFilm skill (`openfilm.json`) |
 | ElevenLabs | Optional, and only used after asking you |
 | Delivery | Renders the MP4, checks frames and loudness, then sends the video with a list of the techniques used and the credits |
@@ -55,6 +55,7 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/director.md`: brief → capability router → storyboard → scene-cached render; library and font tables
 - `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix
 - `references/toon-story.md`: cartoon story episodes: script format, characters, sets, camera for 9:16
+- `references/toon-characters.md`: new characters and outfits, from a reference picture, and the saved character library (`characters/`)
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses

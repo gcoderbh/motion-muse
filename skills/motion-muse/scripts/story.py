@@ -3,6 +3,8 @@
 
   story.py build  <project> src/<slug>/script.json [--no-subs]   # times every line from its Thai length, places SFX/music
   story.py openfilm <project> src/<slug>/storyboard.json --out ~/films/<slug>   # after director.py render
+  story.py cast list | pull <project> | save <project> <name> [--about ..] [--still x.png] | palette <image>
+      # the skill's character library (characters/cast.json): save a character made in a project, reuse it in the next
 
 script.json: {title, comp, fps, width, height, cps?, caps?, cast:{id:{name,color}}, music:[{file, from?, volume?, trim?}],
   scenes:[{id, shot, min?, pad?, lead?, lines:[{who, text, hold?, sfx?:[{file, at?, volume?}]}], sfx?:[{file, at, volume?}]}]}
@@ -143,9 +145,78 @@ def cmd_openfilm(a):
     print(f"open it: cd {out} && npx -y openfilm@latest   (Studio)   |   check: npx openfilm look   |   render: npx openfilm render --loudness=-14")
 
 
+SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LIB = os.path.join(SKILL, "characters")
+
+
+def jload(p):
+    return json.load(open(p, encoding="utf-8")) if os.path.isfile(p) else {}
+
+
+def jsave(p, d):
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    open(p, "w", encoding="utf-8").write(json.dumps(d, ensure_ascii=False, indent=2) + "\n")
+
+
+def cmd_cast(a):
+    lib_p = os.path.join(LIB, "cast.json"); lib = jload(lib_p)
+    if a.do == "list":
+        for n, c in sorted(lib.items()):
+            still = " (+ still)" if os.path.isfile(os.path.join(LIB, n + ".png")) else ""
+            print(f"{n:16} base={c.get('base', '-'):10} {c.get('about', '')}{still}")
+        if not lib: print("library is empty: make a character in src/lib/cast.json, then story.py cast save")
+        return
+    if a.do == "palette":
+        if not a.args: sys.exit("story.py cast palette <image> [n]")
+        img = a.args[0]; n = int(a.args[1]) if len(a.args) > 1 else 6
+        raw = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", img, "-vf", "scale=64:64:flags=area", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+        if not raw: sys.exit(f"cannot read {img}")
+        px = [raw[i:i + 3] for i in range(0, len(raw) - 2, 3)]
+        groups = {}
+        for r, g_, b in px:
+            groups.setdefault((r >> 5, g_ >> 5, b >> 5), []).append((r, g_, b))
+        out = []
+        for k, v in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+            c = tuple(sum(x[i] for x in v) // len(v) for i in range(3))
+            if all(sum(abs(c[i] - o[i]) for i in range(3)) > 60 for o, _ in out):
+                out.append((c, len(v)))
+            if len(out) == n: break
+        for c, m in out:
+            print(f"#{c[0]:02X}{c[1]:02X}{c[2]:02X}  {100 * m / len(px):4.1f}%")
+        return
+    if not a.args: sys.exit(f"story.py cast {a.do} <project>")
+    P = os.path.abspath(a.args[0]); proj_p = os.path.join(P, "src", "lib", "cast.json"); proj = jload(proj_p)
+    if a.do == "pull":
+        new = {n: c for n, c in lib.items() if a.force or n not in proj}
+        proj.update(new); jsave(proj_p, proj)
+        print(f"{len(new)} character(s) into {proj_p}: {', '.join(new) or '-'}")
+        return
+    if len(a.args) < 2: sys.exit("story.py cast save <project> <name>")
+    n = a.args[1]
+    if n not in proj: sys.exit(f"{n} is not in {proj_p}; add it there first: {{\"{n}\": {{\"about\": ..., \"base\": ..., \"look\": {{...}}}}}}")
+    c = dict(proj[n])
+    if a.about:
+        c["about"] = a.about; proj[n] = c; jsave(proj_p, proj)
+    chain, b = [n], c.get("base")
+    while b in proj and b not in lib and b not in chain:  # a base that is itself a project character is saved with it
+        lib[b] = proj[b]; chain.append(b); b = proj[b].get("base")
+    print(("replaced " if n in lib else "saved ") + n + (f" (+ base {', '.join(chain[1:])})" if chain[1:] else "") + f" in {lib_p}")
+    lib[n] = c; jsave(lib_p, lib)
+    if a.still:
+        shutil.copy(a.still, os.path.join(LIB, n + ".png")); print(f"still: {LIB}/{n}.png")
+    kit, mine = os.path.join(SKILL, "starter", "kits", "three", "toon.tsx"), os.path.join(P, "src", "lib", "toon.tsx")
+    if os.path.isfile(mine) and open(mine).read() != open(kit).read():
+        print(f"WARN: {mine} differs from the skill's {kit}. If the character uses parts added in the project, "
+              "copy them into the skill's toon.tsx too, or it will not render in the next project.")
+
+
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 s = ap.add_subparsers(dest="cmd", required=True)
 b = s.add_parser("build"); b.add_argument("project"); b.add_argument("script"); b.add_argument("--no-subs", action="store_true", help="no burned-in subtitles (for OpenFilm export)")
 o = s.add_parser("openfilm"); o.add_argument("project"); o.add_argument("storyboard"); o.add_argument("--out", required=True); o.add_argument("--force", action="store_true")
+c = s.add_parser("cast", help="character library: list | pull <project> | save <project> <name> | palette <image> [n]")
+c.add_argument("do", choices=["list", "pull", "save", "palette"]); c.add_argument("args", nargs="*")
+c.add_argument("--about", help="one line: who the character is"); c.add_argument("--still", help="a PNG of the character to keep with it")
+c.add_argument("--force", action="store_true", help="pull: replace project characters with the library's")
 a = ap.parse_args()
-{"build": cmd_build, "openfilm": cmd_openfilm}[a.cmd](a)
+{"build": cmd_build, "openfilm": cmd_openfilm, "cast": cmd_cast}[a.cmd](a)

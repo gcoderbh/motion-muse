@@ -58,11 +58,16 @@ Register it with `defaultProps={{ subs: true }}` and `durationInFrames={T.total}
 
 ### Characters (`lib/toon.tsx`)
 
-- Presets in `LOOKS`: `zombie`, `clerk`, `aunty`, `guard`, `kid`. A new character is a preset with changes:
-  `look('zombie', { shirt: '#B04A3A', hair: 'bald', iris: '#F2C14E' })`. Keep each character's look in one const
-  and reuse it in every shot: that is what keeps them consistent.
-- Parts: head size `head`, `build`, `height`, `hair` (`strands`, `cap`, `bun`, `spiky`, `bald`, `police`), `eyes`
-  (`bulge` or `dot`), `glasses`, `tie`, `badge`, `bandage`, `teeth`, `torn` clothes, `nose`, `sleeves`.
+- Presets in `LOOKS`: `zombie`, `clerk`, `aunty`, `guard`, `kid`, `princess`, plus the characters saved in the skill
+  (`story.py cast list`, copied to `src/lib/cast.json` by `init`). A new character is a preset with changes:
+  `look('zombie', { shirt: '#B04A3A', hair: 'bald', iris: '#F2C14E' })`, or an entry in `src/lib/cast.json` that is
+  then `LOOKS.<name>` in every shot: that is what keeps them consistent.
+- Parts: head size `head`, `build`, `height`, `hair` (`strands`, `cap`, `bun`, `spiky`, `bald`, `police`, `long`,
+  `ponytail`), `eyes` (`bulge` or `dot`), `lashes`, `blush`, `glasses`, `tie`, `badge`, `bandage`, `teeth`, `torn`
+  clothes, `nose`, `sleeves` (`short`, `long`, `puff`), `outfit` (`pants`, `skirt`, `gown`) with `dress` and `trim`,
+  `cape`, `hat` (`crown`, `tiara`) with `hatColor` and `gem`.
+- New characters and outfits, building one from a reference picture, adding parts, and saving a character in the
+  skill so the next episode can use it: `references/toon-characters.md`.
 - `pose` is `lib/pose` (`pose('think')`, `posesAt`, `gait(f / 26, 'shamble')`, `breathe`). `yaw` turns the whole
   body a full 360°; `headYaw` (degrees) turns the head. `handR` / `handL` hold a prop (e.g. a `<Sign>` card).
 - `face`: `mouth` 0–1 (`mouthOf` gives it from the timeline: the voice envelope, or a talking wobble while the line
