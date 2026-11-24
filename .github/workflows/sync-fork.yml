@@ -1,0 +1,20 @@
+name: Sync Fork
+
+on:
+  schedule:
+    # รันทุกวันเวลา 00:00 UTC (07:00 น. เวลาไทย)
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync fork with upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo sync "${{ github.repository }}" --branch main
