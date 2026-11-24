@@ -63,7 +63,7 @@ Register it with `defaultProps={{ subs: true }}` and `durationInFrames={T.total}
   `look('zombie', { shirt: '#B04A3A', hair: 'bald', iris: '#F2C14E' })`, or an entry in `src/lib/cast.json` that is
   then `LOOKS.<name>` in every shot: that is what keeps them consistent.
 - Parts: head size `head`, `build`, `height`, `hair` (`strands`, `cap`, `bun`, `spiky`, `bald`, `police`, `long`,
-  `ponytail`), `eyes` (`bulge` or `dot`), `lashes`, `blush`, `glasses`, `tie`, `badge`, `bandage`, `teeth`, `torn`
+  `ponytail`), `eyes` (`bulge`, `dot` or `big` cute eyes with highlights and a curved smile), `lashes`, `blush`, `glasses`, `tie`, `badge`, `bandage`, `teeth`, `torn`
   clothes, `nose`, `sleeves` (`short`, `long`, `puff`), `outfit` (`pants`, `skirt`, `gown`) with `dress` and `trim`,
   `cape`, `hat` (`crown`, `tiara`) with `hatColor` and `gem`.
 - New characters and outfits, building one from a reference picture, adding parts, and saving a character in the

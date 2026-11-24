@@ -4,6 +4,8 @@
 
 - Toon characters: `princess` preset; parts `hair: 'long' | 'ponytail'`, `outfit: 'skirt' | 'gown'` with `dress` and
   `trim`, `sleeves: 'puff'`, `cape`, `hat: 'crown' | 'tiara'` with `hatColor` and `gem`, `lashes`, `blush`.
+- Cuter girls' faces and outfits: `eyes: 'big'` (large irises with highlights, lid line, curved smile), soft bangs
+  on long and ponytail hair, bell-shaped skirts and gowns (`bell()` lathe).
 - Character library: `characters/cast.json` in the skill, copied to `src/lib/cast.json` by `init --caps toon` and
   merged into `LOOKS`. `story.py cast list | pull | save | palette` saves a character made in a project, reuses it,
   and reads the main colours of a reference picture.

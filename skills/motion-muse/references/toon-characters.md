@@ -21,7 +21,7 @@ Presets in `LOOKS`: `zombie`, `clerk`, `aunty`, `guard`, `kid`, `princess`, plus
 ### Parts you can set (`ToonLook`)
 
 - Body: `head` (head radius, 0.35 adult, 0.4 child, 0.44 big-headed), `build` (width, 0.8–1.25), `height` (0.7–1).
-- Face: `eyes` (`dot` or `bulge`), `iris`, `nose`, `lashes`, `blush` (cheek colour), `teeth`, `glasses`, `bandage`.
+- Face: `eyes` (`dot`, `bulge`, or `big` for cute characters: large irises with highlights, a lid line and a curved smile), `iris`, `nose`, `lashes`, `blush` (cheek colour), `teeth`, `glasses`, `bandage`.
 - Hair: `hair` = `strands`, `cap` (short), `bun`, `spiky`, `bald`, `police` (cap and hat), `long` (to the shoulders
   with side locks), `ponytail`; `hairColor` also colours the brows.
 - Clothes: `shirt` (top), `pants` (legs; skin colour for bare legs or tights under a skirt), `shoes`, `sole`,
