@@ -169,9 +169,10 @@ def cmd_cast(a):
     if a.do == "palette":
         if not a.args: sys.exit("story.py cast palette <image> [n]")
         img = a.args[0]; n = int(a.args[1]) if len(a.args) > 1 else 6
-        raw = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", img, "-vf", "scale=64:64:flags=area", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+        raw = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", img, "-vf", "scale=64:64:flags=area", "-f", "rawvideo", "-pix_fmt", "rgba", "-"], capture_output=True).stdout
         if not raw: sys.exit(f"cannot read {img}")
-        px = [raw[i:i + 3] for i in range(0, len(raw) - 2, 3)]
+        px = [raw[i:i + 3] for i in range(0, len(raw) - 3, 4) if raw[i + 3] >= 128]  # skip transparent pixels
+        if not px: sys.exit(f"{img} is fully transparent")
         groups = {}
         for r, g_, b in px:
             groups.setdefault((r >> 5, g_ >> 5, b >> 5), []).append((r, g_, b))
@@ -187,6 +188,10 @@ def cmd_cast(a):
     if not a.args: sys.exit(f"story.py cast {a.do} <project>")
     P = os.path.abspath(a.args[0]); proj_p = os.path.join(P, "src", "lib", "cast.json"); proj = jload(proj_p)
     if a.do == "pull":
+        mine = os.path.join(P, "src", "lib", "toon.tsx")
+        if os.path.isfile(mine) and "cast.json" not in open(mine, encoding="utf-8").read():
+            sys.exit(f"{mine} is older than the character library and would not load them; copy the skill's "
+                     "starter/kits/three/toon.tsx over it (keep any parts you added there), then pull again")
         new = {n: c for n, c in lib.items() if a.force or n not in proj}
         proj.update(new); jsave(proj_p, proj)
         print(f"{len(new)} character(s) into {proj_p}: {', '.join(new) or '-'}")
@@ -198,7 +203,7 @@ def cmd_cast(a):
     if a.about:
         c["about"] = a.about; proj[n] = c; jsave(proj_p, proj)
     chain, b = [n], c.get("base")
-    while b in proj and b not in lib and b not in chain:  # a base that is itself a project character is saved with it
+    while b in proj and proj[b] != lib.get(b) and b not in chain:  # project bases (new or changed) are saved with it
         lib[b] = proj[b]; chain.append(b); b = proj[b].get("base")
     print(("replaced " if n in lib else "saved ") + n + (f" (+ base {', '.join(chain[1:])})" if chain[1:] else "") + f" in {lib_p}")
     lib[n] = c; jsave(lib_p, lib)
