@@ -96,6 +96,11 @@ def cmd_init(a):
         shutil.copytree(os.path.join(SKILL, "starter", "src"), os.path.join(P, "src"))
     for k in kits:
         shutil.copy(os.path.join(SKILL, "starter", "kits", k), os.path.join(P, "src", "lib", os.path.basename(k)))
+    if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
+        cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")
+        have = json.load(open(cast, encoding="utf-8")) if os.path.isfile(cast) else {}
+        saved = json.load(open(lib, encoding="utf-8")) if os.path.isfile(lib) else {}
+        open(cast, "w", encoding="utf-8").write(json.dumps({**saved, **have}, ensure_ascii=False, indent=2) + "\n")
     for f in os.listdir(os.path.join(SKILLS_DIR, "fonts", "prompt")):
         if f.endswith(".ttf"):
             shutil.copy(os.path.join(SKILLS_DIR, "fonts", "prompt", f), os.path.join(P, "public", "fonts"))

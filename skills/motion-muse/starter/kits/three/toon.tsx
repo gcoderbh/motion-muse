@@ -9,6 +9,7 @@ import { continueRender, delayRender } from 'remotion';
 import { useThree } from '@react-three/fiber';
 import { Pose, REST } from './pose';
 import { rand } from './noise';
+import castJson from './cast.json';
 
 type V3 = [number, number, number];
 const R = (d: number) => (d * Math.PI) / 180;
@@ -46,6 +47,9 @@ export const capsule = (r: number, len: number) => g(`c${r},${len}`, () => new T
 export const rbox = (w: number, h: number, d: number, r = 0.02) => g(`b${w},${h},${d},${r}`, () => r <= 0 ? new THREE.BoxGeometry(w, h, d) : new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2.01, h / 2.01, d / 2.01)));
 export const cyl = (rt: number, rb: number, h: number, n = 24) => g(`y${rt},${rb},${h},${n}`, () => new THREE.CylinderGeometry(rt, rb, h, n));
 export const cone = (r: number, h: number) => g(`k${r},${h}`, () => new THREE.ConeGeometry(r, h, 16));
+/** Flared skirt: radius rt at the top to rb at the bottom, curve > 1 flares near the hem (bell / gown). */
+export const bell = (rt: number, rb: number, h: number, curve = 1.6) => g(`l${rt},${rb},${h},${curve}`, () => new THREE.LatheGeometry(
+  Array.from({ length: 13 }, (_, i) => { const t = i / 12; return new THREE.Vector2(rt + (rb - rt) * Math.pow(t, curve), h / 2 - t * h); }).reverse(), 40));
 export const tube = (pts: V3[], r: number) => g(`u${JSON.stringify(pts)}${r}`, () => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p))), 16, r, 6));
 
 type PartProps = { geo: THREE.BufferGeometry; color: string; ol?: number; glow?: number; position?: V3; rotation?: V3; scale?: number | V3; shadow?: boolean; children?: React.ReactNode };
@@ -61,10 +65,13 @@ export const Part: React.FC<PartProps> = ({ geo, color, ol = 0.016, glow = 0, po
 // ---------- characters ----------
 export type ToonLook = {
   skin: string; shirt: string; shirt2?: string; pants: string; shoes: string; sole?: string;
-  hair: 'strands' | 'cap' | 'bun' | 'spiky' | 'bald' | 'police'; hairColor: string;
-  eyes: 'bulge' | 'dot'; iris?: string; glasses?: string; tie?: string; badge?: string;
-  bandage?: boolean; teeth?: boolean; torn?: boolean; nose?: boolean;
-  head?: number; build?: number; height?: number; sleeves?: 'short' | 'long';
+  hair: 'strands' | 'cap' | 'bun' | 'spiky' | 'bald' | 'police' | 'long' | 'ponytail'; hairColor: string;
+  eyes: 'bulge' | 'dot' | 'big'; iris?: string; glasses?: string; tie?: string; badge?: string;
+  bandage?: boolean; teeth?: boolean; torn?: boolean; nose?: boolean; blush?: string; lashes?: boolean;
+  head?: number; build?: number; height?: number; sleeves?: 'short' | 'long' | 'puff';
+  /** pants (default), a knee skirt or a floor-length gown in `dress` (default: shirt) with a `trim` band. */
+  outfit?: 'pants' | 'skirt' | 'gown'; dress?: string; trim?: string;
+  hat?: 'crown' | 'tiara'; hatColor?: string; gem?: string; cape?: string;
 };
 export const LOOKS: Record<string, ToonLook> = {
   zombie: { skin: '#9DC58B', shirt: '#5D8FA6', shirt2: '#ECE6D2', pants: '#4B5262', shoes: '#C95A6B', sole: '#F1EEE6', hair: 'strands', hairColor: '#2E3A2A', eyes: 'bulge', iris: '#B8E64C', bandage: true, teeth: true, torn: true, head: 0.44, build: 0.82, sleeves: 'short' },
@@ -72,7 +79,17 @@ export const LOOKS: Record<string, ToonLook> = {
   aunty: { skin: '#DCA580', shirt: '#E8745B', pants: '#3F5E7B', shoes: '#6B4B3A', hair: 'bun', hairColor: '#1F1A1A', eyes: 'dot', nose: true, head: 0.36, build: 1.22, height: 0.92, sleeves: 'short' },
   guard: { skin: '#C98F6B', shirt: '#7B6B49', pants: '#4E4733', shoes: '#1E1E1E', hair: 'police', hairColor: '#3B3424', eyes: 'dot', badge: '#E9C24B', nose: true, head: 0.35, build: 1.12, sleeves: 'short' },
   kid: { skin: '#F0C29C', shirt: '#F4C430', pants: '#3A6FB0', shoes: '#E9514B', sole: '#FFF', hair: 'spiky', hairColor: '#231C18', eyes: 'dot', head: 0.4, build: 0.8, height: 0.72, sleeves: 'short' },
+  princess: { skin: '#F3CDB0', shirt: '#EE8FB8', pants: '#F3CDB0', shoes: '#F6E7A8', hair: 'long', hairColor: '#F0C766', eyes: 'big', iris: '#4A78C2', lashes: true, blush: '#F7A8B8', head: 0.42, build: 0.8, height: 0.9, sleeves: 'puff', outfit: 'gown', trim: '#FFF4F8', hat: 'crown', hatColor: '#F2C14E', gem: '#E2405E' },
 };
+/** Saved characters (src/lib/cast.json, from the skill's characters/cast.json): { name: { about, base?, look } }. */
+type CastEntry = { about?: string; base?: string; look: Partial<ToonLook> };
+const CAST = castJson as Record<string, CastEntry>;
+const fromCast = (name: string, seen: string[] = []): ToonLook | undefined => {
+  const c = CAST[name]; if (!c || seen.includes(name)) return LOOKS[name];
+  const base = c.base ? (fromCast(c.base, [...seen, name]) ?? LOOKS[c.base]) : undefined;
+  return { ...(base ?? LOOKS.kid), ...c.look } as ToonLook;
+};
+for (const name of Object.keys(CAST)) LOOKS[name] = fromCast(name)!;
 /** A preset with changes, e.g. look('zombie', { shirt: '#B04A3A', hair: 'bald' }) for a new character. */
 export const look = (base: keyof typeof LOOKS | ToonLook, over: Partial<ToonLook> = {}): ToonLook => ({ ...(typeof base === 'string' ? LOOKS[base] : base), ...over });
 
@@ -90,6 +107,7 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
   const hm = L.height ?? 1, bw = L.build ?? 1, hr = L.head ?? 0.36;
   const legU = 0.32 * hm, legL = 0.3 * hm, foot = 0.08, hipY = legU + legL + foot, torso = 0.46 * hm;
   const skin = L.skin, sleeve = L.sleeves === 'long';
+  const dressed = L.outfit === 'skirt' || L.outfit === 'gown', dress = L.dress ?? L.shirt;
   const leg = (hip: number, knee: number, x: number) => (
     <group position={[x, hipY, 0]} rotation={[-R(hip), 0, 0]}>
       <Part geo={capsule(0.08 * bw, legU - 0.1)} color={L.pants} position={[0, -legU / 2, 0]} />
@@ -103,7 +121,8 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
   );
   const arm = (sh: number, el: number, x: number, hand?: React.ReactNode) => (
     <group position={[x, torso * 0.86, 0]} rotation={[-R(sh), 0, x > 0 ? -0.1 : 0.1]}>
-      <Part geo={capsule(0.062 * bw, 0.18 * hm)} color={L.shirt} position={[0, -0.13 * hm, 0]} />
+      <Part geo={capsule(0.062 * bw, 0.18 * hm)} color={L.sleeves === 'puff' ? skin : L.shirt} position={[0, -0.13 * hm, 0]} />
+      {L.sleeves === 'puff' && <Part geo={sphere(0.1 * bw)} color={L.shirt} position={[0, -0.04, 0]} scale={[1, 0.9, 1]} />}
       <group position={[0, -0.27 * hm, 0]} rotation={[-R(el), 0, 0]}>
         <Part geo={capsule(0.054 * bw, 0.17 * hm)} color={sleeve ? L.shirt : skin} position={[0, -0.12 * hm, 0]} />
         <group position={[0, -0.27 * hm, 0]}>
@@ -114,15 +133,23 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
     </group>
   );
   const blink = Math.max(face.blink ?? 0, 0), gz = face.gaze ?? [0, 0], mouth = Math.max(0, Math.min(1, face.mouth ?? 0)), smile = face.smile ?? 0;
-  const eyeR = L.eyes === 'bulge' ? hr * 0.34 : hr * 0.17;
-  const eyeX = L.eyes === 'bulge' ? hr * 0.4 : hr * 0.34, eyeY = L.eyes === 'bulge' ? hr * 0.12 : hr * 0.08;
+  const big = L.eyes === 'big';
+  const eyeR = L.eyes === 'bulge' ? hr * 0.34 : big ? hr * 0.21 : hr * 0.17;
+  const eyeX = L.eyes === 'bulge' ? hr * 0.4 : big ? hr * 0.37 : hr * 0.34, eyeY = L.eyes === 'bulge' ? hr * 0.12 : big ? -hr * 0.04 : hr * 0.08;
   const eyeZ = Math.sqrt(Math.max(0, hr * hr - eyeX * eyeX - eyeY * eyeY)) * 0.94 - (L.eyes === 'bulge' ? 0 : eyeR * 0.25);
   const browRot = { neutral: 0, angry: -0.38, sad: 0.32, up: 0.08 }[face.brow ?? 'neutral'];
   const browLift = face.brow === 'up' ? eyeR * 0.6 : 0;
   const eye = (s: number) => (
     <group position={[s * eyeX, eyeY, eyeZ]} scale={[1, Math.max(0.08, 1 - blink), 1]}>
-      <Part geo={sphere(eyeR)} color={L.eyes === 'bulge' ? '#F3F0C6' : '#FFFFFF'} ol={0.012} scale={L.eyes === 'bulge' ? 1 : [1, 1.15, 0.6]} />
-      {L.eyes === 'bulge' ? (
+      <Part geo={sphere(eyeR)} color={L.eyes === 'bulge' ? '#F3F0C6' : '#FFFFFF'} ol={0.012} scale={L.eyes === 'bulge' ? 1 : big ? [0.92, 1.22, 0.6] : [1, 1.15, 0.6]} />
+      {big ? (
+        <group position={[gz[0] * eyeR * 0.25, gz[1] * eyeR * 0.25 - eyeR * 0.06, eyeR * 0.36]}>
+          <Part geo={sphere(eyeR * 0.74)} color={L.iris ?? '#5A3A2A'} ol={0} scale={[0.92, 1.2, 0.42]} />
+          <Part geo={sphere(eyeR * 0.42)} color="#120E16" ol={0} position={[0, -eyeR * 0.02, eyeR * 0.1]} scale={[1, 1.15, 0.42]} />
+          <Part geo={sphere(eyeR * 0.2)} color="#FFFFFF" glow={0.8} ol={0} position={[eyeR * 0.24, eyeR * 0.3, eyeR * 0.22]} scale={[1, 1, 0.4]} />
+          <Part geo={sphere(eyeR * 0.1)} color="#FFFFFF" glow={0.8} ol={0} position={[-eyeR * 0.2, -eyeR * 0.34, eyeR * 0.2]} scale={[1, 1, 0.4]} />
+        </group>
+      ) : L.eyes === 'bulge' ? (
         <group position={[gz[0] * eyeR * 0.3, gz[1] * eyeR * 0.3, eyeR * 0.8]}>
           <Part geo={sphere(eyeR * 0.52)} color={L.iris ?? '#8BC34A'} ol={0} scale={[1, 1, 0.45]} />
           <Part geo={sphere(eyeR * 0.24)} color="#141014" ol={0} position={[0, 0, eyeR * 0.14]} scale={[1, 1, 0.5]} />
@@ -131,7 +158,9 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
       ) : (
         <Part geo={sphere(eyeR * 0.55)} color="#16121A" ol={0} position={[gz[0] * eyeR * 0.3, gz[1] * eyeR * 0.3, eyeR * 0.42]} scale={[1, 1.1, 0.5]} />
       )}
-      <Part geo={rbox(eyeR * 1.7, eyeR * 0.22, eyeR * 0.3, 0.01)} color={L.hairColor} ol={0} position={[0, eyeR * 1.25 + browLift, eyeR * 0.3]} rotation={[0, 0, s * -browRot]} />
+      <Part geo={rbox(eyeR * (big ? 1.2 : 1.7), eyeR * (big ? 0.14 : 0.22), eyeR * 0.3, 0.01)} color={L.hairColor} ol={0} position={[0, eyeR * (big ? 1.6 : 1.25) + browLift, eyeR * 0.3]} rotation={[0, 0, s * -browRot]} />
+      {big && <Part geo={rbox(eyeR * 1.75, eyeR * 0.22, eyeR * 0.3, 0.02)} color="#16121A" ol={0} position={[0, eyeR * 1.08, eyeR * 0.28]} rotation={[-0.2, 0, 0]} />}
+      {L.lashes && <Part geo={rbox(eyeR * 0.7, eyeR * 0.2, eyeR * 0.2, 0.01)} color="#16121A" ol={0} position={[s * eyeR * (big ? 0.95 : 0.85), eyeR * (big ? 1.05 : 0.95), eyeR * 0.25]} rotation={[0, 0, s * 0.55]} />}
     </group>
   );
   const mouthY = -hr * 0.4, mouthZ = Math.sqrt(hr * hr - mouthY * mouthY) * 0.93;
@@ -140,7 +169,15 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
       <group position={[0, P.bob * 1.6, 0]}>
         {leg(P.hipL, P.knL, -0.11 * bw)}{leg(P.hipR, P.knR, 0.11 * bw)}
         <group position={[0, hipY, 0]} rotation={[R(P.lean), 0, 0]}>
-          <Part geo={capsule(0.2 * bw, 0.06)} color={L.pants} position={[0, 0.02, 0]} scale={[1, 1, 0.85]} />
+          <Part geo={capsule(0.2 * bw, 0.06)} color={dressed ? dress : L.pants} position={[0, 0.02, 0]} scale={[1, 1, 0.85]} />
+          {dressed && (() => {
+            const h = L.outfit === 'gown' ? hipY + 0.04 : legU * 1.05, rb = (L.outfit === 'gown' ? 0.5 : 0.34) * bw;
+            return <group position={[0, 0.08 - h / 2, 0]}>
+              <Part geo={bell(0.2 * bw, rb, h, L.outfit === 'gown' ? 1.8 : 1.2)} color={dress} />
+              {L.trim && <Part geo={cyl(rb * 1.01, rb * 1.05, 0.06, 32)} color={L.trim} ol={0.012} position={[0, -h / 2 + 0.03, 0]} />}
+            </group>;
+          })()}
+          {L.cape && <Part geo={rbox(0.5 * bw, torso + legU * 1.1, 0.03, 0.012)} color={L.cape} glow={0.3} ol={0} position={[0, torso * 0.92 - (torso + legU * 1.1) / 2, -0.2 * bw]} rotation={[0.14, 0, 0]} />}
           <Part geo={capsule(0.2 * bw, torso * 0.5)} color={L.shirt} position={[0, torso * 0.48, 0]} scale={[1, 1, 0.82]} />
           {L.torn && <>
             <Part geo={rbox(0.15 * bw, torso * 0.62, 0.05, 0.02)} color={L.shirt2 ?? '#EEE'} ol={0.01} position={[0, torso * 0.5, 0.16 * bw]} rotation={[-0.05, 0, 0.04]} />
@@ -156,7 +193,7 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
             <Part geo={capsule(0.06, 0.06)} color={skin} position={[0, 0.03, 0]} />
             <group position={[0, hr * 0.95, 0]}>
               <Part geo={sphere(hr)} color={skin} ol={0.02} scale={L.eyes === 'bulge' ? [1, 1.06, 0.95] : [1, 1, 0.94]} />
-              {[-1, 1].map((s) => <Part key={s} geo={sphere(hr * 0.22)} color={skin} position={[s * hr * 0.97, -hr * 0.05, 0]} scale={[0.5, 1, 0.8]} />)}
+              {L.hair !== 'long' && [-1, 1].map((s) => <Part key={s} geo={sphere(hr * 0.22)} color={skin} position={[s * hr * 0.97, -hr * 0.05, 0]} scale={[0.5, 1, 0.8]} />)}
               {eye(-1)}{eye(1)}
               {L.nose && <Part geo={sphere(hr * 0.1)} color={skin} ol={0.01} position={[0, -hr * 0.12, hr * 0.92]} scale={[1, 0.9, 0.8]} />}
               {L.glasses && [-1, 1].map((s) => (
@@ -165,16 +202,20 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
                 </group>
               ))}
               {L.glasses && <Part geo={rbox(eyeX * 0.6, eyeR * 0.25, eyeR * 0.2, 0.01)} color={L.glasses} ol={0} position={[0, eyeY, eyeZ + eyeR * 0.5]} />}
-              <group position={[0, mouthY + (L.eyes === 'bulge' ? -hr * 0.04 : 0), mouthZ]}>
+              {big && mouth < 0.01 ? <group position={[0, mouthY + hr * 0.06, mouthZ]} rotation={[0, 0, Math.PI]}>
+                <mesh geometry={g(`smile${hr}`, () => new THREE.TorusGeometry(hr * 0.1, hr * 0.022, 6, 16, Math.PI))} material={toon('#3A1620')} scale={[1 + smile * 0.3, 0.5 + smile * 0.5, 1]} />
+              </group> : <group position={[0, mouthY + (L.eyes === 'bulge' ? -hr * 0.04 : 0), mouthZ]} scale={big ? 0.7 : 1}>
                 <Part geo={sphere(hr * 0.2)} color="#3A1620" ol={0.012} scale={[1.15 + smile * 0.3, 0.12 + 0.85 * mouth, 0.35]} />
                 {L.teeth && [-0.09, 0, 0.09].map((x, i) => <Part key={i} geo={rbox(hr * 0.07, hr * 0.08, 0.02, 0.006)} color="#F4EFD8" ol={0.005} position={[x * hr * 1.4, hr * 0.2 * (0.12 + 0.85 * mouth) - hr * 0.03, hr * 0.06]} rotation={[0, 0, (i - 1) * 0.15]} />)}
                 {mouth > 0.35 && <Part geo={sphere(hr * 0.09)} color="#E07A8A" ol={0} position={[0, -hr * 0.1 * mouth, hr * 0.03]} scale={[1.2, 0.6, 0.6]} />}
-              </group>
+              </group>}
               {L.bandage && <group position={[hr * 0.35, hr * 0.62, hr * 0.68]} rotation={[-0.7, 0.4, -0.35]}>
                 <Part geo={rbox(hr * 0.42, hr * 0.14, 0.02, 0.01)} color="#E9A79A" ol={0.008} />
                 <Part geo={rbox(hr * 0.12, hr * 0.12, 0.022, 0.005)} color="#D88C80" ol={0} />
               </group>}
+              {L.blush && [-1, 1].map((s) => <Part key={`b${s}`} geo={sphere(hr * 0.13)} color={L.blush!} ol={0} position={[s * hr * 0.55, -hr * 0.22, hr * 0.78]} scale={[1, 0.6, 0.3]} />)}
               <Hair L={L} hr={hr} />
+              <Hat L={L} hr={hr} />
             </group>
           </group>
         </group>
@@ -192,11 +233,47 @@ const Hair: React.FC<{ L: ToonLook; hr: number }> = ({ L, hr }) => {
   if (L.hair === 'cap') return <>{cap}<Part geo={rbox(hr * 1.3, hr * 0.22, hr * 0.3, 0.05)} color={c} ol={0.012} position={[hr * 0.1, hr * 0.7, hr * 0.62]} rotation={[0.5, 0, -0.12]} /></>;
   if (L.hair === 'bun') return <>{cap}<Part geo={sphere(hr * 0.38)} color={c} position={[0, hr * 0.95, -hr * 0.45]} /></>;
   if (L.hair === 'spiky') return <>{cap}{[-0.5, -0.2, 0.1, 0.4].map((x, i) => <Part key={i} geo={cone(hr * 0.18, hr * 0.45)} color={c} ol={0.01} position={[x * hr, hr * 0.95, -hr * 0.05]} rotation={[-0.3, 0, -x * 0.8]} />)}</>;
+  // girls' styles: a fuller cap tipped back to show the forehead, and a fringe of soft bangs over the hairline
+  const crown = <Part geo={sphere(hr * 1.07, 0.56)} color={c} ol={0.016} rotation={[-0.32, 0, 0]} />;
+  const bangs = [-0.78, -0.4, 0, 0.4, 0.78].map((a, i) => (
+    <Part key={`f${i}`} geo={sphere(hr * 0.27)} color={c} ol={0.012} position={[Math.sin(a) * hr * 0.82, hr * (0.62 - Math.abs(a) * 0.14), Math.cos(a) * hr * 0.8]} rotation={[0.35, a, 0]} scale={[1.1, 1, 0.5]} />
+  ));
+  if (L.hair === 'long') return <>{crown}{bangs}
+    <Part geo={sphere(hr)} color={c} position={[0, -hr * 0.5, -hr * 0.36]} scale={[1.06, 1.45, 0.66]} />
+    {[-1, 1].map((s) => <React.Fragment key={s}>
+      <Part geo={capsule(hr * 0.15, hr * 0.8)} color={c} position={[s * hr * 0.92, -hr * 0.4, -hr * 0.18]} rotation={[0, 0, s * 0.1]} />
+      <Part geo={sphere(hr * 0.19)} color={c} position={[s * hr * 0.86, -hr * 0.95, -hr * 0.1]} scale={[1, 0.85, 1]} />
+    </React.Fragment>)}
+  </>;
+  if (L.hair === 'ponytail') return <>{crown}{bangs}
+    <Part geo={sphere(hr * 0.15)} color={L.gem ?? '#E2405E'} ol={0.01} position={[0, hr * 0.62, -hr * 0.98]} />
+    <Part geo={sphere(hr * 0.34)} color={c} position={[0, hr * 0.02, -hr * 1.18]} rotation={[-0.35, 0, 0]} scale={[0.75, 1.5, 0.72]} />
+  </>;
   if (L.hair === 'police') return <>{cap}
     <Part geo={cyl(hr * 0.9, hr * 1.02, hr * 0.38)} color="#2E3A4E" position={[0, hr * 0.92, -hr * 0.04]} rotation={[-0.12, 0, 0]} />
     <Part geo={cyl(hr * 0.75, hr * 0.75, hr * 0.06)} color="#1A1A1A" position={[0, hr * 0.72, hr * 0.38]} rotation={[0.25, 0, 0]} scale={[1, 1, 0.6]} />
     <Part geo={sphere(hr * 0.12)} color="#E9C24B" glow={0.3} ol={0.008} position={[0, hr * 0.98, hr * 0.92]} scale={[1, 1, 0.4]} />
   </>;
+  return null;
+};
+
+const Hat: React.FC<{ L: ToonLook; hr: number }> = ({ L, hr }) => {
+  const c = L.hatColor ?? '#F2C14E', gem = L.gem ?? '#E2405E';
+  if (L.hat === 'crown') return <group position={[0, hr * 0.98, -hr * 0.05]} rotation={[-0.12, 0, 0]}>
+    <Part geo={cyl(hr * 0.6, hr * 0.56, hr * 0.26, 32)} color={c} glow={0.15} ol={0.012} />
+    {[0, 1, 2, 3, 4].map((i) => { const a = (i / 5) * Math.PI * 2; return <group key={i} position={[Math.sin(a) * hr * 0.55, hr * 0.2, Math.cos(a) * hr * 0.55]}>
+      <Part geo={cone(hr * 0.12, hr * 0.26)} color={c} glow={0.15} ol={0.01} />
+      <Part geo={sphere(hr * 0.06)} color={gem} glow={0.4} ol={0.006} position={[0, hr * 0.15, 0]} />
+    </group>; })}
+    <Part geo={sphere(hr * 0.09)} color={gem} glow={0.4} ol={0.008} position={[0, 0, hr * 0.6]} scale={[1, 1, 0.5]} />
+  </group>;
+  if (L.hat === 'tiara') return <group rotation={[0.35, 0, 0]}>
+    <mesh geometry={g(`tiara${hr}`, () => new THREE.TorusGeometry(hr * 1.07, hr * 0.04, 8, 32, Math.PI))} material={toon(c, 0.15)} />
+    <group position={[0, hr * 1.08, 0]}>
+      <Part geo={cone(hr * 0.11, hr * 0.28)} color={c} glow={0.15} ol={0.008} position={[0, hr * 0.12, 0]} />
+      <Part geo={sphere(hr * 0.09)} color={gem} glow={0.4} ol={0.006} position={[0, hr * 0.04, hr * 0.07]} scale={[1, 1, 0.6]} />
+    </group>
+  </group>;
   return null;
 };
 
