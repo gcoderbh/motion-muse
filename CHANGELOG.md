@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+
+- Toon people no longer look like zombies: warm, lighter cel shadows on skin (zombies keep their sickly shade),
+  closed-mouth smile for every non-zombie face, a highlight in `dot` eyes, smooth elbows and rounder hands.
+
 ## 1.4.0
 
 - Toon characters: `princess` preset; parts `hair: 'long' | 'ponytail'`, `outfit: 'skirt' | 'gown'` with `dress` and
