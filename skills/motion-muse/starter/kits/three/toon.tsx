@@ -19,7 +19,7 @@ let grad: THREE.DataTexture | null = null;
 /** 3-step light ramp for MeshToonMaterial (hard cel bands). */
 export const toonGradient = () => {
   if (grad) return grad;
-  grad = new THREE.DataTexture(new Uint8Array([110, 110, 110, 255, 190, 190, 190, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
+  grad = new THREE.DataTexture(new Uint8Array([165, 165, 165, 255, 218, 218, 218, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
   grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.generateMipmaps = false; grad.needsUpdate = true;
   return grad;
 };
@@ -106,7 +106,7 @@ type CharProps = { look: ToonLook; pose?: Pose; position?: V3; yaw?: number; sca
 export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, position = [0, 0, 0], yaw = 0, scale = 1, face = {}, headYaw = 0, handR, handL }) => {
   const hm = L.height ?? 1, bw = L.build ?? 1, hr = L.head ?? 0.36;
   const legU = 0.32 * hm, legL = 0.3 * hm, foot = 0.08, hipY = legU + legL + foot, torso = 0.46 * hm;
-  const skin = L.skin, sleeve = L.sleeves === 'long';
+  const skin = L.skin, sleeve = L.sleeves === 'long', sg = L.eyes === 'bulge' ? 0 : 0.26;
   const dressed = L.outfit === 'skirt' || L.outfit === 'gown', dress = L.dress ?? L.shirt;
   const leg = (hip: number, knee: number, x: number) => (
     <group position={[x, hipY, 0]} rotation={[-R(hip), 0, 0]}>
@@ -121,12 +121,13 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
   );
   const arm = (sh: number, el: number, x: number, hand?: React.ReactNode) => (
     <group position={[x, torso * 0.86, 0]} rotation={[-R(sh), 0, x > 0 ? -0.1 : 0.1]}>
-      <Part geo={capsule(0.062 * bw, 0.18 * hm)} color={L.sleeves === 'puff' ? skin : L.shirt} position={[0, -0.13 * hm, 0]} />
+      <Part geo={capsule(0.062 * bw, 0.18 * hm)} color={L.sleeves === 'puff' ? skin : L.shirt} glow={L.sleeves === 'puff' ? sg : 0} ol={0.012} position={[0, -0.13 * hm, 0]} />
       {L.sleeves === 'puff' && <Part geo={sphere(0.1 * bw)} color={L.shirt} position={[0, -0.04, 0]} scale={[1, 0.9, 1]} />}
       <group position={[0, -0.27 * hm, 0]} rotation={[-R(el), 0, 0]}>
-        <Part geo={capsule(0.054 * bw, 0.17 * hm)} color={sleeve ? L.shirt : skin} position={[0, -0.12 * hm, 0]} />
+        <Part geo={sphere(0.058 * bw)} color={sleeve ? L.shirt : skin} glow={sleeve ? 0 : sg} ol={0} />
+        <Part geo={capsule(0.054 * bw, 0.17 * hm)} color={sleeve ? L.shirt : skin} glow={sleeve ? 0 : sg} ol={0.012} position={[0, -0.12 * hm, 0]} />
         <group position={[0, -0.27 * hm, 0]}>
-          <Part geo={sphere(0.075 * bw)} color={skin} scale={[1, 1.15, 0.85]} />
+          <Part geo={sphere(0.08 * bw)} color={skin} glow={sg} ol={0.012} scale={[1, 1.1, 0.9]} />
           {hand && <group position={[0, -0.04, 0.05]}>{hand}</group>}
         </group>
       </group>
@@ -156,7 +157,10 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
           <Part geo={sphere(eyeR * 0.08)} color="#FFFFFF" glow={0.6} ol={0} position={[eyeR * 0.14, eyeR * 0.14, eyeR * 0.3]} />
         </group>
       ) : (
-        <Part geo={sphere(eyeR * 0.55)} color="#16121A" ol={0} position={[gz[0] * eyeR * 0.3, gz[1] * eyeR * 0.3, eyeR * 0.42]} scale={[1, 1.1, 0.5]} />
+        <group position={[gz[0] * eyeR * 0.3, gz[1] * eyeR * 0.3, eyeR * 0.42]}>
+          <Part geo={sphere(eyeR * 0.66)} color="#16121A" ol={0} scale={[1, 1.1, 0.5]} />
+          <Part geo={sphere(eyeR * 0.17)} color="#FFFFFF" glow={0.8} ol={0} position={[eyeR * 0.18, eyeR * 0.22, eyeR * 0.22]} scale={[1, 1, 0.4]} />
+        </group>
       )}
       <Part geo={rbox(eyeR * (big ? 1.2 : 1.7), eyeR * (big ? 0.14 : 0.22), eyeR * 0.3, 0.01)} color={L.hairColor} ol={0} position={[0, eyeR * (big ? 1.6 : 1.25) + browLift, eyeR * 0.3]} rotation={[0, 0, s * -browRot]} />
       {big && <Part geo={rbox(eyeR * 1.75, eyeR * 0.22, eyeR * 0.3, 0.02)} color="#16121A" ol={0} position={[0, eyeR * 1.08, eyeR * 0.28]} rotation={[-0.2, 0, 0]} />}
@@ -188,21 +192,21 @@ export const ToonCharacter: React.FC<CharProps> = ({ look: L, pose: P = REST, po
             <Part geo={rbox(0.07, torso * 0.55, 0.03, 0.015)} color={L.tie} ol={0.01} position={[0, torso * 0.6, 0.17 * bw]} />
           </>}
           {L.badge && <Part geo={rbox(0.07, 0.08, 0.02, 0.01)} color={L.badge} ol={0.008} glow={0.2} position={[-0.09 * bw, torso * 0.72, 0.16 * bw]} />}
-          {arm(P.shL, P.elL, -(0.2 * bw + 0.06), handL)}{arm(P.shR, P.elR, 0.2 * bw + 0.06, handR)}
+          {arm(P.shL, P.elL, -(0.2 * bw + 0.035), handL)}{arm(P.shR, P.elR, 0.2 * bw + 0.035, handR)}
           <group position={[0, torso + 0.02, 0]} rotation={[R(P.head), R(headYaw), 0]}>
-            <Part geo={capsule(0.06, 0.06)} color={skin} position={[0, 0.03, 0]} />
+            <Part geo={capsule(0.06, 0.06)} color={skin} glow={sg} position={[0, 0.03, 0]} />
             <group position={[0, hr * 0.95, 0]}>
-              <Part geo={sphere(hr)} color={skin} ol={0.02} scale={L.eyes === 'bulge' ? [1, 1.06, 0.95] : [1, 1, 0.94]} />
-              {L.hair !== 'long' && [-1, 1].map((s) => <Part key={s} geo={sphere(hr * 0.22)} color={skin} position={[s * hr * 0.97, -hr * 0.05, 0]} scale={[0.5, 1, 0.8]} />)}
+              <Part geo={sphere(hr)} color={skin} glow={sg} ol={0.02} scale={L.eyes === 'bulge' ? [1, 1.06, 0.95] : [1, 1, 0.94]} />
+              {L.hair !== 'long' && [-1, 1].map((s) => <Part key={s} geo={sphere(hr * 0.22)} color={skin} glow={sg} position={[s * hr * 0.97, -hr * 0.05, 0]} scale={[0.5, 1, 0.8]} />)}
               {eye(-1)}{eye(1)}
-              {L.nose && <Part geo={sphere(hr * 0.1)} color={skin} ol={0.01} position={[0, -hr * 0.12, hr * 0.92]} scale={[1, 0.9, 0.8]} />}
+              {L.nose && <Part geo={sphere(hr * 0.1)} color={skin} glow={sg} ol={0.01} position={[0, -hr * 0.12, hr * 0.92]} scale={[1, 0.9, 0.8]} />}
               {L.glasses && [-1, 1].map((s) => (
                 <group key={s} position={[s * eyeX, eyeY, eyeZ + eyeR * 0.5]}>
                   <mesh geometry={g(`torus${eyeR}`, () => new THREE.TorusGeometry(eyeR * 1.35, eyeR * 0.22, 8, 24))} material={toon(L.glasses!)} />
                 </group>
               ))}
               {L.glasses && <Part geo={rbox(eyeX * 0.6, eyeR * 0.25, eyeR * 0.2, 0.01)} color={L.glasses} ol={0} position={[0, eyeY, eyeZ + eyeR * 0.5]} />}
-              {big && mouth < 0.01 ? <group position={[0, mouthY + hr * 0.06, mouthZ]} rotation={[0, 0, Math.PI]}>
+              {L.eyes !== 'bulge' && mouth < 0.01 ? <group position={[0, mouthY + hr * 0.06, mouthZ]} rotation={[0, 0, Math.PI]}>
                 <mesh geometry={g(`smile${hr}`, () => new THREE.TorusGeometry(hr * 0.1, hr * 0.022, 6, 16, Math.PI))} material={toon('#3A1620')} scale={[1 + smile * 0.3, 0.5 + smile * 0.5, 1]} />
               </group> : <group position={[0, mouthY + (L.eyes === 'bulge' ? -hr * 0.04 : 0), mouthZ]} scale={big ? 0.7 : 1}>
                 <Part geo={sphere(hr * 0.2)} color="#3A1620" ol={0.012} scale={[1.15 + smile * 0.3, 0.12 + 0.85 * mouth, 0.35]} />
@@ -279,7 +283,7 @@ const Hat: React.FC<{ L: ToonLook; hr: number }> = ({ L, hr }) => {
 
 // ---------- staging ----------
 /** Cel-friendly lights: sky/ground fill + one shadow-casting key. */
-export const ToonLights: React.FC<{ key_?: number; color?: string; sky?: string; ground?: string; fill?: number; from?: V3; area?: number }> = ({ key_ = 1.6, color = '#FFF2DD', sky = '#DDE8FF', ground = '#6B5A55', fill = 0.9, from = [4, 8, 6], area = 10 }) => (
+export const ToonLights: React.FC<{ key_?: number; color?: string; sky?: string; ground?: string; fill?: number; from?: V3; area?: number }> = ({ key_ = 1.6, color = '#FFF2DD', sky = '#DDE8FF', ground = '#A08A80', fill = 0.9, from = [4, 8, 6], area = 10 }) => (
   <>
     <hemisphereLight args={[sky, ground, fill]} />
     <directionalLight position={from} intensity={key_} color={color} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} shadow-normalBias={0.04}
