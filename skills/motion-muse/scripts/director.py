@@ -218,7 +218,7 @@ def render_one(a, sb, W, H, tag):
     lib += [os.path.join(src, f) for f in ("transitions.tsx", "theme.ts", "index.ts", "Root.tsx") if os.path.isfile(os.path.join(src, f))]
     pub = os.path.join(P, "public")  # assets (music, sfx, fonts, footage) by size+mtime, so a replaced file invalidates
     assets = {os.path.relpath(os.path.join(dp, f), pub): [os.path.getsize(os.path.join(dp, f)), int(os.path.getmtime(os.path.join(dp, f)))]
-              for dp, _, fs in os.walk(pub) for f in fs}
+              for dp, _, fs in os.walk(pub) for f in fs if os.path.relpath(dp, pub).split(os.sep)[0] != "cover"}  # `cover` writes there
     fmt = {"fps": fps, "width": W, "height": H, "scale": scale}
     sdir = os.path.join(P, "out", "scenes", sb["comp"] + tag); os.makedirs(sdir, exist_ok=True)
     size = [] if (W, H) == (sb["width"], sb["height"]) else [f"--width={W}", f"--height={H}"]
