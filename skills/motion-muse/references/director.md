@@ -93,7 +93,29 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 - Renders each scene's frame range separately to `out/scenes/<Comp>/NN-id-<hash>.mp4`. The hash covers the scene's code (by default the whole composition folder; list a scene's own files in `"files": ["src/<slug>/Hook.tsx"]` to scope it), `src/lib`, `transitions.tsx`, and the storyboard entries of the scene and its neighbours (transitions overlap them). Put each scene in its own file and list it, and editing one scene re-renders only that scene. `--force` re-renders all.
 - 3D scenes render with `--gl=swangle` automatically (software WebGL; `angle` fails on CPU-only machines). Override with `--gl` or `MOTION_MUSE_GL`.
 - Audio is rendered once for the full timeline, then normalised (-14 LUFS, -1.5 dBTP) and muxed.
-- QA prints per-scene motion score (flags static scenes), duration vs storyboard, loudness/true peak, black stretches, and writes a contact sheet. Look at the sheet and fix anything clipped, unreadable or static, then re-run (cached scenes are reused).
+- QA prints per-scene motion score (flags static scenes), duration vs storyboard, loudness/true peak, black stretches, and writes a contact sheet plus `<video>.safe.jpg` with the platform UI zones shaded red. Scenes with `"textY"` (0..1, top of the text) outside the safe band are warned about. Look at both sheets and fix anything clipped, unreadable, static or under the red, then re-run (cached scenes are reused).
+- `--draft`: renders at half resolution (`--scale=0.5`) into its own cache and `out/<Comp>-draft.mp4`. Use it for every review round; render full size once at the end. 3D scenes render about 2× faster (measured: 8.5 s cold-brew ad, 31–39 s vs 72–83 s per scene on 8 CPU cores without GPU).
+- `--formats 9:16,1:1,16:9` (or `1080x1350`): renders the same composition at each size (keeping the storyboard's short side) → `out/<Comp>-<W>x<H>.mp4`, each with its own scene cache. The audio mix is shared. Only works if the composition lays itself out from `useVideoConfig()` (section 7).
+- `cover <video>`: scores frames for sharpness/contrast and stillness (skips mid-transition frames), saves the best as `<video>.cover-frame.jpg`; with `--title` it renders the `Cover` composition (`starter/src/Cover.tsx`) with the Thai title inside the safe zone → `<video>.cover.jpg`.
+
+## 7. Layout, safe zones and formats
+
+- Read sizes from `useFormat()` (`lib/layout.ts`): `safe` (box clear of app UI), `u(px)` (scale a size designed for a 1080 px short side), `pick({ portrait, square, landscape })` for per-format values (camera distance, where the product sits, text alignment). No hard-coded 1080/1920 in scenes.
+- 9:16 safe zone (union of TikTok, Reels, Shorts): top 12 %, bottom 25 %, left 6 %, right 13 % (like/comment column). Titles, captions, logos and CTA stay inside; backgrounds and product may bleed.
+- Put `<SafeGuides />` last in the composition: shows the zones in Remotion Studio (or with `--props='{"guides":true}'`), never in renders.
+- In 16:9 move the hero object to one side (`pick({ landscape: -0.75 })`) and the text to the other half; in 1:1 pull the camera back so the title and object do not overlap.
+
+## 8. Product ads (cans, bottles, jars)
+
+Shot order: reveal (light finds the product) → detail (macro orbit, label, texture) → action (pour, drop, splash, open) → packshot + CTA. One hero object, slow camera, lots of negative space. From `kits/three/three.tsx` (see `examples/cold-brew`):
+- Model with `Lathe` from a 2D profile (base dome, wall, shoulder, neck, rim); reuse one profile in every shot so proportions match.
+- Label: draw it with `useCanvasTexture` (Chrome shapes the Thai text; wait for `useThaiFontReady(font).ok`) at `labelSize(R, H)` so width/height = 2πR/H and nothing stretches; `LabelWrap` puts the seam at the back. Add a roughness map so ink and paper differ.
+- Materials (`MAT`): `aluminium`, `brushed`, `gold`, `glass` (low opacity + clearcoat + env reflections; no transmission, it is slow and grey in software WebGL), `ice`, `liquid`, `paper`. Always add `RoomEnv` so metals and glass have something to reflect.
+- Light: `KeyLight progress={p}` swings the key around the product and shifts it warm→neutral (`kelvin(3200)`→`kelvin(5400)`) as the product turns; `useBlindsGobo()` as a spotlight `map` throws window-blind shadows on the backdrop. Keep fill lights weak so the label is not washed out.
+- `Stage3D tone="agx"` for a softer, filmic roll-off on bright highlights (product whites, glass); `aces` for punchier contrast.
+- Physics from `lib/physics.ts` (pure functions of seconds, deterministic): `projectile` (droplets, thrown objects; stretch along `projectileVel`), `bounce` (dropped ice/products; returns impact times → SFX and `pulse()` camera kicks), `settle` (spring overshoot for titles and landings), `buoyancy` (ice bobbing in a drink), `fillLevel` + `glug` (pour), `crown` (splash ring).
+- Condensation, crema, steam, pour streams: write them per video with seeded `rand` from `lib/noise.ts`, and keep droplets off the logo.
+
 
 ## Examples (copy into `src/` and register in `Root.tsx`)
 
@@ -102,6 +124,7 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 | `examples/zombie-biology` | SVG only | stickman + vector characters, gaits, diagrams, parallax race, Mali |
 | `examples/apocalypse-observer` | `@remotion/three` | ruined procedural city, third-person observer camera, fog/ash, flicker, silhouettes, Noto Serif Thai |
 | `examples/luxury-product` | `@remotion/three` | lathe-turned bottle, studio lighting, macro orbit, packshot, IBM Plex Sans Thai |
+| `examples/cold-brew` | `@remotion/three` + `lib/physics` + `lib/layout` | can with a wrapped Thai label, moving dawn key light, blinds gobo, AgX, bouncing ice with camera pulses and SFX, safe-zone text, renders 9:16 / 1:1 / 16:9, Anuphan |
 | `examples/zombie-id` | `@remotion/three` + `lib/toon` + `lib/story` | toon story: cel-shaded zombie and clerk, graveyard and office sets, Thai signs, 360° orbit, subtitles + SFX + music from `script.json`, no voice, Prompt (run `story.py build` on its `script.json` first) |
 
 Copy with `cp -r "$SKILL_DIR/examples/<name>" src/` (they import `../lib/*` and `../transitions`), set `"resolveJsonModule": true` (done by `init`), and put the example's music at the path it expects or swap it for a new track.
