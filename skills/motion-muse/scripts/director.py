@@ -170,7 +170,7 @@ def run(cmd, **kw):
 
 def vsize(path):
     """Display size of the first video stream (ffmpeg auto-rotates frames, so swap for 90/270° phone video)."""
-    st = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:stream_tags=rotate:stream_side_data=rotation", "-of", "json", path]).stdout)["streams"][0]
+    st = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_streams", "-of", "json", path]).stdout)["streams"][0]
     rot = st.get("tags", {}).get("rotate") or next((d["rotation"] for d in st.get("side_data_list", []) if "rotation" in d), 0)
     w, h = int(st["width"]), int(st["height"])
     return (h, w) if abs(int(float(rot))) % 180 == 90 else (w, h)
@@ -331,8 +331,12 @@ def cmd_cover(a):
     """Best still for a thumbnail: sharp (edge energy), contrasty, not mid-transition (low change vs neighbours)."""
     v = os.path.abspath(a.video)
     dur = float(json.loads(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", v]).stdout)["format"]["duration"])
+    base = os.path.splitext(v)[0]
+    frame = base + ".cover-frame.jpg"
+    if os.path.exists(frame): os.remove(frame)
     if a.at is not None:
-        best = a.at
+        best = min(max(a.at, 0), max(0, dur - 0.1))  # ffmpeg returns nothing when -ss lands inside the last frame
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{best:.3f}", "-i", v, "-frames:v", "1", "-q:v", "2", frame])
     else:
         fr, w, h = frames_gray(v, 4)
         scores = []
@@ -342,12 +346,11 @@ def cmd_cover(a):
             ch = max((sum(abs(x - y) for x, y in zip(f[::4], fr[k][::4])) / len(f[::4]) for k in (i - 1, i + 1) if 0 <= k < len(fr)), default=0)
             t = i / 4
             edge_ok = 0.6 <= t <= dur - 0.3
-            scores.append((edge * con / (1 + ch * 0.8) * (1 if edge_ok else 0.2), t))
-        best = max(scores)[1]
-    base = os.path.splitext(v)[0]
-    frame = base + ".cover-frame.jpg"
-    r = run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{best:.3f}", "-i", v, "-frames:v", "1", "-q:v", "2", frame])
-    if r.returncode: sys.exit(r.stderr)
+            scores.append((edge * con / (1 + ch * 0.8) * (1 if edge_ok else 0.2), t, i))
+        _, best, idx = max(scores)
+        # same fps filter as the scoring pass, so the exported frame is exactly the one that won
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", f"fps=4,select=eq(n\\,{idx})", "-frames:v", "1", "-q:v", "2", frame])
+    if r.returncode or not os.path.exists(frame): sys.exit(f"FAIL no frame at {best:.2f}s\n{r.stderr}")
     print(f"cover frame at {best:.2f}s → {frame}")
     if not a.title: return
     P = os.path.abspath(a.project or os.path.dirname(os.path.dirname(v)))
