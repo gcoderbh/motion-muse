@@ -168,13 +168,21 @@ def run(cmd, **kw):
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
+def vsize(path):
+    """Display size of the first video stream (ffmpeg auto-rotates frames, so swap for 90/270° phone video)."""
+    st = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:stream_tags=rotate:stream_side_data=rotation", "-of", "json", path]).stdout)["streams"][0]
+    rot = st.get("tags", {}).get("rotate") or next((d["rotation"] for d in st.get("side_data_list", []) if "rotation" in d), 0)
+    w, h = int(st["width"]), int(st["height"])
+    return (h, w) if abs(int(float(rot))) % 180 == 90 else (w, h)
+
+
 def motion_score(path):
     """Mean absolute frame difference (0-255) at 6 fps; ~0 means a static slide."""
     r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", "fps=6,scale=96:-2,format=gray", "-f", "rawvideo", "-"], capture_output=True)
     raw = r.stdout
     w = 96; h = None
-    probe = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", path]).stdout.strip().split(",")
-    if len(probe) == 2: h = round(96 * int(probe[1]) / int(probe[0]) / 2) * 2
+    vw, vh = vsize(path)
+    h = round(96 * vh / vw / 2) * 2
     n = w * (h or 96)
     fr = [raw[i:i + n] for i in range(0, len(raw) - n + 1, n)]
     if len(fr) < 2: return 0.0
@@ -290,8 +298,7 @@ def cmd_qa(a, sb=None):
     sheet = os.path.splitext(v)[0] + ".sheet.jpg"
     run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", "fps=1,scale=240:-2,tile=8x3", "-frames:v", "1", sheet])
     print("contact sheet:", sheet, "(look at it: text inside the frame, nothing clipped, every scene moving)")
-    vs = next(x for x in info["streams"] if x.get("width"))
-    W, H = int(vs["width"]), int(vs["height"])
+    W, H = vsize(v)
     z = safe_zone(W, H)
     boxes = ",".join(f"drawbox=x={x}:y={y}:w={w}:h={h}:color=red@0.45:t=fill" for x, y, w, h in z["ui"])
     safe = os.path.splitext(v)[0] + ".safe.jpg"
@@ -313,8 +320,8 @@ def safe_zone(W, H):
 
 
 def frames_gray(path, fps, w=96):
-    pr = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", path]).stdout.strip().split(",")
-    h = round(w * int(pr[1]) / int(pr[0]) / 2) * 2
+    vw, vh = vsize(path)
+    h = round(w * vh / vw / 2) * 2
     raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", f"fps={fps},scale={w}:{h},format=gray", "-f", "rawvideo", "-"], capture_output=True).stdout
     n = w * h
     return [raw[i:i + n] for i in range(0, len(raw) - n + 1, n)], w, h
@@ -344,7 +351,7 @@ def cmd_cover(a):
     print(f"cover frame at {best:.2f}s → {frame}")
     if not a.title: return
     P = os.path.abspath(a.project or os.path.dirname(os.path.dirname(v)))
-    pr = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", v]).stdout.strip().split(",")
+    pr = vsize(v)
     os.makedirs(os.path.join(P, "public", "cover"), exist_ok=True)
     shutil.copy(frame, os.path.join(P, "public", "cover", "frame.jpg"))
     props = {"image": "cover/frame.jpg", "title": a.title.replace("\\n", "\n"), "sub": a.sub, "font": a.font, "place": a.place, "card": a.card, "width": int(pr[0]), "height": int(pr[1])}
