@@ -108,7 +108,8 @@ def cmd_init(a):
     # the transition SFX Timeline plays (Shotcraft keeps them in sub-folders; the bundled BGM is not copied)
     sfx = {f: os.path.join(dp, f) for r in (os.path.join(SKILLS_DIR, "video-shotcraft", "assets", "audio", "sfx"), os.path.join(TEMPLATE, "public", "audio"))
            for dp, _, fs in os.walk(r) for f in fs}
-    for f in set(re.findall(r"file: '([^']+)'", open(os.path.join(P, "src", "transitions.tsx")).read())):
+    starter_sfx = [os.path.basename(l.strip()) for l in open(os.path.join(SKILL, "starter", "audio.txt")) if l.startswith("sfx/")]  # used by starter + examples
+    for f in set(re.findall(r"file: '([^']+)'", open(os.path.join(P, "src", "transitions.tsx")).read())) | set(starter_sfx):
         if f in sfx and not os.path.exists(os.path.join(P, "public", "audio", f)):
             shutil.copy(sfx[f], os.path.join(P, "public", "audio"))
         elif f not in sfx:
