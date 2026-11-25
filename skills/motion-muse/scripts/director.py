@@ -333,10 +333,11 @@ def cmd_cover(a):
     dur = float(json.loads(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", v]).stdout)["format"]["duration"])
     base = os.path.splitext(v)[0]
     frame = base + ".cover-frame.jpg"
-    if os.path.exists(frame): os.remove(frame)
+    tmp = base + ".cover-frame.tmp.jpg"  # keep the previous cover frame until a new one exists
+    if os.path.exists(tmp): os.remove(tmp)
     if a.at is not None:
         best = min(max(a.at, 0), max(0, dur - 0.1))  # ffmpeg returns nothing when -ss lands inside the last frame
-        r = run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{best:.3f}", "-i", v, "-frames:v", "1", "-q:v", "2", frame])
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{best:.3f}", "-i", v, "-frames:v", "1", "-q:v", "2", tmp])
     else:
         fr, w, h = frames_gray(v, 4)
         scores = []
@@ -349,8 +350,9 @@ def cmd_cover(a):
             scores.append((edge * con / (1 + ch * 0.8) * (1 if edge_ok else 0.2), t, i))
         _, best, idx = max(scores)
         # same fps filter as the scoring pass, so the exported frame is exactly the one that won
-        r = run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", f"fps=4,select=eq(n\\,{idx})", "-frames:v", "1", "-q:v", "2", frame])
-    if r.returncode or not os.path.exists(frame): sys.exit(f"FAIL no frame at {best:.2f}s\n{r.stderr}")
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", f"fps=4,select=eq(n\\,{idx})", "-frames:v", "1", "-q:v", "2", tmp])
+    if r.returncode or not os.path.exists(tmp): sys.exit(f"FAIL no frame at {best:.2f}s\n{r.stderr}")
+    os.replace(tmp, frame)
     print(f"cover frame at {best:.2f}s → {frame}")
     if not a.title: return
     P = os.path.abspath(a.project or os.path.dirname(os.path.dirname(v)))
