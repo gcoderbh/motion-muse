@@ -78,7 +78,7 @@ const StreetScene: React.FC<S> = ({ f, abs, font }) => {
 // 3. Offer: the rider walks in next to his scooter, the price card pops, Ton reacts.
 const Offer: React.FC<S> = ({ f, abs, font }) => {
   const l1 = lineStart('offer-1') - sceneStart('offer'), l2 = lineStart('offer-2') - sceneStart('offer');
-  const walkEnd = l1;
+  const walkEnd = Math.max(1, l1);
   const rx = ease(f, 0, walkEnd, 1950, 1420);
   const rp = f < walkEnd ? flatWalk(f / 18) : flatIdle(flatPosesAt(f, [[walkEnd, flatPose('rest')], [walkEnd + 10, flatPose('offer')], [l2, flatPose('offer')], [l2 + 10, flatPose('point', { shR: 70 })]]), abs, 4, talking('rider', abs) ? 1 : 0);
   const tp = flatPosesAt(f, [[0, flatPose('rest')], [l2 - 2, flatPose('rest')], [l2 + 6, flatPose('handsUp')], [l2 + 30, flatPose('shocked')]]);
@@ -160,7 +160,7 @@ export const LifeTime: React.FC<{ subs?: boolean }> = ({ subs = true }) => {
     <AbsoluteFill style={{ background: '#13224A' }}>
       <Timeline sfx={false} backdrop="#13224A" scenes={T.scenes.map((s, i) => ({
         dur: s.dur,
-        el: <Shot id={s.id} start={s.from} dur={s.dur} font={font} pre={i ? TD / 2 : 0} />,
+        el: <Shot id={s.id} start={s.from} dur={s.dur} font={font} pre={i && outs[i - 1] && outs[i - 1] !== 'cut' ? TD / 2 : 0} />,
         out: outs[i] && outs[i] !== 'cut' ? { kind: outs[i] as Kind, dur: TD } : undefined,
       }))} />
       <Grain opacity={0.03} />
