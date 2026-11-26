@@ -4,7 +4,8 @@
   batch.py <project> <Composition> rows.csv [--base props.json] [--name "{name}"] [--formats 9:16,1:1] [--still] [--force]
 
 Each column becomes a prop of the composition. Values that look like numbers or JSON ([..], {..}, true) are parsed;
-dotted columns nest ("brand.colors.primary" → {"brand": {"colors": {"primary": ...}}}). --base gives props shared by
+dotted columns nest ("brand.colors.primary" → {"brand": {"colors": {"primary": ...}}}). A blank top-level cell
+is sent as null (Remotion would otherwise fill it from the composition's demo defaultProps); blank dotted cells are left out. --base gives props shared by
 every row (e.g. the brand kit) and rows override it. The project is bundled once; finished files are skipped unless
 --force. Output: out/batch/<Composition>/<name>[-<format>].mp4 (or .png with --still) and a report.csv.
 """
@@ -26,9 +27,13 @@ def parse(v):
 def nest(row):
     out = {}
     for k, v in row.items():
-        if k is None or v is None or v == "":
+        if k is None or v is None:
             continue
         d, parts = out, k.strip().split(".")
+        if v.strip() == "":
+            if len(parts) == 1:
+                out[parts[0]] = None  # explicit null so the composition's demo defaultProps do not fill the gap
+            continue
         for p in parts[:-1]:
             d = d.setdefault(p, {})
         d[parts[-1]] = parse(v)

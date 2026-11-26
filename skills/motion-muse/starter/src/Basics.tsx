@@ -147,11 +147,12 @@ export const AppPromo: React.FC<AppPromoProps> = (p) => (
 );
 
 // ---------- PromoCard ----------
-export type PromoCardProps = { brand?: Partial<Brand>; name: string; price: number; oldPrice?: number; tagline?: string; image?: string; badge?: string };
+/** `price` / `oldPrice` may be null (blank CSV cell): no price line / no discount. */
+export type PromoCardProps = { brand?: Partial<Brand>; name: string; price: number | null; oldPrice?: number | null; tagline?: string | null; image?: string | null; badge?: string | null };
 const CardBody: React.FC<PromoCardProps> = (p) => {
   const f = useCurrentFrame(), { fps } = useVideoConfig(), b = useBrand(), { safe, u, landscape } = useFormat();
   const s = (d: number) => spring({ frame: f - d, fps, config: { damping: 14 } });
-  const off = p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+  const off = p.price != null && p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
   const money = (n: number) => fmtTH(n, { prefix: '฿', digits: decimals(p.price, p.oldPrice) ? 2 : 0 });
   const strike = interpolate(f, [40, 52], [0, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
@@ -165,7 +166,7 @@ const CardBody: React.FC<PromoCardProps> = (p) => {
           {p.tagline && <div style={{ fontFamily: b.body, fontSize: u(40), lineHeight: 1.4, opacity: s(14) * 0.75 }}>{p.tagline}</div>}
           <div style={{ marginTop: u(26), display: 'flex', gap: u(26), alignItems: 'baseline', justifyContent: landscape ? 'flex-start' : 'center', opacity: s(20) }}>
             {off > 0 && <span style={{ position: 'relative', fontSize: u(50), opacity: 0.5 }}>{money(p.oldPrice!)}<span style={{ position: 'absolute', left: 0, top: '55%', height: u(5), width: `${strike}%`, background: '#FF3B30' }} /></span>}
-            <CountUp from={p.oldPrice ?? 0} to={p.price} delay={off ? 48 : 20} dur={30} fmt={money} style={{ fontSize: u(120), fontWeight: 800, color: b.colors.primary }} />
+            {p.price != null && <CountUp from={p.oldPrice ?? 0} to={p.price} delay={off ? 48 : 20} dur={30} fmt={money} style={{ fontSize: u(120), fontWeight: 800, color: b.colors.primary }} />}
           </div>
         </div>
       </div>

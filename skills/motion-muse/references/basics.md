@@ -75,7 +75,8 @@ python3 "$SKILL_DIR/scripts/batch.py" <project> PromoCard menu.csv --base brand.
 python3 "$SKILL_DIR/scripts/batch.py" <project> PromoCard menu.csv --still --frame 100   # covers / check sheet first
 ```
 
-Columns become props; numbers and JSON cells are parsed; dotted headers nest (`brand.colors.primary`). `--base`
+Columns become props; numbers and JSON cells are parsed; dotted headers nest (`brand.colors.primary`). A blank cell is
+sent as `null`, so the composition must treat null as "none" (Remotion fills missing props from the demo defaultProps). `--base`
 holds the shared props, rows override it. It bundles once, skips files that exist (`--force` to redo) and writes
 `out/batch/<Comp>/report.csv`. Always run `--still` first and look at every row (long names, missing prices), then
 render. Example: `examples/batch-menu` (3 drinks, one brand, per-row colour).
