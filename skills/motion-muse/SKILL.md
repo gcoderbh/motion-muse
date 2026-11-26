@@ -73,6 +73,7 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 - To edit the result in OpenFilm Studio (tracks for every shot, SFX and the music, editable captions): `references/openfilm.md`, `scripts/story.py openfilm`.
 - Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D). Before designing a new character or changing how one looks, read `references/character-design.md` (silhouette, colour, lines, cel shading, faces, poses, turning, sitting/lying, physics, inventing new poses). For ordinary adults with real proportions, no outlines and finger hands, use `lib/slim` (`SlimCharacter`, same poses). Side/three-quarter views, indoor sets (office, condo, store, hospital, market, BTS), mouths from a recorded voice, 2D camera moves, more FX, long episodes and thumbnails: `references/flat-story.md`.
 - Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
+- Everyday jobs: animated charts (bars, line, donut, bar race, count-up), lyric / quote / word-by-word caption videos, app and website demos (phone, laptop, browser, cursor, zoom), brand kits (colours, fonts, logo, intro, outro) and one video per CSV row: read `references/basics.md` and start from the compositions in `starter/src/Basics.tsx` (`DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard`); batches with `scripts/batch.py`.
 - Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
 - Product ads (cans, bottles, jars, packshots): `director.md` section 8 (label wrap, materials, moving key light, gobo, AgX, physics).
 - Steps 2–7 below still apply: gallery references, seam plan and transitions, fresh music, SFX, QA, delivery.
@@ -199,11 +200,12 @@ After a full promo, offer once a CapCut/JianYing project export (`references/jia
 | `scripts/find-music.py`, `beat-grid.py`, `synth-sfx.sh` | fresh music + credits, beat grid, simple SFX |
 | `scripts/footage-scan.py`, `find-footage.py`, `transcribe.py`, `auto-edit.py` | footage pipeline |
 | `scripts/thai-fonts.sh` | fetch any of the 15 Thai OFL fonts |
+| `scripts/batch.py` | one video (or still) per CSV/JSON row, shared `--base` props, `--formats`, report.csv |
 | `scripts/learn.py` | the user's notebook: `show`, `note`, `use`, `save` / `get`, `forget`, `pause`, `export` / `import` (section 8) |
-| `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `lib/*` building blocks |
+| `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `Basics.tsx` (data, lyric, app demo, product card), `lib/*` building blocks (`chart`, `lyrics`, `device`, `brand`, …) |
 | `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx` |
-| `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `flat-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
-| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time |
+| `references/` | `director.md`, `basics.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `flat-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
+| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time, batch-menu |
 
 ## Licenses to mention when sharing
 
