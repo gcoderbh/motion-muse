@@ -35,9 +35,13 @@ def load():
     return d
 
 
-def store(d):
+def ensure_home():
     if not os.path.isdir(HOME):
         os.makedirs(HOME, mode=0o700); os.chmod(HOME, 0o700)
+
+
+def store(d):
+    ensure_home()
     tmp = DB + ".tmp"
     with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as fh:
         fh.write(json.dumps(d, ensure_ascii=False, indent=1) + "\n")
@@ -111,7 +115,7 @@ def cmd_save(a):
     for f in a.files:
         if not os.path.isfile(f): sys.exit(f"no such file: {f}")
         if SECRET.search(open(f, encoding="utf-8", errors="ignore").read()): sys.exit(f"refused: {f} looks like it contains a secret")
-    os.makedirs(dst, exist_ok=True)
+    ensure_home(); os.makedirs(dst, exist_ok=True)
     u = d["uses"].setdefault(k, {"count": 0, "first": today()})
     u["files"] = sorted(set(u.get("files", [])) | {os.path.basename(f) for f in a.files})
     u["saved"] = today()
@@ -164,7 +168,7 @@ def cmd_export(a):
 
 
 def cmd_import(a):
-    src = json.load(open(a.file, encoding="utf-8")); d = load()
+    src = json.load(open(a.file, encoding="utf-8")); d = load(); ensure_home()
     have = {n["text"].lower() for n in d["notes"]}
     for n in src.get("notes", []):
         if n["text"].lower() not in have:
