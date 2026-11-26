@@ -35,6 +35,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - โหมดผู้กำกับ: บอกแค่ว่าอยากได้วิดีโอแบบไหน สไตล์ อารมณ์ ฟอนต์ และเรื่องที่จะเล่า สกิลจะวาง storyboard เลือกเครื่องมือที่เล็กที่สุดที่พอ และทำทั้งคลิปด้วยโค้ด: ตัวละคร stickman/เวกเตอร์ ไดอะแกรมวิทยาศาสตร์ ฉาก 2.5D ฉาก 3D พร้อมกล้อง แสงและหมอก โฆษณาสินค้า ไม่ใช้ AI สร้างวิดีโอ และไม่ต้องใช้ Blender
 - คลิปการ์ตูน 3D เล่าเรื่อง แนวตั้ง: ตัวละครการ์ตูนมีเส้นขอบ หน้าตาเหมือนเดิมทุกช็อต หมุนได้ 360° กะพริบตา ขยับปาก มีฉากออฟฟิศ ร้านค้า ถนน สุสาน ป้ายภาษาไทย เขียนบทเป็นไฟล์ JSON แล้วสกิลจัดเวลาซับ SFX และเพลงให้ ไม่มีเสียงพากย์ถ้าไม่ได้ขอ
 - การ์ตูน 2D แบบ flat หัวโต สไตล์ช่องเล่าเรื่องบน YouTube: ตัวละครแต่งชุดได้ (พนักงานออฟฟิศ วินมอไซค์ เสี่ย ป้า นักเรียน แม่ค้า) มี 10 สีหน้า ท่ามือ เดิน ขยับปาก เหงื่อตก ตกใจ ฉากถนนกรุงเทพฯ รถไฟฟ้า ไฟแดงนับถอยหลัง แท็กซี่ ป้ายบอกทาง ดาดฟ้ากลางคืน ป้ายตัวเลขลอยบนหัว การ์ดราคา และสลิปโอนเงิน เรนเดอร์เร็วกว่า 3D มาก
+- จำสิ่งที่ผู้ใช้ชอบหรือเคยติไว้ในเครื่องของผู้ใช้เอง (`~/.motion-muse`) อ่านทุกครั้งก่อนเริ่มงาน เทคนิคที่ใช้ครบ 3 ครั้งจะถูกเก็บเป็นโค้ดไว้ใช้ซ้ำ สั่งให้ลืมหรือหยุดจำได้
 - ส่งต่อไปแก้ใน OpenFilm Studio ได้ แยกแทร็กช็อต ซับ SFX และเพลง
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
@@ -61,7 +62,8 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
-- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render / qa), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export)
+- `references/flat-story.md`: flat 2D episodes: side and three-quarter views, indoor sets, mouths from a recorded voice, 2D camera moves, more cartoon FX, long episodes, thumbnails
+- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render / qa), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export), `learn.py` (notebook on the user's machine: rules, dislikes, techniques used often, saved code)
 - `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `src/lib/` procedural building blocks and `kits/three/` for 3D
 - `examples/`: five code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, toon story zombie-id, flat cartoon explainer life-time)
 - `skills/toon-story/` + `openfilm.json`: the OpenFilm skill entry
