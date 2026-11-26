@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.11.0
+
+- Place guides: `scripts/place.py fetch` geocodes (Nominatim), pulls buildings / roads / water / parks (Overpass,
+  mirrors tried in turn) as metres around the pin, and fetches open-licence photos and clips from Wikimedia Commons
+  (CC0, PD, CC BY, CC BY-SA; geotagged + text search), cuts clips to MP4 and writes `place.json`, `CREDITS.md` and
+  `PERMISSIONS.md`. Social links (TikTok, YouTube, IG, FB, Google Maps) are refused; `place.py permission` prints a
+  Thai request to the owner.
+- `kits/three/map3d.tsx`: `CityMap` (extruded OSM blocks, rise-in, highlighted building), `MapPin`, `flyTo` (log
+  zoom), `screenOf`, `MapLights`, `MAP_STYLES`, `OsmCredit`. `Stage3D` takes `far`.
+- `examples/food-spot` `FoodSpot`: fly-in + pin card, credited photos (slow Ken Burns), one clip, end card with
+  address and all credits; calm edit. Router capability `place` (`init --caps place` copies it and registers it).
+- `references/place-guide.md`.
+
 ## 1.10.0
 
 - `lib/chart`: `BarChart` (vertical / horizontal, stagger, highlight), `LineChart` (self-drawing, value on the tip),

@@ -26,6 +26,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Every platform | One storyboard renders 9:16, 1:1 and 16:9 (`--formats`). Layout helpers keep text out of TikTok/Reels/Shorts UI, Studio shows the safe-zone guides, and QA writes a sheet with the UI zones in red |
 | Thumbnails | `director.py cover` picks a sharp, still frame and adds the Thai title inside the safe zone |
 | Everyday videos | Animated charts (bars, line, donut, bar chart race, count-up numbers in Thai format), lyric and quote videos timed to the song or speech (karaoke fill, word pop, quote card; from `.lrc` or speech-to-text), app and website demos (phone, laptop and browser frames, a cursor that taps, zooms to each tap), and a brand kit (colours, Thai fonts, logo, intro, outro, lower third, watermark) shared by every video |
+| Place guides | `place.py` + `FoodSpot`: a 3D OpenStreetMap city, camera flies down to the restaurant and drops a pin, open-licence Commons photos and clips with on-screen credits, `CREDITS.md`, and a Thai permission request for clips from TikTok/YouTube (never downloaded) |
 | Batches | `batch.py` renders one video or cover per CSV row (20 products → 20 clips), with shared brand props and every format |
 | Delivery | Renders the MP4, checks frames and loudness, then sends the video with a list of the techniques used and the credits |
 
@@ -49,6 +50,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - ส่งต่อไปแก้ใน OpenFilm Studio ได้ แยกแทร็กช็อต ซับ SFX และเพลง
 - กราฟขยับ (แท่ง เส้น วงกลม กราฟแท่งแข่งกัน ตัวเลขนับขึ้นแบบไทย) คลิปเนื้อเพลงหรือคำคมที่ตัวหนังสือขึ้นตามเสียง คลิปแนะนำแอปหรือเว็บในกรอบมือถือ/laptop มีเคอร์เซอร์กดและซูมตาม
 - เทมเพลตแบรนด์: สี ฟอนต์ โลโก้ intro outro ป้ายชื่อ และลายน้ำ ทุกคลิปออกมาเป็นชุดเดียวกัน
+- คลิปแนะนำร้านหรือสถานที่: แผนที่ 3D จาก OpenStreetMap กล้องบินซูมลงไปปักหมุด ดึงรูปและคลิปที่มีสัญญาอนุญาตเปิดจาก Wikimedia Commons ใส่เครดิตบนจอและในไฟล์ `CREDITS.md` ส่วนคลิปจาก TikTok หรือ YouTube จะไม่โหลดเอง แต่ร่างข้อความขออนุญาตเจ้าของให้ แล้วใช้ไฟล์ที่เจ้าของส่งมา
 - ใส่ข้อมูลเป็นไฟล์ CSV แล้วได้คลิปแถวละหนึ่งคลิป เช่น เมนู 20 อย่างได้ 20 คลิป
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
@@ -76,11 +78,12 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
+- `references/place-guide.md`: restaurant and place guides: 3D map fly-in, pin, credited open-licence media, permission for social clips
 - `references/basics.md`: everyday videos: animated charts, lyric/quote videos, app and website demos, brand kits, batches from CSV
 - `references/flat-story.md`: flat 2D episodes: side and three-quarter views, indoor sets, mouths from a recorded voice, 2D camera moves, more cartoon FX, long episodes, thumbnails
-- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render with `--draft` and `--formats` / qa / cover), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export), `learn.py` (notebook on the user's machine: rules, dislikes, techniques used often, saved code), `batch.py` (one video per CSV row)
+- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render with `--draft` and `--formats` / qa / cover), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export), `learn.py` (notebook on the user's machine: rules, dislikes, techniques used often, saved code), `batch.py` (one video per CSV row), `place.py` (place map data, open-licence media, credits, permission request)
 - `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `Cover.tsx` for thumbnails, `Basics.tsx` (`DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard`), `src/lib/` procedural building blocks and `kits/three/` for 3D
-- `examples/`: six code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, cold-brew can ad in three formats, toon story zombie-id, flat cartoon explainer life-time) and `batch-menu` (CSV + brand for `batch.py`)
+- `examples/`: six code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, cold-brew can ad in three formats, toon story zombie-id, flat cartoon explainer life-time) `batch-menu` (CSV + brand for `batch.py`) and `food-spot` (restaurant guide with a 3D map)
 - `skills/toon-story/` + `openfilm.json`: the OpenFilm skill entry
 
 ElevenLabs is optional and is only used after the agent asks you.
