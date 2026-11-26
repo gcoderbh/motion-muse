@@ -54,7 +54,9 @@ def cmd_build(a):
     missing = [m for m in missing if not os.path.isfile(os.path.join(pub, m))]
     lib = os.path.join(os.environ.get("SKILLS_DIR", os.path.expanduser("~/skills")), "video-shotcraft", "assets", "audio", "sfx")
     have = {f: os.path.join(dp, f) for dp, _, fs in os.walk(lib) for f in fs}
-    for m in [m for m in missing if os.path.basename(m) in have]:  # Shotcraft SFX named in the script are copied in
+    sfx_dir = os.path.realpath(os.path.join(pub, "audio", "sfx"))
+    for m in [m for m in missing if os.path.basename(m) in have  # Shotcraft SFX named in the script are copied in
+              and os.path.dirname(os.path.realpath(os.path.join(pub, m))) == sfx_dir]:
         os.makedirs(os.path.dirname(os.path.join(pub, m)), exist_ok=True)
         shutil.copy(have[os.path.basename(m)], os.path.join(pub, m))
         missing.remove(m)
