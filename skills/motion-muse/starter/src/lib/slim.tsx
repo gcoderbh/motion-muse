@@ -277,8 +277,8 @@ export const SlimCharacter: React.FC<{
       ...[-1, 1].flatMap((q) => [[q * hw * kx, SH_Y - j.bob, 4], [q * 36 * b * kx, HIP_Y + 12 - j.bob, 2]] as [number, number, number][])];
     return -Math.max(...pts.map(([px, py, r]) => HIP_Y + px * rs + (py - HIP_Y) * rc + r));
   };
-  // blends from 0 at roll 0 (the pose's own height) to resting on the floor at ±90, so a roll never snaps
-  const rollLift = roll ? lowest(roll) - lowest(0) * (1 - Math.abs(Math.sin(rad(roll)))) : 0;
+  // a raised pose (jump, cheer) eases down to the floor as it rolls, so a roll never snaps; nothing rolls below the floor
+  const rollLift = roll ? lowest(roll) - Math.max(0, lowest(0)) * (1 - Math.abs(Math.sin(rad(roll)))) : 0;
   const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${rollLift}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
   const legsOrder = j.sa > 0.05 ? [[j.legR, 1], [j.legL, -1]] as const : [[j.legL, -1], [j.legR, 1]] as const;
   const farArms = [j.L, j.R].filter((a) => a.z < -0.2), nearArms = [j.L, j.R].filter((a) => a.z >= -0.2);
