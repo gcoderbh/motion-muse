@@ -155,7 +155,26 @@ build it yourself:
 5. **Timing:** add key poses with `flatPosesAt`: anticipation, the action, overshoot, then settle.
 6. **Check:** render a still and run section 13. Save a pose the user liked with `learn.py use flat-pose-<name>`.
 
-## 13. Check before you use a new character
+## 13. Second body: slim people (`lib/slim`)
+
+`SlimCharacter` is a second house style for explainers that need ordinary adults instead of cartoons: about 6 heads
+tall, no outlines, one shadow tone per part, small face, hands with fingers. It takes the same `FlatPose`, so every
+preset, `yaw`, `sit`, `lie`, `flatStride()` and `flatJump()` work unchanged. Do not mix the two bodies in one scene.
+
+- **Look:** `SlimLook` sets skin, hair colour and style (`wavy`, `long`, `bun`, `curly`, `buzz`), top, bottom, shoes,
+  `sleeves`, `shorts`, `mask`, `lashes` and `build` (0.9 is slimmer). `SLIM_LOOKS` has four starting points; vary them.
+- **Colour:** separate parts by value, not lines: the top and bottom must differ by at least 25% lightness, skin must
+  differ from the background, shoes are the lightest or darkest block so the feet read.
+- **Hands:** `handL` / `handR` pick `relaxed`, `open`, `fist`, `point`, `thumb`, `peace`, `ok`, `pocket`. Use a gesture
+  only when the hand is the point of the shot; otherwise `relaxed`. For hands in pockets use `SLIM_POCKETS` as the arm
+  pose and `pocket` as the hand. `slimReach(side, target)` gives the arm angles that put a hand on a point.
+- **Hair is a cap on the skull:** each style has a hairline (forehead, temples, above the ears, nape) that turns with
+  the head, so every angle is covered. When adding a style, give it a hairline and a volume, never a fixed shape that
+  slides with `yaw`, or the turned head goes bald.
+- **Proportions:** shoulders about 1.4 head widths, hips a little narrower, arms reach mid-thigh. Keep these when you
+  change `build`; a wider build reads as a different person, not a stronger one.
+
+## 14. Check before you use a new character
 
 Render a still of the character on the scene background with `npx remotion still`. Show it in 3 poses (rest, a gesture,
 an extreme expression), next to the other characters in the cast, plus one row of the 5 yaws and one sitting pose. Look at the still and check:
