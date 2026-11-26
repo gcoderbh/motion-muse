@@ -26,12 +26,13 @@ def parse(v):
 
 def nest(row):
     out = {}
+    parents = {k.strip().split(".")[0] for k in row if k and "." in k}
     for k, v in row.items():
         if k is None or v is None:
             continue
         d, parts = out, k.strip().split(".")
         if v.strip() == "":
-            if len(parts) == 1:
+            if len(parts) == 1 and parts[0] not in parents:
                 out[parts[0]] = None  # explicit null so the composition's demo defaultProps do not fill the gap
             continue
         for p in parts[:-1]:
