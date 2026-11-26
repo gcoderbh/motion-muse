@@ -187,7 +187,10 @@ def cmd_fetch(a):
             r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", str(a.clip_from), "-i", src, "-t", str(a.clip), "-an", "-vf",
                                 "scale='min(1920,iw)':-2", "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p", os.path.join(out, f)])
             os.remove(src)
-            if r.returncode:
+            dur = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", os.path.join(out, f)], capture_output=True, text=True).stdout.strip()
+            if r.returncode or not re.match(r"^\d", dur) or float(dur) < 0.5:  # --clip-from past the end gives an empty MP4
+                if os.path.exists(os.path.join(out, f)):
+                    os.remove(os.path.join(out, f))
                 continue
             videos.append({"file": f, **c})
             print(f"video: {c['title']}  ({c['license']}, {c['author']})")
