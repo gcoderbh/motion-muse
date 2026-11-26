@@ -11,6 +11,9 @@
 - `Basics.tsx` compositions `DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard` (JSON props, all formats).
 - `scripts/batch.py`: one video or still per CSV/JSON row, dotted columns nest, `--base` shared props, `--formats`,
   bundles once, skips finished files, `report.csv`. `examples/batch-menu`.
+- Calm transitions by default (`editing-craft.md` section 0, SKILL.md step 2.5, pacing table, checklist): mostly hard cuts,
+  at most one soft transition per 10 s, none between steps, slow rare camera pushes; flashy counts only if the user asks.
+  `AppPromo` is one continuous shot: screens slide inside a still phone, optional gentle `zoom` per step.
 - `references/basics.md`; router capabilities `chart`, `lyrics`, `device`, `brand`, `batch` (`data-viz` is now maps / d3 scales).
 
 ## 1.9.0

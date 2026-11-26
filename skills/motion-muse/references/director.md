@@ -83,7 +83,7 @@ Text components: `Kinetic` (word or grapheme reveal, never splits vowels/tone ma
 - Characters: use `gait(frame / cycle, kind)` and move the body at `strideLength(kind, legLen) / cycle` per frame so feet do not slide; blend key poses with `posesAt`.
 - Camera: always moving a little (dolly, orbit, handheld `shake`); third person = `observer()` (lagged follow, deterministic).
 - Light: one motivated key light, rim to separate the subject, fog lighter than silhouettes; `flicker()` for practicals.
-- Keep the existing editing rules: seam plan, transitions from `transitions.tsx` + 2–4 custom ones at key moments, beat-synced cuts, fresh music per video (find-music.py), SFX on transitions.
+- Keep the existing editing rules: seam plan, calm transitions by default (`editing-craft.md` section 0: mostly hard cuts, few soft transitions, 1–2 custom seams; more only if the user asks), beat-synced cuts, fresh music per video (find-music.py), SFX on transitions.
 
 ## 6. Render scene by scene (cached) and QA
 

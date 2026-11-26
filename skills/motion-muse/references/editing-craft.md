@@ -2,11 +2,26 @@
 
 Read this before planning shots. Write a seam plan (section 3) before writing code, and run the checklist (section 6) before delivering.
 
+## 0. Default: calm transitions (unless the user asks for more)
+
+Many flashy transitions look cheap and make people dizzy. Unless the user asks for an energetic, flashy or
+transition-heavy edit, keep seams calm:
+- Most seams are hard cuts on the beat. When a seam needs motion, prefer what is already in the shot: a match cut,
+  the next screen sliding in inside a device, an object or the camera carrying the eye.
+- Base-set transitions: at most 1 per 10 s, and only the soft ones (`push`, `focus`, `leak`, `wipe`, `iris`).
+  `whip`, `zoom`, `slices`, `flash`, `glitch` and `smash` only when the user asks or the brief is clearly hype
+  (sport, drop, gaming), and then at most once each per video.
+- A sequence of steps (app demo, recipe, tutorial, list) is one continuous shot: keep the frame or device still and
+  change what is inside it. No transition between steps.
+- Camera moves are slow and few: at most one push-in (≤ 1.3×) per 3 steps or ~8 s; no zoom out/in on every shot.
+- Custom designed seams: 1–2 for the key moments (hook, reveal), not 2–4.
+If the user does ask for more, use the counts in sections 1, 4 and 6.
+
 ## 1. Why AI-made clips look cheap, and the fix
 
 | Looks AI-made | Do this instead |
 |---|---|
-| Every cut is a crossfade or the same slide | Choose each seam on purpose (section 3). Use 4–6 different transition types in 30 s; never the same one 3 times in a row |
+| Every cut is a crossfade or the same slide | Choose each seam on purpose (section 3): mostly hard cuts and match cuts; vary the few transitions you use, never the same one 3 times in a row (section 0 for how many) |
 | Every shot has the same length | Vary lengths: short hits (0.5–1 beat) between longer reads (2–4 beats). Speed up toward drops; slow down before the end card |
 | Linear or default ease-in-out everywhere | Fast in, slow settle (`Easing.bezier(0.16,1,0.3,1)`), springs with a small overshoot, anticipation before big moves |
 | Everything enters at once, centered | Stagger 1–3 frames per element; change layout per shot (left, center, bottom, split); main motion follows one direction across cuts |
@@ -55,7 +70,7 @@ The 12 kinds in `transitions.tsx` are a base set, not the limit. The best seams 
 5. Build it as a component in the project (for example `src/seams/CircleToLogo.tsx`). It must be deterministic (driven only by `useCurrentFrame()`), take its frames from both shots, and end with every blur, shake and scale back at its resting value. To make it a new `Timeline` kind, add a case in `look()` and `Overlay`, a `DUR` entry and an `SFX_FOR` entry. Alternatively, put the custom seam inside one scene and use `cut` at that seam.
 6. Check single frames before, during and after the seam. Nothing should pop, jump, or show empty frame edges.
 
-A good video combines plain beat-synced hard cuts, a few base-set transitions, and 2–4 custom seams designed for its content.
+A good video combines plain beat-synced hard cuts, a few soft base-set transitions, and 1–2 custom seams designed for its content (more only if the user asks for an energetic edit).
 
 ## 3. Choosing the seam (write this table before coding)
 
@@ -85,9 +100,11 @@ Rules:
 
 | Length | Shots | Hard cuts | Designed transitions | Peak |
 |---|---|---|---|---|
-| 15 s | 8–12 | 50–70 % | 3–5 | 10–12 s |
-| 30 s | 12–20 | 60–75 % | 5–8 | 21–24 s |
-| 60 s | 20–35 | 65–80 % | 8–12 | 42–48 s |
+| 15 s | 8–12 | 80–90 % (energetic: 50–70 %) | 1–2 (energetic: 3–5) | 10–12 s |
+| 30 s | 12–20 | 85–90 % (energetic: 60–75 %) | 2–3 (energetic: 5–8) | 21–24 s |
+| 60 s | 20–35 | 85–95 % (energetic: 65–80 %) | 3–6 (energetic: 8–12) | 42–48 s |
+
+Use the energetic numbers only when the user asks for a flashy, transition-heavy edit (section 0).
 
 At 120–128 BPM, one beat is about 14–15 frames; one bar (4 beats) is about 2 s.
 
@@ -102,7 +119,7 @@ At 120–128 BPM, one beat is about 14–15 frames; one bar (4 beats) is about 2
 ## 6. Checklist before delivery (fix every "no")
 
 1. Is every cut on a beat (±1 frame), and does each SFX land on its action?
-2. Are there at least 4 different seam types, and no type 3 times in a row?
+2. Are transitions within section 0 (calm by default: mostly hard cuts, soft kinds, none between steps), and no type 3 times in a row?
 3. Is any shot completely static for more than 1 s? (should be no)
 4. Do shot lengths vary?
 5. Is any text unreadable on a phone (shrink a frame to 480 px wide and look)?
