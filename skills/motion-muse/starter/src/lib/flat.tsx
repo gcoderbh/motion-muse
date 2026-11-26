@@ -88,7 +88,7 @@ export const flatLook = (name: keyof typeof FLAT_LOOKS | string, over: Partial<F
 export type FlatExpr = 'neutral' | 'happy' | 'laugh' | 'shocked' | 'worried' | 'angry' | 'smug' | 'sad' | 'wink' | 'sleepy';
 
 // ---------- body geometry ----------
-// Motion Muse "sticker" style: wide pebble head that sits into the collar (no neck shows), bean torso,
+// Motion Muse "sticker" style: wide pebble head on a short neck that the collar wraps, bean torso,
 // mitten hands, every shape outlined in a darker tone of its own colour.
 const SH_Y = -176, HIP_Y = -92, UP = 50, FORE = 44, HEAD_R = 50, HW = 58, HH = 52;
 const dir2 = (s: number, a: number): P => [s * Math.sin(rad(a)), Math.cos(rad(a))];
@@ -107,7 +107,7 @@ export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
     return { S: rot(S), E: rot(E), H: rot(Hd), angle: sh + el };
   };
   const neck = rot([0, SH_Y * hgt]);
-  const head = rot([0, SH_Y * hgt - HH + 8]);
+  const head = rot([0, SH_Y * hgt - HH - 18]);
   return { neck, head, headTop: [head[0], head[1] - HH - 14] as P, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
 };
 
@@ -266,7 +266,7 @@ const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1; uid: s
     </g>
   );
 };
-// collar pieces overlap the bottom of the chin, so the head reads as sitting inside the shirt
+// collar pieces wrap the base of the neck, so no bare neck shows outside the shirt
 const Collar: React.FC<{ look: FlatLook }> = ({ look }) => {
   const hy = SH_Y * (look.height ?? 1);
   const c = look.outfit === 'suit' || look.outfit === 'vest' ? look.shirt : shade(look.shirt, 0.92);
@@ -336,6 +336,7 @@ export const FlatCharacter: React.FC<{
       </g>
       <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} /></g>
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
+        <rect x={-13} y={HH - 16} width={26} height={44} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
