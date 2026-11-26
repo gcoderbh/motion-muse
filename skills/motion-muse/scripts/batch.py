@@ -78,8 +78,9 @@ def main():
             name = slug(a.name.format(i=i + 1, **{k: v for k, v in props.items() if not isinstance(v, dict)}), i)
         except KeyError as e:
             sys.exit(f"--name uses {e} but row {i + 1} has no such column")
-        if name in names:
-            name = f"{name}-{i + 1}"
+        base_name, n = name, 2
+        while name in names:
+            name, n = f"{base_name}-{n}", n + 1
         names.add(name)
         for fm in fmts:
             ext = "png" if a.still else "mp4"
