@@ -7,6 +7,12 @@
   same side of the screen when a character is mirrored. Use `finish: 'flat'` for the old single fills.
 - `references/character-design.md`: rules for designing good-looking 2D characters in code (silhouette, proportions,
   colour, lines, cel shading, faces, posing, outfits, a checklist with a rendered still).
+- Flat characters turn: `pose.yaw` 0 front, 0.5 three-quarter, 1 side, 2 back (face, ears, hair, badge and arms follow).
+- Two-bone legs (`hipL/hipR`, `kneeL/kneeR`) and presets `sit`, `slump`, `sitFloor`, `lie`, `lieSide`; `FLAT_SEAT`,
+  `flatPlant()` keeps feet on the ground.
+- Physics helpers: `flatStride()` side walk with `FLAT_STRIDE`, `flatJump()` (anticipation, stretch, springy landing),
+  `pose.air` with a shrinking ground shadow, `pose.squash`, `pose.roll`.
+- Guide sections on turning, sitting and lying, physics and weight, and how to invent a pose from a description.
 
 ## 1.6.0
 

@@ -83,13 +83,86 @@ item) but never copy another channel's or artist's characters.
   suit (boss), scrubs + stethoscope (nurse), uniform + backpack (student). Add an item instead of a text label.
 - Invent logos, shop names and badges. Never use real brands, real uniforms with insignia, or real people's faces.
 
-## 9. Check before you use a new character
+## 9. Turning: front, three-quarter, side, back
 
-Render a still of the character on the scene background with `npx remotion still`. Show it in front view in 3 poses
-(rest, a gesture, an extreme expression), next to the other characters in the cast. Look at the still and check:
+`pose.yaw` turns a character: 0 front, 0.5 three-quarter, 1 side, 1.5 three-quarter back, 2 back. It turns toward +x.
+Use `dir={-1}` to face the other way. `yaw` is part of the pose, so `flatPosesAt` animates a turn like any other key.
+
+- **Which view to use:** front for talking to the viewer, three-quarter for two people talking (the default for dialogue),
+  side for walking and handing things over, back for leaving or looking at something in the scene.
+- **Turns are fast:** 4–6 frames from front to side, with the head leading the body by 1–2 frames. Never hold a
+  half-turn on purpose.
+- **What moves when it turns:** the face slides toward the facing side, the far eye folds away, the near ear moves
+  behind the cheek, the hair covers the back of the head, and the body gets narrower. Badges, ties and numbers slide with
+  the chest and disappear round the back. Arm angles swing forward in side view, so `point` points where the body faces.
+- **New hair styles or props:** check them at all 5 yaws in one still. A shape drawn only for the front view will float
+  off the head when the character turns.
+
+## 10. Sitting, kneeling and lying
+
+Legs are two bones: `hipL/hipR` swing the thigh forward, and `kneeL/kneeR` fold the shin back. A negative `bob` lowers
+the hips. Use `flatPlant(hip, knee)` to get the `bob` that keeps the foot on the ground.
+
+- **Presets:**
+  - `sit`: on a chair. Put the seat top at `FLAT_SEAT` above the ground point.
+  - `slump`: tired on a chair.
+  - `sitFloor`: on the floor, hugging the knees.
+  - `lie`: on the back, head to screen-left.
+  - `lieSide`: curled on the side.
+- **Which view:** side or three-quarter shows a sitting pose best. In front view the thighs point at the camera and look
+  short, which is correct but reads less clearly.
+- **Contact:** the seat, bed or floor must touch the body. Draw the chair behind the character, with its seat exactly at
+  the hips. Draw the bed or floor under the lying body. Nothing may float above its support or sink into it.
+- **Lying:** `roll` turns the whole body around the hips (±90 = lying). The ground shadow gets wider. Keep the face
+  readable: tilt the head toward the camera with `head`.
+
+## 11. Physics and weight
+
+Cartoon physics exaggerates real physics. It never ignores it.
+
+- **Feet stay planted:** a foot on the ground must not slide.
+  - Front-view `flatWalk`: move x about 7 px per frame at scale 1.
+  - Side-view `flatStride`: move x by `FLAT_STRIDE * scale` per cycle.
+  - Turning on the spot: keep x still.
+- **Gravity:** anything in the air follows a parabola. Rise and fall take the same time, and the body is slowest at the top.
+  `flatJump(t, dur, height)` does anticipation, then a stretched flight, then a squashed landing.
+  - `pose.air` lifts the body. The ground shadow stays on the floor, shrinks and fades as the body rises.
+  - Props that are thrown use `lib/physics` if this version has it.
+- **Anticipation and follow-through:** before a big move, go the opposite way for 3–6 frames (crouch before a jump, pull
+  the arm back before a throw). After it, let the hair, the tie and the arms settle 2–4 frames late.
+- **Squash and stretch:** use `pose.squash`, from 0.8 to 1.15. Squash on impact, stretch at speed, and keep the volume
+  (the width changes the other way automatically). Faces never squash on their own.
+- **Weight:**
+  - Lean away from a heavy load.
+  - Walk slower and bob lower when tired or carrying something.
+  - Shift the hips over the standing foot when standing on one leg.
+  - A light character can bounce more than a heavy one.
+- **Shadows match the light:** the ground shadow sits under the feet, and the cel shading follows `light`. A character
+  that jumps or lies down still has its shadow on the floor, in the same scene light as everyone else.
+
+## 12. Inventing a pose that is not in the presets
+
+When the script asks for a pose that has no preset (for example "เหนื่อยหมดแรง", "ยกกล่องหนัก" or "ตกใจถอยหลัง"),
+build it yourself:
+
+1. **Line of action:** decide one curve for the spine and head. Tired sags forward and down, proud arches back,
+   scared pulls back and in.
+2. **Joint angles:** turn the curve into `lean`, `head`, `bob`, the arm angles (`shL/elL/shR/elR`), the legs
+   (`hipL/kneeL/hipR/kneeR`, `spread`) and `yaw`. Start from the closest preset, then change 3–5 values.
+3. **Balance:** the head and chest must sit over the base of support (the feet, the seat or the floor). If they don't,
+   add a step, a lean back or a hand on something.
+4. **Silhouette:** both hands and the head must read clearly against the body, with no arm hidden in front of the torso.
+5. **Timing:** add key poses with `flatPosesAt`: anticipation, the action, overshoot, then settle.
+6. **Check:** render a still and run section 13. Save a pose the user liked with `learn.py use flat-pose-<name>`.
+
+## 13. Check before you use a new character
+
+Render a still of the character on the scene background with `npx remotion still`. Show it in 3 poses (rest, a gesture,
+an extreme expression), next to the other characters in the cast, plus one row of the 5 yaws and one sitting pose. Look at the still and check:
 
 - It still reads at thumbnail size, and in grayscale the face is the lightest area.
 - No part sticks out wrongly: neck outside the collar, hands detached from the arms, hair floating off the head.
+- Feet touch the ground or the seat, and nothing floats or sinks.
 - The cast looks like one family: same line rule, same light, same shading tones.
 - It doesn't look like a copy of the reference.
 

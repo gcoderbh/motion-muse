@@ -58,7 +58,7 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/director.md`: brief → capability router → storyboard → scene-cached render; library and font tables
 - `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix
 - `references/toon-story.md`: cartoon story episodes: script format, characters, sets, camera for 9:16
-- `references/character-design.md`: how to make 2D characters look designed: silhouette, proportions, colour, line weight, cel shading, faces, poses
+- `references/character-design.md`: how to make 2D characters look designed: silhouette, proportions, colour, line weight, cel shading, faces, poses, turning (front/side/back), sitting and lying, physics and weight
 - `references/toon-characters.md`: new characters and outfits, from a reference picture, and the saved character library (`characters/`)
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
