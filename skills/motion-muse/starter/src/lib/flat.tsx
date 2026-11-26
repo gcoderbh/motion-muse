@@ -72,13 +72,19 @@ export const flatWalk = (phase: number, over: Partial<FlatPose> = {}): FlatPose 
   const s = Math.sin(phase * Math.PI * 2);
   return { ...FLAT_REST, legL: Math.max(0, s), legR: Math.max(0, -s), bob: 6 * Math.abs(s), shL: 10 + 14 * s, shR: 10 - 14 * s, elL: 12, elR: 12, head: 2 * s, ...over };
 };
-/** Side or three-quarter walk (yaw defaults to 1): thighs swing, the swinging knee bends, arms counter-swing, hips drop at each contact.
- * Move x by FLAT_STRIDE * scale per cycle (phase 0..1 = two steps) so the planted foot does not slide. */
+/** Side or three-quarter walk (yaw defaults to 1): the planted foot moves back at a constant speed, the swinging knee
+ * bends, arms counter-swing, hips drop at each contact. Move x by FLAT_STRIDE * scale per cycle (phase 0..1 = two steps). */
 export const FLAT_STRIDE = 127;
 export const flatStride = (phase: number, over: Partial<FlatPose> = {}): FlatPose => {
-  const c = Math.sin(phase * Math.PI * 2), d = Math.cos(phase * Math.PI * 2);
-  const hL = 24 * c, hR = -24 * c, kL = 42 * Math.max(0, d), kR = 42 * Math.max(0, -d);
-  return { ...FLAT_REST, yaw: 1, hipL: hL, hipR: hR, kneeL: kL, kneeR: kR, bob: flatPlant(24 * Math.abs(c), 0), shL: 10 - 22 * c, shR: 10 + 22 * c, elL: 16, elR: 16, head: 1.5 * d, ...over };
+  const X = FLAT_STRIDE / 4, L = THIGH + SHIN, deg = (r: number) => (r * 180) / Math.PI;
+  const leg = (p: number) => {
+    p -= Math.floor(p);
+    if (p < 0.5) return { h: deg(Math.asin((X * (1 - 4 * p)) / L)), k: 0 }; // stance: foot x = X..-X, linear
+    const q = (p - 0.5) / 0.5, k = 42 * Math.sin(Math.PI * q);
+    return { h: deg(Math.asin((-X * Math.cos(Math.PI * q)) / L)) + (k * SHIN) / L, k };
+  };
+  const l = leg(phase), r = leg(phase + 0.5), stance = phase - Math.floor(phase) < 0.5 ? l : r, d = Math.cos(phase * Math.PI * 2);
+  return { ...FLAT_REST, yaw: 1, hipL: l.h, hipR: r.h, kneeL: l.k, kneeR: r.k, bob: flatPlant(stance.h, 0), shL: 10 - 22 * d, shR: 10 + 22 * d, elL: 16, elR: 16, head: 1.5 * Math.sin(phase * Math.PI * 4), ...over };
 };
 /** Jump with anticipation, stretch in the air and a springy landing. t = frames since the jump started. Merge: flatPose('rest', flatJump(t)). */
 export const flatJump = (t: number, dur = 30, height = 150): Partial<FlatPose> => {
