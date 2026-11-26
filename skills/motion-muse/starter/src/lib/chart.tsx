@@ -85,6 +85,7 @@ export const LineChart: React.FC<Common & { data: Datum[]; dur?: number; color?:
 }) => {
   const f = useCurrentFrame();
   const id = React.useId().replace(/[^a-zA-Z0-9]/g, '');
+  if (!data.length) return null;
   const lo = min ?? 0, hi = niceMax(max ?? Math.max(...data.map((d) => d.value)));
   const padB = fontSize * 2, padT = fontSize * 2.2, H = height - padB - padT;
   const pts = data.map((d, i) => [(i / Math.max(1, data.length - 1)) * width, padT + H * (1 - (d.value - lo) / (hi - lo))] as [number, number]);
