@@ -55,8 +55,8 @@ export const slimJoints = (p: FlatPose, look: SlimLook) => {
   const bent = !!(p.hipL || p.hipR || p.kneeL || p.kneeR);
   const vert = (h: number, k: number) => THIGH * Math.cos(rad(h)) + SHIN * Math.cos(rad(h - k));
   // bent legs: plant the lower foot, then keep any bob the pose adds beyond FlatCharacter's own plant (scaled)
-  const extra = bent ? (p.bob - Math.max(flatPlant(p.hipL, p.kneeL), flatPlant(p.hipR, p.kneeR))) * ((THIGH + SHIN) / FLAT_LEG) : 0;
-  const bob = bent ? -(THIGH + SHIN - Math.max(vert(p.hipL, p.kneeL), vert(p.hipR, p.kneeR))) + extra : p.bob * 1.2;
+  const k = (THIGH + SHIN) / FLAT_LEG, extra = bent ? (p.bob - Math.max(flatPlant(p.hipL, p.kneeL), flatPlant(p.hipR, p.kneeR))) * k : 0;
+  const bob = bent ? -(THIGH + SHIN - Math.max(vert(p.hipL, p.kneeL), vert(p.hipR, p.kneeR))) + extra : p.bob * k;
   const rot = (q: P): P => {
     const l = rad(p.lean), dx = q[0], dy = q[1] - HIP_Y;
     return [dx * Math.cos(l) - dy * Math.sin(l), HIP_Y + dx * Math.sin(l) + dy * Math.cos(l) - bob];
@@ -269,15 +269,16 @@ export const SlimCharacter: React.FC<{
   const uid = 'sl' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   const roll = pose.roll ?? 0, air = pose.air ?? 0, sq = pose.squash ?? 1;
   // rolled (lying): lift so the lowest rotated part (head, elbow, hand, knee, foot, torso corner) rests on the floor
-  const rollLift = (() => {
-    if (!roll) return 0;
-    const rs = Math.sin(rad(roll)), rc = Math.cos(rad(roll));
+  const lowest = (deg: number) => {
+    const rs = Math.sin(rad(deg)), rc = Math.cos(rad(deg));
     const pts: [number, number, number][] = [[j.head[0], j.head[1], HRX + 4],
       ...[j.L, j.R].flatMap((q) => [[q.E[0], q.E[1], 7], [q.H[0], q.H[1], 10]] as [number, number, number][]),
       ...[j.legL, j.legR].flatMap((q) => [[q.knee[0], q.knee[1], 9], [q.foot[0], q.foot[1], 12]] as [number, number, number][]),
       ...[-1, 1].flatMap((q) => [[q * hw * kx, SH_Y - j.bob, 4], [q * 36 * b * kx, HIP_Y + 12 - j.bob, 2]] as [number, number, number][])];
     return -Math.max(...pts.map(([px, py, r]) => HIP_Y + px * rs + (py - HIP_Y) * rc + r));
-  })();
+  };
+  // blends from 0 at roll 0 (the pose's own height) to resting on the floor at ±90, so a roll never snaps
+  const rollLift = roll ? lowest(roll) - lowest(0) * (1 - Math.abs(Math.sin(rad(roll)))) : 0;
   const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${rollLift}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
   const legsOrder = j.sa > 0.05 ? [[j.legR, 1], [j.legL, -1]] as const : [[j.legL, -1], [j.legR, 1]] as const;
   const farArms = [j.L, j.R].filter((a) => a.z < -0.2), nearArms = [j.L, j.R].filter((a) => a.z >= -0.2);
