@@ -42,6 +42,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - เรนเดอร์ร่างครึ่งความละเอียดไว้ตรวจงานก่อน ฉาก 3D เร็วขึ้นราว 2 เท่า
 - storyboard เดียวออกได้ทั้ง 9:16, 1:1 และ 16:9 วางข้อความไม่ให้ทับ UI ของ TikTok/Reels/Shorts และทำภาพปกพร้อมหัวข้อไทยให้
 - การ์ตูน 2D แบบ flat หัวโต สไตล์ช่องเล่าเรื่องบน YouTube: ตัวละครแต่งชุดได้ (พนักงานออฟฟิศ วินมอไซค์ เสี่ย ป้า นักเรียน แม่ค้า) มี 10 สีหน้า ท่ามือ เดิน ขยับปาก เหงื่อตก ตกใจ ฉากถนนกรุงเทพฯ รถไฟฟ้า ไฟแดงนับถอยหลัง แท็กซี่ ป้ายบอกทาง ดาดฟ้ากลางคืน ป้ายตัวเลขลอยบนหัว การ์ดราคา และสลิปโอนเงิน เรนเดอร์เร็วกว่า 3D มาก
+- ตัวละคร 2D มีเงาสองโทน ผมมีเงาวาว และมีเงาตกกระทบ มีหลักการออกแบบให้ AI อ่าน แล้วสร้างตัวละครใหม่ที่สวยได้เองโดยไม่ต้องใช้ภาพวาด
 - ส่งต่อไปแก้ใน OpenFilm Studio ได้ แยกแทร็กช็อต ซับ SFX และเพลง
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
@@ -64,6 +65,7 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/director.md`: brief → capability router → storyboard → scene-cached render; library and font tables
 - `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix
 - `references/toon-story.md`: cartoon story episodes: script format, characters, sets, camera for 9:16
+- `references/character-design.md`: how to make 2D characters look designed: silhouette, proportions, colour, line weight, cel shading, faces, poses, turning (front/side/back), sitting and lying, physics and weight, and the slim no-outline body (`lib/slim`)
 - `references/toon-characters.md`: new characters and outfits, from a reference picture, and the saved character library (`characters/`)
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
