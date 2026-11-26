@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.11.0
+## 2.0.0
+
+First major release: everything from 1.10.0 (charts, lyric/quote videos, app demos, brand kits, CSV batches,
+calm transitions by default) and the place guides below ship together.
 
 - Place guides: `scripts/place.py fetch` geocodes (Nominatim), pulls buildings / roads / water / parks (Overpass,
   mirrors tried in turn) as metres around the pin, and fetches open-licence photos and clips from Wikimedia Commons
