@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.0
 
 - `FlatCharacter` now has `finish: 'soft'` by default: two-tone cel shading on the head, limbs, hands and torso, a hair
   shine, cast shadows from the fringe, chin and collar, and one key light (`light: 'left' | 'right'`) that stays on the
