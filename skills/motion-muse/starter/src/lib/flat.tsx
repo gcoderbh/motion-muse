@@ -91,6 +91,7 @@ export type FlatExpr = 'neutral' | 'happy' | 'laugh' | 'shocked' | 'worried' | '
 // Motion Muse "sticker" style: wide pebble head on a short neck that the collar wraps, bean torso,
 // mitten hands, every shape outlined in a darker tone of its own colour.
 const SH_Y = -176, HIP_Y = -92, UP = 50, FORE = 44, HEAD_R = 50, HW = 58, HH = 52;
+const NECK_BASE = 12, NECK_L = 36, NECK_PIVOT = 14;
 const dir2 = (s: number, a: number): P => [s * Math.sin(rad(a)), Math.cos(rad(a))];
 /** Joint positions in character space (before x/y/scale): use them to hang a badge over the head or put a prop in a hand. */
 export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
@@ -106,9 +107,15 @@ export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
     const fa = dir2(s, sh + el), Hd: P = [E[0] + fa[0] * FORE, E[1] + fa[1] * FORE];
     return { S: rot(S), E: rot(E), H: rot(Hd), angle: sh + el };
   };
-  const neck = rot([0, SH_Y * hgt]);
-  const head = rot([0, SH_Y * hgt - HH - 10]);
-  return { neck, head, headTop: [head[0], head[1] - HH - 14] as P, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
+  // Neck rides the torso; the head turns on the top of the neck, and the neck only bends for big tilts.
+  const turn = p.head * 0.9;
+  const bend = Math.sign(turn) * Math.max(0, Math.abs(turn) - 10) * 0.25;
+  const base: P = [0, SH_Y * hgt + NECK_BASE];
+  const top: P = [base[0] + NECK_L * Math.sin(rad(bend)), base[1] - NECK_L * Math.cos(rad(bend))];
+  const off = HH - NECK_PIVOT;
+  const neck = rot(base);
+  const head = rot([top[0] + off * Math.sin(rad(turn)), top[1] - off * Math.cos(rad(turn))]);
+  return { neck, head, headTop: [head[0], head[1] - HH - 14] as P, headAngle: p.lean + turn, neckBend: bend, neckBase: base, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
 };
 
 // ---------- parts ----------
@@ -324,7 +331,7 @@ export const FlatCharacter: React.FC<{
       </g>
     );
   };
-  const tilt = (pose.lean + pose.head) * 0.9;
+  const tilt = j.headAngle;
   const torsoT = `translate(0 ${-pose.bob}) rotate(${pose.lean} 0 ${HIP_Y})`;
   return (
     <g transform={`translate(${x} ${y}) scale(${scale * dir} ${scale})`} opacity={opacity}>
@@ -335,8 +342,10 @@ export const FlatCharacter: React.FC<{
         <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} back /></g>
       </g>
       <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} /></g>
+      <g transform={`${torsoT} rotate(${j.neckBend} ${j.neckBase[0]} ${j.neckBase[1]})`}>
+        <rect x={-13} y={j.neckBase[1] - NECK_L - 6} width={26} height={NECK_L + 6} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
+      </g>
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
-        <rect x={-13} y={HH - 16} width={26} height={36} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
