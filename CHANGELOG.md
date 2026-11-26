@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.10.0
+
+- `lib/chart`: `BarChart` (vertical / horizontal, stagger, highlight), `LineChart` (self-drawing, value on the tip),
+  `Donut`, `BarRace` + `raceFrames`, `CountUp`, `fmtTH` (Thai number format, compact "ล้าน").
+- `lib/lyrics`: `LyricTrack` (`karaoke` grapheme fill, `pop` words, `quote` card), `parseLRC`, `fromCaptions`
+  (transcribe.py word times).
+- `lib/device`: `Phone`, `Laptop`, `Browser`, `Cursor` (pointer or finger, click ripple), `ZoomTo`, `ScrollShot`, `keyed`.
+- `lib/brand`: `Brand` JSON, `BrandProvider` / `useBrand`, `Logo`, `BrandIntro`, `BrandOutro`, `LowerThird`, `Watermark`.
+- `Basics.tsx` compositions `DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard` (JSON props, all formats).
+- `scripts/batch.py`: one video or still per CSV/JSON row, dotted columns nest, `--base` shared props, `--formats`,
+  bundles once, skips finished files, `report.csv`. `examples/batch-menu`.
+- Calm transitions by default (`editing-craft.md` section 0, SKILL.md step 2.5, pacing table, checklist): mostly hard cuts,
+  at most one soft transition per 10 s, none between steps, slow rare camera pushes; flashy counts only if the user asks.
+  `AppPromo` is one continuous shot: screens slide inside a still phone, optional gentle `zoom` per step.
+- `references/basics.md`; router capabilities `chart`, `lyrics`, `device`, `brand`, `batch` (`data-viz` is now maps / d3 scales).
+
 ## 1.9.0
 
 - `references/flat-story.md`: guidance (no example code) for flat 2D episodes: side / three-quarter views with a `turn`
