@@ -93,7 +93,7 @@ export const flatJump = (t: number, dur = 30, height = 150): Partial<FlatPose> =
   const bend = (k: number) => ({ hipL: 30 * k, hipR: 30 * k, kneeL: 60 * k, kneeR: 60 * k, bob: flatPlant(30 * k, 60 * k) });
   if (u < 0.25) { const k = ease(u / 0.25); return { ...bend(k), squash: 1 - 0.14 * k, shL: 10 - 30 * k, shR: 10 - 30 * k, lean: 4 * k }; }
   if (u < 0.8) { // legs extend during the first frames of take-off, so every value carries on from the crouch
-    const v = (u - 0.25) / 0.55, e = ease(v / 0.18), sh = -20 + (130 - 40 * v) * e;
+    const v = (u - 0.25) / 0.55, e = ease(v / 0.18), sh = -20 + (170 - 40 * v) * e;
     return { ...bend(1 - e), air: height * 4 * v * (1 - v), squash: v < 0.18 ? 0.86 + 0.26 * e : 1.12 - 0.12 * ((v - 0.18) / 0.82), shL: sh, shR: sh, elL: 6 + 14 * e, elR: 6 + 14 * e, lean: 4 * (1 - e) };
   }
   const w = (u - 0.8) / 0.2, k = w < 0.3 ? ease(w / 0.3) : Math.cos(((w - 0.3) / 0.7) * Math.PI / 2);
