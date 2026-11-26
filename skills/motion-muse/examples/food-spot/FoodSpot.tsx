@@ -28,11 +28,19 @@ export type FoodSpotProps = {
 const FPS = 30, MAP = 200, PHOTO = 66, CLIP = 150, OUTRO = 120;
 const INK = '#2A1F18', PAPER = '#FFF9F0', ACC = MAP_STYLES.day.accent;
 
+// the photos and clip that exist in place.json (bad indexes are dropped, so length and content always agree)
+const pick = (p: FoodSpotProps, place: Place) => {
+  const ph = (p.photos ?? place.photos.slice(0, 4).map((_, i) => ({ i, text: '' }))).filter((x) => place.photos[x.i]);
+  const want = p.video === undefined ? { i: 0, text: '' } : p.video;
+  const v = want && place.videos[want.i] ? want : null;
+  return { ph, v, total: MAP + ph.length * PHOTO + (v ? CLIP : 0) + OUTRO };
+};
+
 export const foodSpotMetadata: CalculateMetadataFunction<FoodSpotProps> = async ({ props }) => {
-  const place: Place = await fetch(staticFile(`${props.dir}/place.json`)).then((r) => r.json());
-  const n = props.photos?.length ?? Math.min(4, place.photos.length);
-  const v = props.video !== null && place.videos.length ? 1 : 0;
-  return { props: { ...props, place }, durationInFrames: MAP + n * PHOTO + v * CLIP + OUTRO, fps: FPS };
+  // no place.json yet (fresh init): show the setup hint instead of failing every composition in the project
+  const place: Place | undefined = await fetch(staticFile(`${props.dir}/place.json`)).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined);
+  if (!place) return { props: { ...props, place: undefined }, durationInFrames: 90, fps: FPS };
+  return { props: { ...props, place }, durationInFrames: pick(props, place).total, fps: FPS };
 };
 
 const useType = () => { const { family } = useThaiFontReady('Prompt'); const { u } = useFormat(); return { family, u }; };
@@ -127,12 +135,14 @@ const Outro: React.FC<{ p: FoodSpotProps & { place: Place }; used: Credit[] }> =
 };
 
 export const FoodSpot: React.FC<FoodSpotProps> = (props) => {
-  if (!props.place) return null;
+  if (!props.place) return (
+    <AbsoluteFill style={{ background: PAPER, color: INK, justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', fontSize: 40, textAlign: 'center', padding: 80 }}>
+      No public/{props.dir}/place.json yet: run scripts/place.py fetch "&lt;place&gt;" --out public/{props.dir}
+    </AbsoluteFill>
+  );
   const p = props as FoodSpotProps & { place: Place };
-  const ph = (p.photos ?? p.place.photos.slice(0, 4).map((_, i) => ({ i, text: '' }))).filter((x) => p.place.photos[x.i]);
-  const v = p.video !== null && p.place.videos.length ? p.video ?? { i: 0, text: '' } : null;
+  const { ph, v, total } = pick(p, p.place);
   const used = [...ph.map((x) => p.place.photos[x.i]), ...(v ? [p.place.videos[v.i]] : [])];
-  const total = MAP + ph.length * PHOTO + (v ? CLIP : 0) + OUTRO;
   return (
     <AbsoluteFill style={{ background: PAPER }}>
       <Timeline sfx={false} backdrop={PAPER} scenes={[
