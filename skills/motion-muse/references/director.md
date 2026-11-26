@@ -31,6 +31,7 @@ python3 "$SKILL_DIR/scripts/director.py" init ~/videos/<slug> --caps 3d,atmosphe
 |---|---|---|---|
 | `thai-type` | `lib/typography` | none | always |
 | `character-2d` | `lib/characters` + `lib/pose` (Stickman, VectorCharacter, gaits, key poses, blink, talk) | none | cartoons, mascots, explainers |
+| `flat` | `lib/flat` (FlatCharacter: big head, 7 looks, 9 hair styles, outfits, badges, 10 expressions, poses, walk, idle/talk, Sweat/ShockLines/AngerMark/Sparkles) + `lib/city` (CityBackdrop, Skytrain, Street, Car, Motorbike, TrafficLight, RoadSign, Rooftop, Bushes, TimeBadge, NoteCard, TransferSlip) + `lib/story` | none | flat 2D explainer stories (Thai YouTube style), 16:9 or 9:16 |
 | `diagram` | `lib/diagram` (Draw, Arrow, Callout, Flow, Ecg, Blob, Virus, GridPaper) | none | science, education, how-it-works |
 | `parallax` | `lib/parallax` (Parallax/Layer depth, Sky, Ridge, Skyline, FogBand, Stars) | none | 2.5D worlds, side-scrollers, storybook |
 | `atmosphere` | `lib/atmosphere` (GodRays, Fog, Particles, LightSweep, Glow, Vignette, Letterbox, Scanlines, Grade) | none | any mood/lighting, works over 2D, 3D and footage |
@@ -102,6 +103,7 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 | `examples/zombie-biology` | SVG only | stickman + vector characters, gaits, diagrams, parallax race, Mali |
 | `examples/apocalypse-observer` | `@remotion/three` | ruined procedural city, third-person observer camera, fog/ash, flicker, silhouettes, Noto Serif Thai |
 | `examples/luxury-product` | `@remotion/three` | lathe-turned bottle, studio lighting, macro orbit, packshot, IBM Plex Sans Thai |
+| `examples/life-time` | SVG only + `lib/flat` + `lib/city` + `lib/story` | flat cartoon explainer, 16:9, 33 s: "what if life-time could be transferred", office worker, motorbike-taxi rider, tycoon, Bangkok street with skytrain and countdown light, life-time badges, price card, transfer slip, night rooftop, subtitles + SFX + music from `script.json`, no voice, Prompt (run `story.py build` on its `script.json` first) |
 | `examples/zombie-id` | `@remotion/three` + `lib/toon` + `lib/story` | toon story: cel-shaded zombie and clerk, graveyard and office sets, Thai signs, 360° orbit, subtitles + SFX + music from `script.json`, no voice, Prompt (run `story.py build` on its `script.json` first) |
 
 Copy with `cp -r "$SKILL_DIR/examples/<name>" src/` (they import `../lib/*` and `../transitions`), set `"resolveJsonModule": true` (done by `init`), and put the example's music at the path it expects or swap it for a new track.

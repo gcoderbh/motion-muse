@@ -1,0 +1,29 @@
+{
+ "title": "ถ้าพรุ่งนี้ \"เวลาชีวิต\" โอนได้ (flat cartoon explainer test)",
+ "comp": "LifeTime", "fps": 30, "width": 1920, "height": 1080, "cps": 11,
+ "brief": "16:9 flat 2D cartoon explainer in the style of Thai YouTube story channels: what if life-time could be transferred like PromptPay. Subtitles, music and SFX; no voice.",
+ "style": { "look": "flat vector cartoon, big heads, pastel Bangkok street, skytrain, navy night rooftop", "palette": ["#CFE6F5", "#3D7DD8", "#F07A1A", "#FFD23F", "#13224A"], "thaiFont": "Prompt", "music": "Mixkit 'Kidding Around' (humorous, mallets)" },
+ "caps": ["character-2d", "parallax", "thai-type"],
+ "cast": { "ton": { "name": "ต้น", "color": "#9CC8FF" }, "rider": { "name": "พี่วิน", "color": "#FFB067" }, "tycoon": { "name": "เสี่ย", "color": "#F2D27A" } },
+ "music": [ { "file": "audio/bgm.mp3", "from": 0, "volume": 0.2 } ],
+ "scenes": [
+  { "id": "title", "shot": "Wide street, camera pushes in, headline slams in word by word", "min": 3.2, "lead": 0, "pad": 0, "out": "whip",
+    "sfx": [ { "file": "audio/sfx/whoosh-fast.mp3", "at": 0, "volume": 0.6 }, { "file": "audio/sfx/pop.mp3", "at": 0.5, "volume": 0.8 }, { "file": "audio/sfx/bass-hit-short.mp3", "at": 1.0, "volume": 0.6 } ] },
+  { "id": "street", "shot": "Ton waits at a red light with a 185 s countdown, checks his phone, life-time badge above his head", "lead": 0.6, "pad": 0.3, "out": "push",
+    "sfx": [ { "file": "audio/sfx/pop.mp3", "at": 0.7, "volume": 0.7 } ],
+    "lines": [ { "who": "narr", "text": "วันที่เวลาชีวิตโอนกันได้ ทุกคนมีตัวเลขลอยอยู่บนหัว" },
+               { "who": "ton", "text": "ไฟแดงอีกสามนาที ประชุมเริ่มแล้ว!", "sfx": [ { "file": "audio/sfx/clock-tick-single.mp3", "at": 0.2, "volume": 0.8 } ] } ] },
+  { "id": "offer", "shot": "Rider (vest 09) walks in beside his scooter, a price card pops: 3 hours of life; Ton is shocked", "lead": 0.9, "pad": 0.4, "out": "zoom",
+    "lines": [ { "who": "rider", "text": "ไปทันแน่พี่ ค่ารถแค่สามชั่วโมงชีวิต", "sfx": [ { "file": "audio/sfx/pop.mp3", "at": 1.6, "volume": 0.8 } ] },
+               { "who": "ton", "text": "สามชั่วโมง!? แพงกว่าค่าข้าวอีก", "sfx": [ { "file": "audio/sfx/bass-hit-short.mp3", "at": 0, "volume": 0.7 } ] } ] },
+  { "id": "pay", "shot": "Close two-shot: Ton and a phone transfer slip; 3 hours fly out, his badge drops", "lead": 0.4, "pad": 0.6, "out": "flash",
+    "sfx": [ { "file": "audio/sfx/switch-click-quick.mp3", "at": 0.5, "volume": 0.7 }, { "file": "audio/sfx/clock-knob-spin.mp3", "at": 0.7, "volume": 0.6 }, { "file": "audio/sfx/ui-success-soft.mp3", "at": 2.0, "volume": 0.8 } ],
+    "lines": [ { "who": "narr", "text": "กดโอนผ่านพร้อมเพย์ชีวิต... หายไปสามชั่วโมง" } ] },
+  { "id": "rich", "shot": "Night rooftop: the tycoon in a suit, gold badge 312 years, sparkles", "lead": 0.6, "pad": 0.4, "out": "iris",
+    "sfx": [ { "file": "audio/sfx/sparkle.mp3", "at": 0.4, "volume": 0.6 } ],
+    "lines": [ { "who": "narr", "text": "แต่บางคนซื้อเวลาตุนไว้แล้ว 312 ปี" },
+               { "who": "tycoon", "text": "เวลาไม่ใช่ปัญหา ถ้ามีเงิน" } ] },
+  { "id": "end", "shot": "Question card with Ton and the rider either side", "min": 3.0, "lead": 0, "pad": 0,
+    "sfx": [ { "file": "audio/sfx/swoosh-quick.mp3", "at": 0, "volume": 0.6 }, { "file": "audio/sfx/pop.mp3", "at": 0.6, "volume": 0.8 } ] }
+ ]
+}
