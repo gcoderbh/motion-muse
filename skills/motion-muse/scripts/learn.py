@@ -36,7 +36,8 @@ def load():
 
 
 def store(d):
-    os.makedirs(HOME, mode=0o700, exist_ok=True); os.chmod(HOME, 0o700)
+    if not os.path.isdir(HOME):
+        os.makedirs(HOME, mode=0o700); os.chmod(HOME, 0o700)
     tmp = DB + ".tmp"
     with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as fh:
         fh.write(json.dumps(d, ensure_ascii=False, indent=1) + "\n")
@@ -79,14 +80,14 @@ def cmd_show(a):
 
 def cmd_note(a):
     d = load(); writable(d)
-    if a.kind not in KINDS: sys.exit(f"--kind must be one of {', '.join(KINDS)}")
+    if a.kind and a.kind not in KINDS: sys.exit(f"--kind must be one of {', '.join(KINDS)}")
     if SECRET.search(a.text): sys.exit("refused: looks like a secret; never store keys or passwords")
     tags = [t.strip().lower() for t in (a.tag or "").split(",") if t.strip()]
     for n in d["notes"]:
         if n["text"].strip().lower() == a.text.strip().lower():
-            n["hits"] = n.get("hits", 1) + 1; n["last"] = today(); n.pop("imported", None); n["tags"] = sorted(set(n.get("tags", [])) | set(tags))
+            n["hits"] = n.get("hits", 1) + 1; n["last"] = today(); n.pop("imported", None); n["kind"] = a.kind or n["kind"]; n["tags"] = sorted(set(n.get("tags", [])) | set(tags))
             store(d); print(f"seen again #{n['id']} (x{n['hits']})"); return
-    n = {"id": d["next"], "kind": a.kind, "text": a.text.strip(), "tags": tags, "added": today(), "last": today(), "hits": 1}
+    n = {"id": d["next"], "kind": a.kind or "rule", "text": a.text.strip(), "tags": tags, "added": today(), "last": today(), "hits": 1}
     d["next"] += 1; d["notes"].append(n); store(d); print(f"noted #{n['id']}")
 
 
@@ -186,7 +187,7 @@ def cmd_import(a):
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 sp = ap.add_subparsers(dest="cmd", required=True)
 s = sp.add_parser("show"); s.add_argument("--brief"); s.add_argument("--limit", type=int, default=30); s.set_defaults(fn=cmd_show)
-s = sp.add_parser("note"); s.add_argument("text"); s.add_argument("--kind", default="rule"); s.add_argument("--tag"); s.set_defaults(fn=cmd_note)
+s = sp.add_parser("note"); s.add_argument("text"); s.add_argument("--kind"); s.add_argument("--tag"); s.set_defaults(fn=cmd_note)
 s = sp.add_parser("use"); s.add_argument("technique"); s.add_argument("--desc"); s.set_defaults(fn=cmd_use)
 s = sp.add_parser("save"); s.add_argument("technique"); s.add_argument("files", nargs="+"); s.add_argument("--desc"); s.set_defaults(fn=cmd_save)
 s = sp.add_parser("get"); s.add_argument("technique"); s.add_argument("project"); s.set_defaults(fn=cmd_get)
