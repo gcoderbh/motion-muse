@@ -88,7 +88,9 @@ export const flatLook = (name: keyof typeof FLAT_LOOKS | string, over: Partial<F
 export type FlatExpr = 'neutral' | 'happy' | 'laugh' | 'shocked' | 'worried' | 'angry' | 'smug' | 'sad' | 'wink' | 'sleepy';
 
 // ---------- body geometry ----------
-const SH_Y = -188, HIP_Y = -96, UP = 52, FORE = 46, HEAD_R = 47;
+// Motion Muse "sticker" style: wide pebble head that sits into the collar (no neck shows), bean torso,
+// mitten hands, every shape outlined in a darker tone of its own colour.
+const SH_Y = -176, HIP_Y = -92, UP = 50, FORE = 44, HEAD_R = 50, HW = 58, HH = 52;
 const dir2 = (s: number, a: number): P => [s * Math.sin(rad(a)), Math.cos(rad(a))];
 /** Joint positions in character space (before x/y/scale): use them to hang a badge over the head or put a prop in a hand. */
 export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
@@ -99,14 +101,14 @@ export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
     return [dx * Math.cos(a) - dy * Math.sin(a), HIP_Y + dx * Math.sin(a) + dy * Math.cos(a) + lift];
   };
   const arm = (s: number, sh: number, el: number) => {
-    const S: P = [s * 40 * (look.build ?? 1), SH_Y * hgt + 6];
+    const S: P = [s * 36 * (look.build ?? 1), SH_Y * hgt + 12];
     const ua = dir2(s, sh), E: P = [S[0] + ua[0] * UP, S[1] + ua[1] * UP];
     const fa = dir2(s, sh + el), Hd: P = [E[0] + fa[0] * FORE, E[1] + fa[1] * FORE];
     return { S: rot(S), E: rot(E), H: rot(Hd), angle: sh + el };
   };
   const neck = rot([0, SH_Y * hgt]);
-  const head = rot([0, SH_Y * hgt - HEAD_R - 2]);
-  return { neck, head, headTop: [head[0], head[1] - HEAD_R - 14] as P, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
+  const head = rot([0, SH_Y * hgt - HH + 8]);
+  return { neck, head, headTop: [head[0], head[1] - HH - 14] as P, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
 };
 
 // ---------- parts ----------
@@ -115,33 +117,43 @@ const shade = (hex: string, k: number) => {
   const c = (v: number) => Math.max(0, Math.min(255, Math.round(v * k)));
   return `#${((c(n >> 16) << 16) | (c((n >> 8) & 255) << 8) | c(n & 255)).toString(16).padStart(6, '0')}`;
 };
-const seg = (pts: P[], w: number, col: string) => <polyline points={pts.map((q) => q.join(',')).join(' ')} fill="none" stroke={col} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />;
+const edge = (c: string) => shade(c, 0.62);
+const OL = 4;
+const seg = (pts: P[], w: number, col: string, outline = true) => {
+  const pp = pts.map((q) => q.join(',')).join(' ');
+  return <g>
+    {outline && <polyline points={pp} fill="none" stroke={edge(col)} strokeWidth={w + OL * 2} strokeLinecap="round" strokeLinejoin="round" />}
+    <polyline points={pp} fill="none" stroke={col} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+  </g>;
+};
 
+// hair is drawn for a round head of radius HEAD_R and stretched to the pebble head
 const Hair: React.FC<{ look: FlatLook; back?: boolean }> = ({ look, back }) => {
   const r = HEAD_R, c = look.hair, d = shade(c, 0.8);
+  const st = { stroke: edge(c), strokeWidth: OL, strokeLinejoin: 'round' as const };
   switch (look.hairStyle) {
-    case 'spiky':
-      return back ? null : <path d={`M${-r - 2} 2 Q${-r - 6} ${-r * 0.9} ${-r * 0.55} ${-r - 8} L${-r * 0.42} ${-r - 22} L${-r * 0.12} ${-r - 10} L${r * 0.1} ${-r - 26} L${r * 0.32} ${-r - 9} L${r * 0.62} ${-r - 20} L${r * 0.7} ${-r - 4} Q${r + 8} ${-r * 0.7} ${r + 2} 2 Q${r * 0.7} ${-r * 0.55} ${r * 0.25} ${-r * 0.6} L${r * 0.1} ${-r * 0.42} L${-r * 0.12} ${-r * 0.62} Q${-r * 0.75} ${-r * 0.55} ${-r - 2} 2 Z`} fill={c} />;
+    case 'spiky': // three soft tufts, not spikes
+      return back ? null : <path {...st} d={`M${-r - 2} 6 Q${-r - 6} ${-r * 0.9} ${-r * 0.5} ${-r - 6} Q${-r * 0.3} ${-r - 22} ${-r * 0.02} ${-r - 10} Q${r * 0.25} ${-r - 24} ${r * 0.45} ${-r - 6} Q${r + 8} ${-r * 0.9} ${r + 2} 6 Q${r * 0.85} ${-r * 0.5} ${r * 0.3} ${-r * 0.55} Q${r * 0.1} ${-r * 0.3} ${-r * 0.15} ${-r * 0.55} Q${-r * 0.8} ${-r * 0.55} ${-r - 2} 6 Z`} fill={c} />;
     case 'side':
-      return back ? null : <path d={`M${-r - 1} 4 Q${-r - 4} ${-r - 10} ${r * 0.1} ${-r - 8} Q${r + 8} ${-r - 4} ${r + 1} 4 Q${r * 0.85} ${-r * 0.6} ${-r * 0.2} ${-r * 0.62} Q${-r * 0.75} ${-r * 0.5} ${-r - 1} 4 Z`} fill={c} />;
+      return back ? null : <path {...st} d={`M${-r - 1} 6 Q${-r - 4} ${-r - 10} ${r * 0.1} ${-r - 8} Q${r + 8} ${-r - 4} ${r + 1} 6 Q${r * 0.85} ${-r * 0.6} ${-r * 0.2} ${-r * 0.62} Q${-r * 0.75} ${-r * 0.5} ${-r - 1} 6 Z`} fill={c} />;
     case 'buzz':
       return back ? null : <path d={`M${-r} -2 Q${-r} ${-r - 4} 0 ${-r - 4} Q${r} ${-r - 4} ${r} -2 Q${r * 0.6} ${-r * 0.7} 0 ${-r * 0.72} Q${-r * 0.6} ${-r * 0.7} ${-r} -2 Z`} fill={c} opacity={0.92} />;
     case 'bald':
-      return back ? null : <g fill={c}>
-        <path d={`M${-r - 3} 8 Q${-r - 6} ${-r * 0.5} ${-r * 0.55} ${-r * 0.62} Q${-r * 0.8} ${-r * 0.2} ${-r * 0.72} 6 Z`} />
-        <path d={`M${r + 3} 8 Q${r + 6} ${-r * 0.5} ${r * 0.55} ${-r * 0.62} Q${r * 0.8} ${-r * 0.2} ${r * 0.72} 6 Z`} />
+      return back ? null : <g fill={c} {...st}>
+        <path d={`M${-r - 3} 10 Q${-r - 6} ${-r * 0.5} ${-r * 0.55} ${-r * 0.62} Q${-r * 0.8} ${-r * 0.2} ${-r * 0.72} 8 Z`} />
+        <path d={`M${r + 3} 10 Q${r + 6} ${-r * 0.5} ${r * 0.55} ${-r * 0.62} Q${r * 0.8} ${-r * 0.2} ${r * 0.72} 8 Z`} />
       </g>;
     case 'bob':
-      return back ? <path d={`M${-r - 8} ${r * 0.45} Q${-r - 12} ${-r - 8} 0 ${-r - 10} Q${r + 12} ${-r - 8} ${r + 8} ${r * 0.45} Q${r * 0.6} ${r * 0.6} ${r * 0.5} ${r * 0.2} L${-r * 0.5} ${r * 0.2} Q${-r * 0.6} ${r * 0.6} ${-r - 8} ${r * 0.45} Z`} fill={d} />
-        : <path d={`M${-r - 4} ${r * 0.1} Q${-r - 6} ${-r - 8} ${r * 0.1} ${-r - 9} Q${r + 6} ${-r - 6} ${r + 4} ${r * 0.1} Q${r * 0.9} ${-r * 0.45} ${r * 0.2} ${-r * 0.5} Q${-r * 0.2} ${-r * 0.3} ${-r * 0.5} ${-r * 0.55} Q${-r * 0.9} ${-r * 0.3} ${-r - 4} ${r * 0.1} Z`} fill={c} />;
+      return back ? <path {...st} d={`M${-r - 8} ${r * 0.5} Q${-r - 12} ${-r - 8} 0 ${-r - 10} Q${r + 12} ${-r - 8} ${r + 8} ${r * 0.5} Z`} fill={d} />
+        : <path {...st} d={`M${-r - 4} ${r * 0.15} Q${-r - 6} ${-r - 8} ${r * 0.1} ${-r - 9} Q${r + 6} ${-r - 6} ${r + 4} ${r * 0.15} Q${r * 0.9} ${-r * 0.45} ${r * 0.2} ${-r * 0.5} Q${-r * 0.2} ${-r * 0.3} ${-r * 0.5} ${-r * 0.55} Q${-r * 0.9} ${-r * 0.4} ${-r - 4} ${r * 0.15} Z`} fill={c} />;
     case 'long':
-      return back ? <path d={`M${-r - 8} ${r * 1.5} Q${-r - 14} ${-r - 8} 0 ${-r - 10} Q${r + 14} ${-r - 8} ${r + 8} ${r * 1.5} Q0 ${r * 1.7} ${-r - 8} ${r * 1.5} Z`} fill={d} />
-        : <path d={`M${-r - 4} ${r * 0.4} Q${-r - 6} ${-r - 8} ${r * 0.1} ${-r - 9} Q${r + 6} ${-r - 6} ${r + 4} ${r * 0.4} Q${r * 0.9} ${-r * 0.4} ${r * 0.15} ${-r * 0.55} Q${-r * 0.8} ${-r * 0.45} ${-r - 4} ${r * 0.4} Z`} fill={c} />;
+      return back ? <path {...st} d={`M${-r - 8} ${r * 1.5} Q${-r - 14} ${-r - 8} 0 ${-r - 10} Q${r + 14} ${-r - 8} ${r + 8} ${r * 1.5} Q0 ${r * 1.7} ${-r - 8} ${r * 1.5} Z`} fill={d} />
+        : <path {...st} d={`M${-r - 4} ${r * 0.4} Q${-r - 6} ${-r - 8} ${r * 0.1} ${-r - 9} Q${r + 6} ${-r - 6} ${r + 4} ${r * 0.4} Q${r * 0.9} ${-r * 0.4} ${r * 0.15} ${-r * 0.55} Q${-r * 0.8} ${-r * 0.45} ${-r - 4} ${r * 0.4} Z`} fill={c} />;
     case 'bun':
-      return back ? <circle cx={0} cy={-r - 12} r={r * 0.42} fill={d} />
-        : <path d={`M${-r - 2} 4 Q${-r - 4} ${-r - 6} 0 ${-r - 6} Q${r + 4} ${-r - 6} ${r + 2} 4 Q${r * 0.8} ${-r * 0.5} 0 ${-r * 0.55} Q${-r * 0.8} ${-r * 0.5} ${-r - 2} 4 Z`} fill={c} />;
+      return back ? <circle {...st} cx={0} cy={-r - 12} r={r * 0.42} fill={d} />
+        : <path {...st} d={`M${-r - 2} 6 Q${-r - 4} ${-r - 6} 0 ${-r - 6} Q${r + 4} ${-r - 6} ${r + 2} 6 Q${r * 0.8} ${-r * 0.5} 0 ${-r * 0.55} Q${-r * 0.8} ${-r * 0.5} ${-r - 2} 6 Z`} fill={c} />;
     case 'curly':
-      return back ? null : <g fill={c}>{Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.05 + i * 0.112); return <circle key={i} cx={Math.cos(a) * r * 0.92} cy={Math.sin(a) * r * 0.92 - 4} r={r * 0.3} />; })}</g>;
+      return back ? null : <g fill={c} {...st}>{Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.05 + i * 0.112); return <circle key={i} cx={Math.cos(a) * r * 0.92} cy={Math.sin(a) * r * 0.92 - 4} r={r * 0.3} />; })}</g>;
     default: return null;
   }
 };
@@ -149,119 +161,146 @@ const Hair: React.FC<{ look: FlatLook; back?: boolean }> = ({ look, back }) => {
 const Face: React.FC<{ look: FlatLook; expr: FlatExpr; mouth: number; blink: number; gaze: P; uid: string }> = ({ look, expr, mouth, blink, gaze, uid }) => {
   const ink = look.ink ?? '#2A1E1E';
   const big = expr === 'shocked';
-  const ex = 17, ey = -4;
+  const ex = 21, ey = -4;
   const closed = expr === 'happy' || expr === 'laugh';
-  const lid = Math.max(blink, expr === 'smug' || expr === 'sleepy' ? 0.5 : 0);
+  const lid = Math.max(blink, expr === 'smug' || expr === 'sleepy' ? 0.45 : 0);
   const eye = (s: number) => {
-    const x = s * ex;
-    if (closed || (expr === 'wink' && s > 0)) return <path key={s} d={`M${x - 10} ${ey + 3} Q${x} ${ey - 9} ${x + 10} ${ey + 3}`} stroke={ink} strokeWidth={4} fill="none" strokeLinecap="round" />;
-    const rx = big ? 13 : 10, ry = (big ? 15 : 12) * (1 - 0.92 * blink);
-    const pr = big ? 3.6 : 5.6;
-    const px = x + gaze[0] * (rx - pr - 1), py = ey + gaze[1] * (ry * 0.5);
-    return (
+    const x = s * ex + gaze[0] * 4, y = ey + gaze[1] * 3;
+    if (closed || (expr === 'wink' && s > 0)) return <path key={s} d={`M${x - 9} ${y + 3} Q${x} ${y - 8} ${x + 9} ${y + 3}`} stroke={ink} strokeWidth={5} fill="none" strokeLinecap="round" />;
+    if (big) return ( // ring eyes with a pin pupil
       <g key={s}>
-        <ellipse cx={x} cy={ey} rx={rx} ry={Math.max(1, ry)} fill="#FFFFFF" stroke={ink} strokeOpacity={0.25} strokeWidth={1.5} />
-        {ry > 3 && <><circle cx={px} cy={py} r={pr} fill={look.iris ?? ink} /><circle cx={px + pr * 0.35} cy={py - pr * 0.4} r={pr * 0.34} fill="#fff" /></>}
-        {lid > 0.05 && blink < 0.5 && <g>
-          <clipPath id={`e${uid}${s}`}><ellipse cx={x} cy={ey} rx={rx + 0.5} ry={ry + 0.5} /></clipPath>
-          <rect x={x - rx - 1} y={ey - ry - 1} width={rx * 2 + 2} height={ry * 2 * lid + 1} fill={look.skin} clipPath={`url(#e${uid}${s})`} />
-          <path d={`M${x - rx} ${ey - ry + ry * 2 * lid} L${x + rx} ${ey - ry + ry * 2 * lid}`} stroke={ink} strokeWidth={3} strokeLinecap="round" />
-        </g>}
-        {look.lashes && <path d={`M${x + s * (rx - 2)} ${ey - ry + 2} l${s * 6} -5`} stroke={ink} strokeWidth={2.5} strokeLinecap="round" />}
-      </g>
-    );
+        <circle cx={x} cy={y} r={14 * (1 - 0.9 * blink) + 1} fill="#fff" stroke={ink} strokeWidth={3.5} />
+        {blink < 0.5 && <circle cx={x + gaze[0] * 4} cy={y + gaze[1] * 4} r={3.4} fill={ink} />}
+      </g>);
+    const ry = 10.5 * (1 - 0.92 * blink), rx = 7;
+    if (blink > 0.85) return <path key={s} d={`M${x - 7} ${y} h14`} stroke={ink} strokeWidth={4.5} strokeLinecap="round" />;
+    return ( // solid capsule eyes: the house style
+      <g key={s}>
+        <clipPath id={`e${uid}${s}`}><rect x={x - rx - 2} y={y - ry + 2 * ry * lid} width={rx * 2 + 4} height={ry * 2 + 4} /></clipPath>
+        <g clipPath={`url(#e${uid}${s})`}>
+          <ellipse cx={x} cy={y} rx={rx} ry={ry} fill={look.iris ?? ink} />
+          <circle cx={x + 2.4} cy={y - ry * 0.42} r={2.6} fill="#fff" />
+        </g>
+        {lid > 0.05 && <path d={`M${x - rx - 2} ${y - ry + 2 * ry * lid} h${rx * 2 + 4}`} stroke={ink} strokeWidth={4} strokeLinecap="round" />}
+        {look.lashes && <path d={`M${x + s * (rx - 1)} ${y - ry + 3} l${s * 6} -5`} stroke={ink} strokeWidth={3} strokeLinecap="round" />}
+      </g>);
   };
-  const by = big ? -30 : -22;
+  const by = big ? -32 : -25;
   const brow = (s: number) => {
-    const tilt = expr === 'angry' ? 7 : expr === 'worried' || expr === 'sad' ? -6 : expr === 'smug' ? (s > 0 ? -4 : 2) : 0;
-    const x0 = s * 9, x1 = s * 25;
-    return <path key={s} d={`M${x0} ${by + tilt} Q${(x0 + x1) / 2} ${by - 3 + tilt * 0.3} ${x1} ${by - tilt * 0.4}`} stroke={shade(look.hair === '#E9E6E1' ? '#9A948C' : look.hair, 1)} strokeWidth={4.5} fill="none" strokeLinecap="round" />;
+    const tilt = expr === 'angry' ? 8 : expr === 'worried' || expr === 'sad' || expr === 'shocked' ? -7 : expr === 'smug' ? (s > 0 ? -5 : 2) : 0;
+    const x0 = s * 12, x1 = s * 30;
+    return <path key={s} d={`M${x0} ${by + tilt} L${x1} ${by - tilt * 0.5}`} stroke={look.hair === '#E9E6E1' ? '#9A948C' : look.hair} strokeWidth={6.5} fill="none" strokeLinecap="round" />;
   };
-  const my = 22;
+  const my = 24;
   const open = expr === 'shocked' ? Math.max(0.85, mouth) : expr === 'laugh' ? Math.max(0.7, mouth) : mouth;
   let m: React.ReactNode;
-  if (open > 0.06) {
-    const w = expr === 'shocked' ? 10 + 4 * open : expr === 'laugh' ? 16 : 9 + 5 * open, h = expr === 'shocked' ? 6 + 12 * open : 3 + 11 * open;
-    const d = expr === 'laugh' ? `M${-w} ${my - 3} L${w} ${my - 3} Q${w} ${my + h * 1.4} 0 ${my + h * 1.4} Q${-w} ${my + h * 1.4} ${-w} ${my - 3} Z`
-      : `M${-w} ${my} Q${-w} ${my - h} 0 ${my - h} Q${w} ${my - h} ${w} ${my} Q${w} ${my + h} 0 ${my + h} Q${-w} ${my + h} ${-w} ${my} Z`;
+  if (open > 0.05) {
+    // a D-shaped mouth that opens wide: flat top lip for talking, round for shock
+    const w = expr === 'shocked' ? 10 + 3 * open : 9 + 9 * open, h = expr === 'shocked' ? 8 + 14 * open : 3 + 18 * open;
+    const d = expr === 'shocked' ? `M0 ${my - h * 0.6} Q${w} ${my - h * 0.6} ${w} ${my + h * 0.3} Q${w} ${my + h} 0 ${my + h} Q${-w} ${my + h} ${-w} ${my + h * 0.3} Q${-w} ${my - h * 0.6} 0 ${my - h * 0.6} Z`
+      : `M${-w} ${my - 3} Q0 ${my - 1} ${w} ${my - 3} Q${w * 0.9} ${my + h} 0 ${my + h} Q${-w * 0.9} ${my + h} ${-w} ${my - 3} Z`;
     m = (
       <g>
         <clipPath id={`m${uid}`}><path d={d} /></clipPath>
-        <path d={d} fill="#6B1E2A" />
+        <path d={d} fill="#5A1624" stroke={ink} strokeWidth={3.5} strokeLinejoin="round" />
         <g clipPath={`url(#m${uid})`}>
-          <rect x={-w} y={my - h * 1.5 - 3} width={w * 2} height={h * 0.55 + 2} fill="#fff" />
-          <ellipse cx={0} cy={my + h * 1.1} rx={w * 0.7} ry={h * 0.6} fill="#E76F7E" />
+          {expr !== 'shocked' && <rect x={-w} y={my - 6} width={w * 2} height={Math.min(6, h * 0.35) + 3} fill="#fff" />}
+          <ellipse cx={0} cy={my + h * 1.05} rx={w * 0.7} ry={h * 0.5} fill="#E8677A" />
         </g>
       </g>
     );
-  } else if (expr === 'happy' || expr === 'wink') m = <path d={`M-12 ${my - 2} Q0 ${my + 10} 12 ${my - 2}`} stroke={ink} strokeWidth={4} fill="#fff" strokeLinecap="round" strokeLinejoin="round" />;
-  else if (expr === 'smug') m = <path d={`M-9 ${my + 1} Q4 ${my + 5} 13 ${my - 5}`} stroke={ink} strokeWidth={4} fill="none" strokeLinecap="round" />;
-  else if (expr === 'sad' || expr === 'angry') m = <path d={`M-10 ${my + 4} Q0 ${my - 5} 10 ${my + 4}`} stroke={ink} strokeWidth={4} fill="none" strokeLinecap="round" />;
-  else if (expr === 'worried') m = <path d={`M-10 ${my + 2} q5 -4 10 0 q5 4 10 0`} stroke={ink} strokeWidth={3.5} fill="none" strokeLinecap="round" />;
-  else m = <path d={`M-7 ${my} Q0 ${my + 3} 7 ${my}`} stroke={ink} strokeWidth={4} fill="none" strokeLinecap="round" />;
+  } else if (expr === 'happy' || expr === 'wink') m = <path d={`M-13 ${my - 3} Q0 ${my - 1} 13 ${my - 3} Q11 ${my + 12} 0 ${my + 12} Q-11 ${my + 12} -13 ${my - 3} Z`} stroke={ink} strokeWidth={3.5} fill="#5A1624" strokeLinejoin="round" />;
+  else if (expr === 'smug') m = <path d={`M-10 ${my + 2} Q4 ${my + 6} 14 ${my - 5}`} stroke={ink} strokeWidth={4.5} fill="none" strokeLinecap="round" />;
+  else if (expr === 'sad' || expr === 'angry') m = <path d={`M-11 ${my + 5} Q0 ${my - 5} 11 ${my + 5}`} stroke={ink} strokeWidth={4.5} fill="none" strokeLinecap="round" />;
+  else if (expr === 'worried') m = <path d={`M-12 ${my + 2} q6 -5 12 0 q6 5 12 0`} stroke={ink} strokeWidth={4} fill="none" strokeLinecap="round" />;
+  else m = <path d={`M-9 ${my} Q0 ${my + 5} 9 ${my}`} stroke={ink} strokeWidth={4.5} fill="none" strokeLinecap="round" />;
   return (
     <g>
-      {look.blush !== false && <g fill="#FF8A8A" opacity={expr === 'shocked' ? 0.2 : 0.42}><ellipse cx={-29} cy={12} rx={9} ry={5.5} /><ellipse cx={29} cy={12} rx={9} ry={5.5} /></g>}
+      {look.blush !== false && <g fill="#FF7E7E" opacity={expr === 'shocked' ? 0.15 : 0.38}><ellipse cx={-36} cy={14} rx={10} ry={6} /><ellipse cx={36} cy={14} rx={10} ry={6} /></g>}
       {eye(-1)}{eye(1)}
-      {!closed && brow(-1)}{!closed && brow(1)}
-      {closed && <>{brow(-1)}{brow(1)}</>}
-      <path d="M-4 9 Q0 13 4 9" stroke={shade(look.skin, 0.72)} strokeWidth={3.5} fill="none" strokeLinecap="round" />
-      {look.mustache && <path d={`M-16 ${my - 6} Q-8 ${my - 12} 0 ${my - 8} Q8 ${my - 12} 16 ${my - 6} Q8 ${my - 3} 0 ${my - 6} Q-8 ${my - 3} -16 ${my - 6} Z`} fill={look.hair === '#E9E6E1' ? '#D9D4CC' : look.hair} />}
+      {brow(-1)}{brow(1)}
+      <ellipse cx={0} cy={11} rx={4.5} ry={3.2} fill={shade(look.skin, 0.8)} />
+      {look.mustache && <path d={`M-18 ${my - 6} Q-9 ${my - 13} 0 ${my - 8} Q9 ${my - 13} 18 ${my - 6} Q9 ${my - 2} 0 ${my - 6} Q-9 ${my - 2} -18 ${my - 6} Z`} fill={look.hair === '#E9E6E1' ? '#D9D4CC' : look.hair} stroke={edge(look.hair === '#E9E6E1' ? '#D9D4CC' : look.hair)} strokeWidth={2.5} />}
       {m}
-      {look.old && <g stroke={shade(look.skin, 0.75)} strokeWidth={2} fill="none" strokeLinecap="round"><path d="M-14 -36 q14 -4 28 0" /><path d="M-36 4 q-3 8 0 14" /><path d="M36 4 q3 8 0 14" /></g>}
-      {look.glasses === 'round' && <g stroke={ink} strokeWidth={3} fill="rgba(255,255,255,0.15)"><circle cx={-ex} cy={ey} r={15} /><circle cx={ex} cy={ey} r={15} /><path d={`M-2 ${ey - 2} q2 -3 4 0`} fill="none" /></g>}
-      {look.glasses === 'square' && <g stroke={ink} strokeWidth={3} fill="rgba(255,255,255,0.15)"><rect x={-ex - 15} y={ey - 12} width={30} height={24} rx={6} /><rect x={ex - 15} y={ey - 12} width={30} height={24} rx={6} /><path d={`M-2 ${ey - 2} h4`} /></g>}
-      {look.glasses === 'shades' && <g><path d={`M-34 ${ey - 9} h68 v6 q0 14 -14 14 h-6 q-12 0 -12 -12 h-4 q0 12 -12 12 h-6 q-14 0 -14 -14 Z`} fill="#18181C" /><path d={`M-26 ${ey - 6} l8 0`} stroke="#fff" strokeOpacity={0.5} strokeWidth={3} strokeLinecap="round" /></g>}
+      {look.beard && <path d={`M-34 ${my - 8} Q-30 ${HH - 2} 0 ${HH + 4} Q30 ${HH - 2} 34 ${my - 8} Q20 ${my + 20} 0 ${my + 20} Q-20 ${my + 20} -34 ${my - 8} Z`} fill={look.hair} opacity={0.9} />}
+      {look.old && <g stroke={shade(look.skin, 0.72)} strokeWidth={2.5} fill="none" strokeLinecap="round"><path d="M-16 -40 q16 -5 32 0" /><path d="M-42 6 q-3 8 0 14" /><path d="M42 6 q3 8 0 14" /></g>}
+      {look.glasses === 'round' && <g stroke={ink} strokeWidth={3.5} fill="rgba(255,255,255,0.18)"><circle cx={-ex} cy={ey} r={16} /><circle cx={ex} cy={ey} r={16} /><path d={`M-5 ${ey - 2} q5 -4 10 0`} fill="none" /></g>}
+      {look.glasses === 'square' && <g stroke={ink} strokeWidth={3.5} fill="rgba(255,255,255,0.18)"><rect x={-ex - 16} y={ey - 13} width={32} height={26} rx={7} /><rect x={ex - 16} y={ey - 13} width={32} height={26} rx={7} /><path d={`M-5 ${ey - 2} h10`} /></g>}
+      {look.glasses === 'shades' && <g><path d={`M-40 ${ey - 10} h80 v6 q0 15 -15 15 h-7 q-13 0 -13 -13 h-10 q0 13 -13 13 h-7 q-15 0 -15 -15 Z`} fill="#18181C" /><path d="M-30 -10 l9 0" stroke="#fff" strokeOpacity={0.5} strokeWidth={3} strokeLinecap="round" /></g>}
     </g>
   );
 };
 
-const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1 }> = ({ look, badgeFont, dir = 1 }) => {
+// bean torso: narrower at the shoulders, rounder at the belly; the collar is drawn after the head so the chin sits in it
+const torsoPath = (look: FlatLook) => {
   const b = look.build ?? 1, hy = SH_Y * (look.height ?? 1);
-  const w0 = 44 * b, w1 = 38 * b;
-  const body = `M${-w0 + 12} ${hy - 4} Q0 ${hy - 9} ${w0 - 12} ${hy - 4} Q${w0 + 2} ${hy} ${w0 + 1} ${hy + 18} L${w1} ${HIP_Y + 4} Q${w1} ${HIP_Y + 12} ${w1 - 8} ${HIP_Y + 12} L${-w1 + 8} ${HIP_Y + 12} Q${-w1} ${HIP_Y + 12} ${-w1} ${HIP_Y + 4} L${-w0 - 1} ${hy + 18} Q${-w0 - 2} ${hy} ${-w0 + 12} ${hy - 4} Z`;
+  const w0 = 38 * b, w1 = 46 * b, bot = HIP_Y + 14;
+  return `M${-w0 + 14} ${hy - 2} Q0 ${hy - 8} ${w0 - 14} ${hy - 2} Q${w0 + 4} ${hy + 2} ${w0 + 4} ${hy + 26} Q${w1 + 2} ${HIP_Y - 20} ${w1} ${bot - 12} Q${w1 - 2} ${bot} ${w1 - 16} ${bot} L${-w1 + 16} ${bot} Q${-w1 + 2} ${bot} ${-w1} ${bot - 12} Q${-w1 - 2} ${HIP_Y - 20} ${-w0 - 4} ${hy + 26} Q${-w0 - 4} ${hy + 2} ${-w0 + 14} ${hy - 2} Z`;
+};
+const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1; uid: string }> = ({ look, badgeFont, dir = 1, uid }) => {
+  const hy = SH_Y * (look.height ?? 1), b = look.build ?? 1;
+  const body = torsoPath(look);
   const outer = look.outer ?? look.shirt;
-  const neckV = `M-12 ${hy - 6} L0 ${hy + 12} L12 ${hy - 6} Z`;
+  const main = look.outfit === 'suit' || look.outfit === 'vest' ? outer : look.shirt;
   return (
     <g>
-      <path d={body} fill={look.outfit === 'suit' || look.outfit === 'vest' ? outer : look.shirt} />
-      <path d={body} fill="#000" opacity={0.08} style={{ clipPath: 'inset(0 0 0 50%)' }} />
-      {look.outfit === 'suit' && <>
-        <path d={`M-18 ${hy - 6} L0 ${hy + 40} L18 ${hy - 6} Z`} fill={look.shirt} />
-        {look.tie && <path d={`M-5 ${hy} L5 ${hy} L7 ${hy + 34} L0 ${hy + 44} L-7 ${hy + 34} Z`} fill={look.tie} />}
-        <path d={`M-18 ${hy - 6} L-4 ${hy + 46} L-24 ${hy + 16} Z M18 ${hy - 6} L4 ${hy + 46} L24 ${hy + 16} Z`} fill={shade(outer, 0.75)} />
-        <circle cx={0} cy={HIP_Y - 14} r={3} fill={shade(outer, 0.6)} />
-      </>}
-      {look.outfit === 'vest' && <>
-        <path d={`M-16 ${hy - 6} L0 ${hy + 26} L16 ${hy - 6} Z`} fill={look.shirt} />
-        <rect x={-w1 - 2} y={HIP_Y - 36} width={(w1 + 2) * 2} height={9} fill={look.trim ?? '#FFE15A'} opacity={0.9} />
-        <rect x={-22} y={hy + 30} width={44} height={34} rx={6} fill="#fff" />
-        <rect x={-22} y={hy + 30} width={44} height={10} rx={4} fill={shade(outer, 0.8)} />
-        <text transform={`scale(${dir} 1)`} x={0} y={hy + 61} fontSize={22} fontWeight={800} textAnchor="middle" fill="#1A1A22" fontFamily={badgeFont}>{look.number ?? '00'}</text>
-      </>}
-      {look.outfit === 'apron' && <path d={`M-24 ${hy + 22} h48 l4 ${HIP_Y + 12 - hy - 22} h-56 Z`} fill={outer} />}
-      {(look.outfit === 'shirt') && <path d={`M-16 ${hy - 6} L-3 ${hy + 12} L-8 ${hy + 16} Z M16 ${hy - 6} L3 ${hy + 12} L8 ${hy + 16} Z`} fill={shade(look.shirt, 0.86)} />}
-      {(look.outfit === 'tee' || look.outfit === 'dress') && <path d={neckV} fill={look.skin} />}
-      {look.badge && <>
-        <path d={`M-14 ${hy - 4} L-6 ${hy + 52} M14 ${hy - 4} L6 ${hy + 52}`} stroke="#1E2A52" strokeWidth={4} />
-        <rect x={-20} y={hy + 50} width={40} height={30} rx={5} fill="#fff" stroke="#1E2A52" strokeWidth={2} />
-        <rect x={-20} y={hy + 50} width={40} height={8} rx={3} fill={look.badge.color} />
-        <text transform={`scale(${dir} 1)`} x={0} y={hy + 75} fontSize={13} fontWeight={700} textAnchor="middle" fill="#1A1A22" fontFamily={badgeFont}>{look.badge.name}</text>
-      </>}
+      <path d={body} fill={main} stroke={edge(main)} strokeWidth={OL} strokeLinejoin="round" />
+      <clipPath id={`t${uid}`}><path d={body} /></clipPath>
+      <g clipPath={`url(#t${uid})`}>
+        <ellipse cx={46 * b} cy={HIP_Y - 30} rx={26 * b} ry={80} fill="#000" opacity={0.1} />
+        {look.outfit === 'suit' && <>
+          <path d={`M-20 ${hy - 6} L0 ${hy + 44} L20 ${hy - 6} Z`} fill={look.shirt} />
+          {look.tie && <path d={`M-6 ${hy + 4} L6 ${hy + 4} L8 ${hy + 36} L0 ${hy + 46} L-8 ${hy + 36} Z`} fill={look.tie} stroke={edge(look.tie)} strokeWidth={2.5} />}
+          <path d={`M-20 ${hy - 6} L-3 ${hy + 50} L-28 ${hy + 18} Z M20 ${hy - 6} L3 ${hy + 50} L28 ${hy + 18} Z`} fill={shade(outer, 0.78)} stroke={edge(outer)} strokeWidth={2.5} strokeLinejoin="round" />
+          <circle cx={0} cy={HIP_Y - 12} r={3.5} fill={shade(outer, 0.55)} />
+        </>}
+        {look.outfit === 'vest' && <>
+          <path d={`M-18 ${hy - 6} L0 ${hy + 28} L18 ${hy - 6} Z`} fill={look.shirt} />
+          <rect x={-60} y={HIP_Y - 34} width={120} height={10} fill={look.trim ?? '#FFE15A'} />
+          <rect x={-24} y={hy + 34} width={48} height={36} rx={7} fill="#fff" stroke={edge(outer)} strokeWidth={2.5} />
+          <text transform={`scale(${dir} 1)`} x={0} y={hy + 62} fontSize={23} fontWeight={800} textAnchor="middle" fill="#1A1A22" fontFamily={badgeFont}>{look.number ?? '00'}</text>
+        </>}
+        {look.outfit === 'apron' && <path d={`M-26 ${hy + 26} h52 l6 ${HIP_Y + 16 - hy - 26} h-64 Z`} fill={outer} stroke={edge(outer)} strokeWidth={2.5} />}
+        {look.outfit !== 'dress' && <path d={`M-60 ${HIP_Y + 4} h120`} stroke={edge(main)} strokeWidth={3} opacity={0.6} />}
+      </g>
     </g>
   );
+};
+// collar pieces overlap the bottom of the chin, so the head reads as sitting inside the shirt
+const Collar: React.FC<{ look: FlatLook }> = ({ look }) => {
+  const hy = SH_Y * (look.height ?? 1);
+  const c = look.outfit === 'suit' || look.outfit === 'vest' ? look.shirt : shade(look.shirt, 0.92);
+  const st = { stroke: edge(c), strokeWidth: 3, strokeLinejoin: 'round' as const };
+  if (look.outfit === 'tee' || look.outfit === 'dress' || look.outfit === 'apron')
+    return <path d={`M-24 ${hy - 8} Q0 ${hy + 8} 24 ${hy - 8} L28 ${hy - 1} Q0 ${hy + 18} -28 ${hy - 1} Z`} fill={shade(look.shirt, 0.85)} {...st} stroke={edge(look.shirt)} />;
+  return <g fill={c} {...st}>
+    <path d={`M-1 ${hy + 4} L-22 ${hy - 5} L-25 ${hy + 9} L-9 ${hy + 19} Z`} />
+    <path d={`M1 ${hy + 4} L22 ${hy - 5} L25 ${hy + 9} L9 ${hy + 19} Z`} />
+  </g>;
+};
+const Badge: React.FC<{ look: FlatLook; font?: string; dir: 1 | -1 }> = ({ look, font, dir }) => {
+  if (!look.badge) return null;
+  const hy = SH_Y * (look.height ?? 1);
+  return <g>
+    <path d={`M-16 ${hy + 6} L-7 ${hy + 54} M16 ${hy + 6} L7 ${hy + 54}`} stroke="#1E2A52" strokeWidth={4} strokeLinecap="round" />
+    <rect x={-22} y={hy + 52} width={44} height={32} rx={6} fill="#fff" stroke="#1E2A52" strokeWidth={2.5} />
+    <rect x={-22} y={hy + 52} width={44} height={9} rx={4} fill={look.badge.color} />
+    <text transform={`scale(${dir} 1)`} x={0} y={hy + 79} fontSize={14} fontWeight={700} textAnchor="middle" fill="#1A1A22" fontFamily={font}>{look.badge.name}</text>
+  </g>;
 };
 
 const Arm: React.FC<{ look: FlatLook; a: ReturnType<typeof flatJoints>['L'] }> = ({ look, a }) => {
   const sleeve = look.outfit === 'suit' ? look.outer ?? look.shirt : look.shirt;
-  const mid: P = [a.S[0] + (a.E[0] - a.S[0]) * 0.6, a.S[1] + (a.E[1] - a.S[1]) * 0.6];
+  const mid: P = [a.S[0] + (a.E[0] - a.S[0]) * 0.65, a.S[1] + (a.E[1] - a.S[1]) * 0.65];
   const long = look.sleeves === 'long';
+  const cuff: P = [a.E[0] + (a.H[0] - a.E[0]) * 0.78, a.E[1] + (a.H[1] - a.E[1]) * 0.78];
+  const th = rad(a.angle + 90);
   return (
     <g>
-      {seg([a.S, a.E, a.H], 19, look.skin)}
-      {long ? seg([a.S, a.E, [a.E[0] + (a.H[0] - a.E[0]) * 0.8, a.E[1] + (a.H[1] - a.E[1]) * 0.8]], 23, sleeve) : seg([a.S, mid], 27, sleeve)}
-      <circle cx={a.H[0]} cy={a.H[1]} r={13} fill={look.skin} />
-      <circle cx={a.H[0] + Math.sin(rad(a.angle + 90)) * 9} cy={a.H[1] + Math.cos(rad(a.angle + 90)) * 9} r={5.5} fill={shade(look.skin, 0.93)} />
+      {seg([a.S, a.E, a.H], 17, look.skin)}
+      {long ? seg([a.S, a.E, cuff], 22, sleeve) : seg([a.S, mid], 25, sleeve)}
+      <circle cx={a.H[0]} cy={a.H[1]} r={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+      <ellipse cx={a.H[0] + Math.sin(th) * 11} cy={a.H[1] + Math.cos(th) * 11} rx={6} ry={6} fill={look.skin} stroke={edge(look.skin)} strokeWidth={3} />
     </g>
   );
 };
@@ -276,36 +315,37 @@ export const FlatCharacter: React.FC<{
   const uid = 'fc' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   const j = flatJoints(pose, look);
   const legs = (s: number, lift: number) => {
-    const hx = s * (17 + pose.spread * 0.5) * (look.build ?? 1);
-    const top: P = [hx, HIP_Y + 4 - pose.bob * 0.4], foot: P = [hx + s * pose.spread * 0.6, -6 - lift * 16 - Math.max(0, pose.bob) * 0.6];
+    const hx = s * (18 + pose.spread * 0.5) * (look.build ?? 1);
+    const top: P = [hx, HIP_Y + 4 - pose.bob * 0.4], foot: P = [hx + s * pose.spread * 0.6, -10 - lift * 16 - Math.max(0, pose.bob) * 0.6];
     return (
       <g key={s}>
-        {look.outfit === 'dress' ? seg([[top[0] * 0.6, HIP_Y + 40], foot], 15, look.skin) : seg([top, foot], 29, look.pants)}
-        <ellipse cx={foot[0] + s * 4} cy={foot[1] + 4} rx={19} ry={10} fill={look.shoes} />
+        {look.outfit === 'dress' ? seg([[top[0] * 0.6, HIP_Y + 40], foot], 14, look.skin) : seg([top, foot], 28, look.pants)}
+        <path d={`M${foot[0] - 16 + s * 2} ${foot[1] + 10} Q${foot[0] - 16 + s * 2} ${foot[1] - 6} ${foot[0] + s * 4} ${foot[1] - 6} Q${foot[0] + 20 + s * 4} ${foot[1] - 6} ${foot[0] + 20 + s * 4} ${foot[1] + 10} Z`} fill={look.shoes} stroke={edge(look.shoes === '#111' ? '#444444' : look.shoes)} strokeWidth={3} strokeLinejoin="round" transform={s < 0 ? `translate(${2 * foot[0]} 0) scale(-1 1)` : undefined} />
       </g>
     );
   };
   const tilt = (pose.lean + pose.head) * 0.9;
+  const torsoT = `translate(0 ${-pose.bob}) rotate(${pose.lean} 0 ${HIP_Y})`;
   return (
     <g transform={`translate(${x} ${y}) scale(${scale * dir} ${scale})`} opacity={opacity}>
-      {shadow && <ellipse cx={0} cy={2} rx={62 * (look.build ?? 1)} ry={11} fill="#000" opacity={0.16} />}
+      {shadow && <ellipse cx={0} cy={2} rx={64 * (look.build ?? 1)} ry={11} fill="#000" opacity={0.16} />}
       {legs(-1, pose.legL)}{legs(1, pose.legR)}
-      {look.outfit === 'dress' && <path d={`M-38 ${HIP_Y - 26 - pose.bob} L38 ${HIP_Y - 26 - pose.bob} L50 ${HIP_Y + 44 - pose.bob} Q0 ${HIP_Y + 52 - pose.bob} -50 ${HIP_Y + 44 - pose.bob} Z`} fill={look.pants} />}
-      <g transform={`translate(0 ${-pose.bob}) rotate(${pose.lean} 0 ${HIP_Y})`}>
-        <Torso look={look} badgeFont={font} dir={dir} />
-      </g>
+      {look.outfit === 'dress' && <path d={`M-40 ${HIP_Y - 26 - pose.bob} L40 ${HIP_Y - 26 - pose.bob} L54 ${HIP_Y + 44 - pose.bob} Q0 ${HIP_Y + 54 - pose.bob} -54 ${HIP_Y + 44 - pose.bob} Z`} fill={look.pants} stroke={edge(look.pants)} strokeWidth={OL} strokeLinejoin="round" />}
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
-        <Hair look={look} back />
-        <rect x={-10} y={HEAD_R - 8} width={20} height={16} fill={shade(look.skin, 0.9)} />
-        <ellipse cx={-HEAD_R + 1} cy={6} rx={8} ry={11} fill={shade(look.skin, 0.95)} />
-        <ellipse cx={HEAD_R - 1} cy={6} rx={8} ry={11} fill={shade(look.skin, 0.95)} />
-        <ellipse cx={0} cy={0} rx={HEAD_R} ry={HEAD_R - 1} fill={look.skin} />
-        <clipPath id={`h${uid}`}><ellipse cx={0} cy={0} rx={HEAD_R} ry={HEAD_R - 1} /></clipPath>
-        <ellipse cx={HEAD_R * 0.55} cy={HEAD_R * 0.35} rx={HEAD_R * 0.8} ry={HEAD_R} fill="#7A3A1A" opacity={0.07} clipPath={`url(#h${uid})`} />
-        <Face look={look} expr={expr} mouth={mouth} blink={blink} gaze={gaze} uid={uid} />
-        <Hair look={look} />
-        {look.glasses === 'shadesUp' && <g transform={`translate(0 ${-HEAD_R * 0.72})`}><path d="M-32 -6 h64 v4 q0 12 -12 12 h-6 q-10 0 -10 -10 h-4 q0 10 -10 10 h-6 q-12 0 -12 -12 Z" fill="#18181C" /><path d="M-24 -3 h7" stroke="#fff" strokeOpacity={0.5} strokeWidth={3} strokeLinecap="round" /></g>}
+        <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} back /></g>
       </g>
+      <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} /></g>
+      <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
+        <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+        <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+        <path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+        <clipPath id={`h${uid}`}><path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} /></clipPath>
+        <ellipse cx={HW * 0.75} cy={HH * 0.3} rx={HW * 0.45} ry={HH} fill="#7A3A1A" opacity={0.08} clipPath={`url(#h${uid})`} />
+        <Face look={look} expr={expr} mouth={mouth} blink={blink} gaze={gaze} uid={uid} />
+        <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} /></g>
+        {look.glasses === 'shadesUp' && <g transform={`translate(0 ${-HH * 0.6})`}><path d="M-38 -6 h76 v4 q0 13 -13 13 h-7 q-11 0 -11 -11 h-6 q0 11 -11 11 h-7 q-13 0 -13 -13 Z" fill="#18181C" /><path d="M-28 -3 h8" stroke="#fff" strokeOpacity={0.5} strokeWidth={3} strokeLinecap="round" /></g>}
+      </g>
+      <g transform={torsoT}><Collar look={look} /><Badge look={look} font={font} dir={dir} /></g>
       <Arm look={look} a={j.L} />
       <Arm look={look} a={j.R} />
       {holdL?.(j.L.H, j.L.angle)}
