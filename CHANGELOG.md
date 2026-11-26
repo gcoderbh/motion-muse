@@ -16,7 +16,7 @@
 - `starter/src/lib/slim.tsx`: `SlimCharacter`, a second body with real proportions (about 6 heads), no outlines, one
   shadow tone, finger hands (`relaxed`, `open`, `fist`, `point`, `thumb`, `peace`, `ok`, `pocket`), a face mask, and hair
   that is a cap on the skull so it covers the head at every angle. Same `FlatPose` as `FlatCharacter`; `SLIM_LOOKS`,
-  `SLIM_POCKETS`, `slimReach()`, `SlimHead`, `SlimHandShape`.
+  `SLIM_POCKETS`, `slimReach()`, `SlimHead`, `SlimHandShape`, `SLIM_STRIDE` (walk travel per cycle). `FLAT_LEG` is exported.
 
 ## 1.6.0
 

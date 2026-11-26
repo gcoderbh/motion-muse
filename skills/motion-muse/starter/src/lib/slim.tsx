@@ -1,8 +1,9 @@
 // Slim flat-vector people: real proportions (about 6 heads tall), no outlines, one shadow tone, hands with fingers.
 // Same FlatPose as lib/flat (yaw, sit, lie, stride, jump all work): <SlimCharacter x y look={SLIM_LOOKS.mek} pose={flatPose('wave')} />
 // (x, y) is the ground point between the feet. Pure function of props: animate with useCurrentFrame().
+// Walking with flatStride(): move x by SLIM_STRIDE * scale per cycle (the legs are longer than FlatCharacter's).
 import React from 'react';
-import { FLAT_REST, FlatExpr, FlatPose } from './flat';
+import { FLAT_LEG, FLAT_REST, FLAT_STRIDE, FlatExpr, FlatPose, flatPlant } from './flat';
 
 type P = [number, number];
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -31,6 +32,7 @@ export const SLIM_LOOKS: Record<string, SlimLook> = {
 };
 
 const SH_X = 35, SH_Y = -290, HIP_Y = -186, UP = 74, FORE = 66, THIGH = 92, SHIN = 84;
+export const SLIM_STRIDE = (FLAT_STRIDE * (THIGH + SHIN)) / FLAT_LEG;
 const NECK_B = -292, NECK_T = -314, HEAD_OFF = 26, HRX = 25, HRY = 31;
 const dir2 = (m: number, a: number): P => [m * Math.sin(rad(a)), Math.cos(rad(a))];
 
@@ -52,7 +54,9 @@ export const slimJoints = (p: FlatPose, look: SlimLook) => {
   const b = look.build ?? 1, a = rad((p.yaw ?? 0) * 90), ca = Math.cos(a), sa = Math.sin(a);
   const bent = !!(p.hipL || p.hipR || p.kneeL || p.kneeR);
   const vert = (h: number, k: number) => THIGH * Math.cos(rad(h)) + SHIN * Math.cos(rad(h - k));
-  const bob = bent ? -(THIGH + SHIN - Math.max(vert(p.hipL, p.kneeL), vert(p.hipR, p.kneeR))) : p.bob * 1.2;
+  // bent legs: plant the lower foot, then keep any bob the pose adds beyond FlatCharacter's own plant (scaled)
+  const extra = bent ? (p.bob - Math.max(flatPlant(p.hipL, p.kneeL), flatPlant(p.hipR, p.kneeR))) * ((THIGH + SHIN) / FLAT_LEG) : 0;
+  const bob = bent ? -(THIGH + SHIN - Math.max(vert(p.hipL, p.kneeL), vert(p.hipR, p.kneeR))) + extra : p.bob * 1.2;
   const rot = (q: P): P => {
     const l = rad(p.lean), dx = q[0], dy = q[1] - HIP_Y;
     return [dx * Math.cos(l) - dy * Math.sin(l), HIP_Y + dx * Math.sin(l) + dy * Math.cos(l) - bob];
@@ -264,7 +268,17 @@ export const SlimCharacter: React.FC<{
   const hw = 39 * b, torso = `M${-14 * b} ${SH_Y - 6} L${-hw + 8} ${SH_Y - 2} Q${-hw} ${SH_Y + 2} ${-hw} ${SH_Y + 20} L${-36 * b} ${HIP_Y + 2} Q${-36 * b} ${HIP_Y + 12} ${-30 * b} ${HIP_Y + 12} L${30 * b} ${HIP_Y + 12} Q${36 * b} ${HIP_Y + 12} ${36 * b} ${HIP_Y + 2} L${hw} ${SH_Y + 20} Q${hw} ${SH_Y + 2} ${hw - 8} ${SH_Y - 2} L${14 * b} ${SH_Y - 6} Z`;
   const uid = 'sl' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   const roll = pose.roll ?? 0, air = pose.air ?? 0, sq = pose.squash ?? 1;
-  const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${(-HIP_Y - 40) * Math.abs(Math.sin(rad(roll)))}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
+  // rolled (lying): lift so the lowest rotated part (head, elbow, hand, knee, foot, torso corner) rests on the floor
+  const rollLift = (() => {
+    if (!roll) return 0;
+    const rs = Math.sin(rad(roll)), rc = Math.cos(rad(roll));
+    const pts: [number, number, number][] = [[j.head[0], j.head[1], HRX + 4],
+      ...[j.L, j.R].flatMap((q) => [[q.E[0], q.E[1], 7], [q.H[0], q.H[1], 10]] as [number, number, number][]),
+      ...[j.legL, j.legR].flatMap((q) => [[q.knee[0], q.knee[1], 9], [q.foot[0], q.foot[1], 12]] as [number, number, number][]),
+      ...[-1, 1].flatMap((q) => [[q * hw * kx, SH_Y - j.bob, 4], [q * 36 * b * kx, HIP_Y + 12 - j.bob, 2]] as [number, number, number][])];
+    return -Math.max(...pts.map(([px, py, r]) => HIP_Y + px * rs + (py - HIP_Y) * rc + r));
+  })();
+  const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${rollLift}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
   const legsOrder = j.sa > 0.05 ? [[j.legR, 1], [j.legL, -1]] as const : [[j.legL, -1], [j.legR, 1]] as const;
   const farArms = [j.L, j.R].filter((a) => a.z < -0.2), nearArms = [j.L, j.R].filter((a) => a.z >= -0.2);
   const hand = (a: { s: number }) => (a.s < 0 ? handL : handR);

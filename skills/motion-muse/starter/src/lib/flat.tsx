@@ -22,6 +22,8 @@ export type FlatPose = {
 export const FLAT_REST: FlatPose = { lean: 0, head: 0, shL: 10, elL: 6, shR: 10, elR: 6, legL: 0, legR: 0, bob: 0, spread: 0, yaw: 0, hipL: 0, hipR: 0, kneeL: 0, kneeR: 0, air: 0, squash: 1, roll: 0 };
 export const FLAT_VIEW = { front: 0, three: 0.5, side: 1, threeBack: 1.5, back: 2 };
 const THIGH = 40, SHIN = 38;
+/** Leg length (hip to sole) at scale 1; flatStride/flatPlant angles are in these units. */
+export const FLAT_LEG = THIGH + SHIN;
 /** bob that keeps the foot on the ground for a bent leg (hip and knee in degrees). */
 export const flatPlant = (hip: number, knee: number) => -(THIGH + SHIN - THIGH * Math.cos((hip * Math.PI) / 180) - SHIN * Math.cos(((hip - knee) * Math.PI) / 180));
 /** Seat height above the ground (scale 1) for flatPose('sit'): put the chair top here. */

@@ -159,7 +159,7 @@ build it yourself:
 
 `SlimCharacter` is a second house style for explainers that need ordinary adults instead of cartoons: about 6 heads
 tall, no outlines, one shadow tone per part, small face, hands with fingers. It takes the same `FlatPose`, so every
-preset, `yaw`, `sit`, `lie`, `flatStride()` and `flatJump()` work unchanged. Do not mix the two bodies in one scene.
+preset, `yaw`, `sit`, `lie`, `flatStride()` and `flatJump()` work unchanged. The legs are longer, so a side walk moves x by `SLIM_STRIDE * scale` per `flatStride` cycle, not `FLAT_STRIDE`. Do not mix the two bodies in one scene.
 
 - **Look:** `SlimLook` sets skin, hair colour and style (`wavy`, `long`, `bun`, `curly`, `buzz`), top, bottom, shoes,
   `sleeves`, `shorts`, `mask`, `lashes` and `build` (0.9 is slimmer). `SLIM_LOOKS` has four starting points; vary them.
