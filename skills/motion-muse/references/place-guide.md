@@ -46,7 +46,8 @@ Never download them, even when public: the platforms' terms forbid it and most p
    watermark, written OK kept in the chat).
 3. When the owner sends the file and the user confirms permission, put it in `public/place/<slug>/videos/`, add it
    to `place.json` `videos` with `author` = the channel, `license` = "ได้รับอนุญาต" and `site` = "TikTok" (or the
-   platform); `FoodSpot` credits it on screen and on the end card. Add a line to `CREDITS.md`.
+   platform); `FoodSpot` credits it on screen and on the end card. Give it `source` = the post link; `place.py fetch` keeps
+   entries that are not from Commons when it is run again, and lists them in `CREDITS.md`.
 - Also ask before featuring identifiable people up close, a restaurant's logo, menu art or signage as the main
   subject, or a review's text. Food, streets and buildings in the background are fine.
 

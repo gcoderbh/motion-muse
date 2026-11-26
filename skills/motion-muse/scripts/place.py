@@ -197,6 +197,13 @@ def cmd_fetch(a):
             if len(videos) >= a.videos:
                 break
 
+    # keep media the user added by hand (owner-supplied clips, own photos): anything not from Commons
+    old = os.path.join(out, "place.json")
+    if os.path.isfile(old):
+        prev = json.load(open(old, encoding="utf-8"))
+        own = lambda c: "commons.wikimedia.org" not in c.get("source", "") and os.path.isfile(os.path.join(out, c.get("file", "")))
+        photos += [c for c in prev.get("photos", []) if own(c)]
+        videos += [c for c in prev.get("videos", []) if own(c)]
     addr = " ".join(x for x in [ad.get("road"), ad.get("suburb") or ad.get("quarter"), ad.get("city_district") or ad.get("district"), ad.get("city") or ad.get("state")] if x)
     place = {"name": name, "query": a.query, "lat": lat, "lon": lon, "address": addr or g.get("display_name", ""),
              "osm": "© OpenStreetMap contributors (ODbL)", "map": m, "photos": photos, "videos": videos}
@@ -207,7 +214,7 @@ def cmd_fetch(a):
 
 
 def line(c):
-    return f"{c['title']} โดย {c['author']} · {c['license']} ({c['licenseUrl'] or 'see source'}) · {c['source']}"
+    return f"{c.get('title') or c['file']} โดย {c['author']} · {c['license']} ({c.get('licenseUrl') or 'see source'}) · {c.get('source') or c.get('site', '')}"
 
 
 def write_credits(out, p):
