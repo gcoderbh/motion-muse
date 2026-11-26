@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.8.0
+## 1.9.0
 
 - `references/flat-story.md`: guidance (no example code) for flat 2D episodes: side / three-quarter views with a `turn`
   value, six indoor sets, mouths from a recorded voice (`env` per frame), 2D camera moves, blush / `?` / idea bulb /
@@ -8,6 +8,34 @@
 - `scripts/learn.py`: a notebook on the user's machine (`~/.motion-muse`, or `$MOTION_MUSE_HOME`): `show`, `note`,
   `use` (prints `PROMOTE` after 3 uses), `save` / `get` reusable code, `forget`, `pause` / `resume`, `export` / `import`.
   Refuses text that looks like a secret. `director.py route` and `init` print it; SKILL.md section 8.
+
+## 1.8.0
+
+- `director.py render --draft`: half-resolution render with its own cache and `-draft` output, for quick review rounds.
+- `director.py render --formats 9:16,1:1,16:9` (or `WxH`): one storyboard → one MP4 per size, separate scene caches, shared audio mix.
+- `director.py cover`: picks a sharp, still frame for the thumbnail; with `--title` renders the new `Cover` composition (Thai title inside the safe zone).
+- QA writes `<video>.safe.jpg` with the platform UI zones in red and warns about scenes whose `textY` is outside the safe band.
+- `lib/layout.ts` (`useFormat`: safe box, `u()`, `pick()`), `lib/SafeGuides.tsx` (Studio-only guides), `lib/physics.ts` (projectile, bounce, settle, buoyancy, fill/glug, crown, pulse).
+- `three.tsx` product kit: `tone="agx"`, `kelvin`, `KeyLight`, `useCanvasTexture`, `labelSize`, `LabelWrap`, `MAT`, `useBlindsGobo`; `typography.tsx` `useThaiFontReady`.
+- `examples/cold-brew`; `director.md` sections 7 (layout, safe zones, formats) and 8 (product ads); SKILL.md render/QA now points to `director.py`, new file table and shorter description.
+
+## 1.7.0
+
+- `FlatCharacter` now has `finish: 'soft'` by default: two-tone cel shading on the head, limbs, hands and torso, a hair
+  shine, cast shadows from the fringe, chin and collar, and one key light (`light: 'left' | 'right'`) that stays on the
+  same side of the screen when a character is mirrored. Use `finish: 'flat'` for the old single fills.
+- `references/character-design.md`: rules for designing good-looking 2D characters in code (silhouette, proportions,
+  colour, lines, cel shading, faces, posing, outfits, a checklist with a rendered still).
+- Flat characters turn: `pose.yaw` 0 front, 0.5 three-quarter, 1 side, 2 back (face, ears, hair, badge and arms follow).
+- Two-bone legs (`hipL/hipR`, `kneeL/kneeR`) and presets `sit`, `slump`, `sitFloor`, `lie`, `lieSide`; `FLAT_SEAT`,
+  `flatPlant()` keeps feet on the ground.
+- Physics helpers: `flatStride()` side walk with `FLAT_STRIDE`, `flatJump()` (anticipation, stretch, springy landing),
+  `pose.air` with a shrinking ground shadow, `pose.squash`, `pose.roll`.
+- Guide sections on turning, sitting and lying, physics and weight, and how to invent a pose from a description.
+- `starter/src/lib/slim.tsx`: `SlimCharacter`, a second body with real proportions (about 6 heads), no outlines, one
+  shadow tone, finger hands (`relaxed`, `open`, `fist`, `point`, `thumb`, `peace`, `ok`, `pocket`), a face mask, and hair
+  that is a cap on the skull so it covers the head at every angle. Same `FlatPose` as `FlatCharacter`; `SLIM_LOOKS`,
+  `SLIM_POCKETS`, `slimReach()`, `SlimHead`, `SlimHandShape`, `SLIM_STRIDE` (walk travel per cycle). `FLAT_LEG` is exported.
 
 ## 1.6.0
 
