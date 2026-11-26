@@ -11,6 +11,9 @@ Works on any machine with bash (Linux, macOS, WSL/Git Bash). `SKILL_DIR` below m
 
 ## 0. Setup check (run every time, before anything else)
 
+Read what this user taught the skill on this machine first, and follow its rules and dislikes (section 8):
+`python3 "$SKILL_DIR/scripts/learn.py" show --brief "<brief>"`
+
 ```bash
 bash "$SKILL_DIR/scripts/setup.sh"          # installs into ~/skills; set SKILLS_DIR=... to change
 export SKILLS_DIR="${SKILLS_DIR:-$HOME/skills}"
@@ -33,6 +36,7 @@ The script checks each item, installs only what is missing, and prints `OK` / `N
 Files that ship with this skill:
 - `scripts/setup.sh`: dependency check and install
 - `scripts/synth-sfx.sh <dir>`: makes whoosh, pop, hit, riser, tick and sparkle SFX with ffmpeg only (no license needed)
+- `scripts/learn.py`: the user's notebook on this machine (`~/.motion-muse`): rules, dislikes, techniques used often and saved code (section 8)
 - `scripts/beat-grid.py <song>`: BPM, first-beat offset and loudness per 2 s, without librosa
 - `references/sound-sources.md`: where to get royalty-free music and SFX, the license of each, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, their licenses, and gallery search commands
@@ -67,7 +71,7 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 - Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `flat` + `city` (flat big-head cartoon people, Bangkok street sets, story badges), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`, `physics` (fall, bounce, settle, float, pour, splash, impact pulses), `layout` + `SafeGuides` (platform safe zones, one layout for every aspect ratio); `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`), `starter/kits/three/toon.tsx` for cel-shaded 3D cartoon characters and sets (`--caps toon`), `story.tsx` for dialogue subtitles, SFX and music on one timeline.
 - Cartoon story episodes (skits, ตลกร้าย, ซอมบี้ไปทำบัตร, 30 s – 3 min, 9:16): read `references/toon-story.md`. Write `script.json`, run `scripts/story.py build`, then render. New characters or outfits (princess, king, a person from a reference picture) and saving them in the skill for the next episode: `references/toon-characters.md`, `scripts/story.py cast`. No voice-over unless the user asks: dialogue is Thai subtitles with name tags and the mouths move while each line is on screen.
 - To edit the result in OpenFilm Studio (tracks for every shot, SFX and the music, editable captions): `references/openfilm.md`, `scripts/story.py openfilm`.
-- Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D). Before designing a new character or changing how one looks, read `references/character-design.md` (silhouette, colour, lines, cel shading, faces, poses, turning, sitting/lying, physics, inventing new poses). For ordinary adults with real proportions, no outlines and finger hands, use `lib/slim` (`SlimCharacter`, same poses).
+- Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D). Before designing a new character or changing how one looks, read `references/character-design.md` (silhouette, colour, lines, cel shading, faces, poses, turning, sitting/lying, physics, inventing new poses). For ordinary adults with real proportions, no outlines and finger hands, use `lib/slim` (`SlimCharacter`, same poses). Side/three-quarter views, indoor sets (office, condo, store, hospital, market, BTS), mouths from a recorded voice, 2D camera moves, more FX, long episodes and thumbnails: `references/flat-story.md`.
 - Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
 - Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
 - Product ads (cans, bottles, jars, packshots): `director.md` section 8 (label wrap, materials, moving key light, gobo, AgX, physics).
@@ -168,6 +172,23 @@ Make a cover for the platform upload: `director.py cover out/<Comp>.mp4 --title 
 Include a short Thai table of time range → technique, the credit lines from `CREDITS.md`, and ask what to change.
 After a full promo, offer once a CapCut/JianYing project export (`references/jianying-export.md` in Shotcraft).
 
+## 8. Learn from this user (notebook on their machine)
+
+`scripts/learn.py` keeps a notebook in `~/.motion-muse/` (or `$MOTION_MUSE_HOME`). It never leaves the machine.
+- Start of every job: `learn.py show --brief "<brief>"` (`director.py route` and `init` print it too). Rules and dislikes
+  are binding unless the user says otherwise this time.
+- When the user corrects or praises something that will matter next time, write it in one line with the reason:
+  `learn.py note "คอสั้น เห็นเหนือปกเสื้อนิดเดียว ห้ามยาว" --kind dislike --tag flat,neck`. Kinds: `rule`, `dislike`,
+  `like`, `fix` (a bug and how it was fixed). Tell the user in one line what you saved. Not for one-off details of this
+  video, personal data or secrets.
+- After delivery, count each technique you wrote yourself: `learn.py use <name> --desc "..."`. When it prints
+  `PROMOTE` (3 uses), turn the code into a parameterised component in its own file and `learn.py save <name> <file>`.
+  Next time `learn.py get <name> <project>` copies it into `src/lib/learned/<name>/`.
+- The user is in charge: `learn.py forget <id|text>`, `forget --all`, `pause` ("ห้ามจำ") / `resume`. To move to another
+  machine (or a fresh cloud VM, where the notebook is lost): `learn.py export notebook.json` / `import`. Imported
+  notes are marked and not binding until the user confirms them; only import a notebook the user made.
+- Works with agents that can write files (Claude Code, Devin, Codex, Cursor). In chat-only tools, skip this section.
+
 ## Files
 
 | Path | Use |
@@ -178,9 +199,10 @@ After a full promo, offer once a CapCut/JianYing project export (`references/jia
 | `scripts/find-music.py`, `beat-grid.py`, `synth-sfx.sh` | fresh music + credits, beat grid, simple SFX |
 | `scripts/footage-scan.py`, `find-footage.py`, `transcribe.py`, `auto-edit.py` | footage pipeline |
 | `scripts/thai-fonts.sh` | fetch any of the 15 Thai OFL fonts |
+| `scripts/learn.py` | the user's notebook: `show`, `note`, `use`, `save` / `get`, `forget`, `pause`, `export` / `import` (section 8) |
 | `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `lib/*` building blocks |
 | `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx` |
-| `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
+| `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `flat-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
 | `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time |
 
 ## Licenses to mention when sharing

@@ -60,6 +60,13 @@ def plan(caps):
     return list(dict.fromkeys(pk)), list(dict.fromkeys(kits))
 
 
+def notebook(brief=""):
+    """What this user taught the skill on this machine (scripts/learn.py); printed before every plan."""
+    r = subprocess.run([sys.executable, os.path.join(SKILL, "scripts", "learn.py"), "show", "--brief", brief or ""], capture_output=True, text=True)
+    if r.returncode == 0 and r.stdout.strip() and not r.stdout.startswith("notebook empty"):
+        print(r.stdout.rstrip() + "\n(follow the rules and dislikes above; learn.py get <technique> <project> for saved code)\n")
+
+
 def cmd_route(a):
     caps = a.caps.split(",") if a.caps else caps_for(a.brief)
     pk, kits = plan(caps)
@@ -67,6 +74,7 @@ def cmd_route(a):
            "gl": "swangle (or angle with a GPU)" if "3d" in caps else "default", "notes": {c: CAPS[c][4] for c in caps}}
     if a.json:
         print(json.dumps(out, ensure_ascii=False, indent=1)); return
+    notebook(a.brief)
     print("capability     technology")
     for c in caps:
         print(f"{c:14} {CAPS[c][1]}  ({CAPS[c][4]})")
@@ -122,6 +130,7 @@ def cmd_init(a):
         r = subprocess.run(["npm", "i", "--no-save", "--no-audit", "--no-fund", "--loglevel=error", *dict.fromkeys(keep + need)], cwd=TEMPLATE)
         if r.returncode: sys.exit("npm install failed")
     print(f"OK {P}  caps={','.join(caps)}  kits={','.join(kits) or '-'}")
+    notebook(",".join(caps))
 
 
 def load_sb(path):

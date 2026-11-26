@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0
+
+- `references/flat-story.md`: guidance (no example code) for flat 2D episodes: side / three-quarter views with a `turn`
+  value, six indoor sets, mouths from a recorded voice (`env` per frame), 2D camera moves, blush / `?` / idea bulb /
+  tears / soul FX, 5–10 min episodes, thumbnails.
+- `scripts/learn.py`: a notebook on the user's machine (`~/.motion-muse`, or `$MOTION_MUSE_HOME`): `show`, `note`,
+  `use` (prints `PROMOTE` after 3 uses), `save` / `get` reusable code, `forget`, `pause` / `resume`, `export` / `import`.
+  Refuses text that looks like a secret. `director.py route` and `init` print it; SKILL.md section 8.
+
 ## 1.8.0
 
 - `director.py render --draft`: half-resolution render with its own cache and `-draft` output, for quick review rounds.
