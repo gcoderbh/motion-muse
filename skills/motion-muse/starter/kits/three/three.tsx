@@ -13,12 +13,12 @@ import { Pose } from './pose';
 type V3 = [number, number, number];
 
 /** Full-frame 3D stage: background, fog, tone mapping, shadows. */
-export const Stage3D: React.FC<{ children: React.ReactNode; background?: string; fog?: [string, number, number]; exposure?: number; shadows?: boolean; env?: boolean; fov?: number; tone?: 'aces' | 'agx' | 'none' }> = ({ children, background = '#0B0D12', fog, exposure = 1, shadows = true, env = false, fov = 40, tone = 'aces' }) => {
+export const Stage3D: React.FC<{ children: React.ReactNode; background?: string; fog?: [string, number, number]; exposure?: number; shadows?: boolean; env?: boolean; fov?: number; far?: number; tone?: 'aces' | 'agx' | 'none' }> = ({ children, background = '#0B0D12', fog, exposure = 1, shadows = true, env = false, fov = 40, far = 200, tone = 'aces' }) => {
   const { width, height } = useVideoConfig();
   // follow --scale (draft renders): R3F clamps dpr to >= 1 by default, which would keep drafts at full resolution
   const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   return (
-    <ThreeCanvas width={width} height={height} dpr={dpr} shadows={shadows} camera={{ fov, near: 0.1, far: 200, position: [0, 2, 8] }}
+    <ThreeCanvas width={width} height={height} dpr={dpr} shadows={shadows} camera={{ fov, near: far > 1000 ? 1 : 0.1, far, position: [0, 2, 8] }}
       gl={{ antialias: true, toneMapping: tone === 'none' ? THREE.NoToneMapping : tone === 'agx' ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping, toneMappingExposure: exposure, preserveDrawingBuffer: true }}>
       <color attach="background" args={[background]} />
       {fog && <fog attach="fog" args={fog} />}
