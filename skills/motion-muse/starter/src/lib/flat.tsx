@@ -83,11 +83,15 @@ export const flatStride = (phase: number, over: Partial<FlatPose> = {}): FlatPos
 /** Jump with anticipation, stretch in the air and a springy landing. t = frames since the jump started. Merge: flatPose('rest', flatJump(t)). */
 export const flatJump = (t: number, dur = 30, height = 150): Partial<FlatPose> => {
   const u = Math.max(0, Math.min(1, t / dur));
-  const bend = (k: number) => ({ hipL: 30 * k, hipR: 30 * k, kneeL: 60 * k, kneeR: 60 * k, bob: flatPlant(30 * k, 60 * k) - 6 * k });
-  if (u < 0.25) { const k = Math.sin((u / 0.25) * Math.PI / 2); return { ...bend(k), squash: 1 - 0.14 * k, shL: 10 - 30 * k, shR: 10 - 30 * k, lean: 4 * k }; }
-  if (u < 0.8) { const v = (u - 0.25) / 0.55, up = 4 * v * (1 - v); return { air: height * up, squash: 1 + 0.12 * (1 - up), shL: 150 - 40 * v, shR: 150 - 40 * v, elL: 20, elR: 20, legL: 0.4 * (1 - up), legR: 0.4 * (1 - up) }; }
-  const w = (u - 0.8) / 0.2, k = (1 - w) * Math.max(0, Math.cos(w * Math.PI * 0.5));
-  return { ...bend(k), squash: 1 - 0.2 * (1 - w) * Math.cos(w * Math.PI * 1.5), shL: 10 + 60 * k, shR: 10 + 60 * k, elL: 30 * k, elR: 30 * k };
+  const ease = (x: number) => Math.sin(Math.max(0, Math.min(1, x)) * Math.PI / 2);
+  const bend = (k: number) => ({ hipL: 30 * k, hipR: 30 * k, kneeL: 60 * k, kneeR: 60 * k, bob: flatPlant(30 * k, 60 * k) });
+  if (u < 0.25) { const k = ease(u / 0.25); return { ...bend(k), squash: 1 - 0.14 * k, shL: 10 - 30 * k, shR: 10 - 30 * k, lean: 4 * k }; }
+  if (u < 0.8) { // legs extend during the first frames of take-off, so every value carries on from the crouch
+    const v = (u - 0.25) / 0.55, e = ease(v / 0.18), sh = -20 + (130 - 40 * v) * e;
+    return { ...bend(1 - e), air: height * 4 * v * (1 - v), squash: v < 0.18 ? 0.86 + 0.26 * e : 1.12 - 0.12 * ((v - 0.18) / 0.82), shL: sh, shR: sh, elL: 6 + 14 * e, elR: 6 + 14 * e, lean: 4 * (1 - e) };
+  }
+  const w = (u - 0.8) / 0.2, k = w < 0.3 ? ease(w / 0.3) : Math.cos(((w - 0.3) / 0.7) * Math.PI / 2);
+  return { ...bend(k), squash: 1 - 0.18 * k, shL: 110 - 100 * w + 40 * k, shR: 110 - 100 * w + 40 * k, elL: 20 - 14 * w + 20 * k, elR: 20 - 14 * w + 20 * k };
 };
 /** Idle life on any pose: breathing, small weight shift, and hand gestures while talking (talk 0..1). */
 export const flatIdle = (p: FlatPose, f: number, seed = 0, talk = 0): FlatPose => ({
