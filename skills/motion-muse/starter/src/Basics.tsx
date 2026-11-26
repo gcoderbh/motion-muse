@@ -26,32 +26,33 @@ const Title: React.FC<{ title: string; sub?: string; delay?: number }> = ({ titl
 };
 
 // ---------- DataReel ----------
-export type DataReelProps = { brand?: Partial<Brand>; title: string; sub?: string; kind: 'bar' | 'barh' | 'line' | 'donut' | 'race'; data?: Datum[]; periods?: string[]; series?: RaceSeries[]; unit?: string; prefix?: string; compact?: boolean; source?: string; highlight?: number; perPeriod?: number };
+/** Optional props may be null (a blank batch.py cell) and then mean "not set". */
+export type DataReelProps = { brand?: Partial<Brand> | null; title: string; sub?: string | null; kind: 'bar' | 'barh' | 'line' | 'donut' | 'race'; data?: Datum[] | null; periods?: string[] | null; series?: RaceSeries[] | null; unit?: string | null; prefix?: string | null; compact?: boolean | null; source?: string | null; highlight?: number | null; perPeriod?: number | null };
 export const dataReelMetadata: CalculateMetadataFunction<DataReelProps> = ({ props }) => ({
-  durationInFrames: props.kind === 'race' ? 30 + raceFrames(props.periods?.length ?? 2, props.perPeriod ?? 30, 75) : 8 * FPS,
+  durationInFrames: props.kind === 'race' ? 30 + raceFrames(props.periods?.length ?? 2, props.perPeriod || 30, 75) : 8 * FPS,
 });
 const DataBody: React.FC<DataReelProps> = (p) => {
   const b = useBrand(), { safe, u, landscape } = useFormat();
   const dg = decimals(...(p.data ?? []).map((d) => d.value), ...(p.series ?? []).flatMap((s) => s.values));
-  const fmt = (n: number) => fmtTH(n, { unit: p.unit, prefix: p.prefix, compact: p.compact, digits: p.compact ? undefined : dg });
+  const fmt = (n: number) => fmtTH(n, { unit: p.unit ?? undefined, prefix: p.prefix ?? undefined, compact: !!p.compact, digits: p.compact ? undefined : dg });
   const colors = [b.colors.primary, b.colors.accent, '#FF5A36', '#3DDC97', '#8C7AC9', '#4BC6E8', '#FF8FB1', '#A8B4C4'];
   const cw = safe.w, ch = safe.h - u(landscape ? 260 : 380), common = { font: b.body, ink: b.colors.ink, fmt, fontSize: u(30), delay: 14 };
   return (
     <AbsoluteFill style={{ background: b.colors.bg }}>
-      <div style={{ position: 'absolute', left: safe.x, top: safe.y, width: safe.w }}><Title title={p.title} sub={p.sub} /></div>
+      <div style={{ position: 'absolute', left: safe.x, top: safe.y, width: safe.w }}><Title title={p.title} sub={p.sub ?? undefined} /></div>
       <div style={{ position: 'absolute', left: safe.x, top: safe.y + u(landscape ? 190 : 260), width: cw, height: ch, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        {p.kind === 'bar' && <BarChart {...common} data={p.data ?? []} width={cw} height={ch} colors={colors} highlight={p.highlight} />}
-        {p.kind === 'barh' && <BarChart {...common} data={p.data ?? []} width={cw} height={Math.min(ch, (p.data?.length ?? 1) * u(120))} colors={colors} highlight={p.highlight} horizontal />}
+        {p.kind === 'bar' && <BarChart {...common} data={p.data ?? []} width={cw} height={ch} colors={colors} highlight={p.highlight ?? undefined} />}
+        {p.kind === 'barh' && <BarChart {...common} data={p.data ?? []} width={cw} height={Math.min(ch, (p.data?.length ?? 1) * u(120))} colors={colors} highlight={p.highlight ?? undefined} horizontal />}
         {p.kind === 'line' && <LineChart {...common} data={p.data ?? []} width={cw} height={Math.min(ch, cw * 0.9)} color={b.colors.primary} every={Math.ceil((p.data?.length ?? 1) / 6)} />}
         {p.kind === 'donut' && <Donut {...common} data={p.data ?? []} size={Math.min(cw, ch) * 0.72} colors={colors} />}
-        {p.kind === 'race' && <BarRace {...common} delay={30} periods={p.periods ?? []} series={p.series ?? []} width={cw} height={ch} colors={colors} perPeriod={p.perPeriod} />}
+        {p.kind === 'race' && <BarRace {...common} delay={30} periods={p.periods ?? []} series={p.series ?? []} width={cw} height={ch} colors={colors} perPeriod={p.perPeriod || 30} />}
       </div>
       {p.source && <div style={{ position: 'absolute', left: safe.x, top: safe.y + safe.h - u(50), fontFamily: b.body, fontSize: u(26), lineHeight: 1.4, color: b.colors.ink, opacity: 0.55 }}>ที่มา: {p.source}</div>}
       <Watermark corner="br" size={36} />
     </AbsoluteFill>
   );
 };
-export const DataReel: React.FC<DataReelProps> = (p) => <BrandProvider brand={p.brand}><DataBody {...p} /></BrandProvider>;
+export const DataReel: React.FC<DataReelProps> = (p) => <BrandProvider brand={p.brand ?? undefined}><DataBody {...p} /></BrandProvider>;
 
 // ---------- LyricReel ----------
 export type LyricReelProps = { brand?: Partial<Brand>; lrc?: string; lines?: Line[]; mode?: LyricMode; audio?: string; audioFrom?: number; title?: string };
