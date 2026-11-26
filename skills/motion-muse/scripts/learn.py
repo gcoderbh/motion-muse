@@ -5,7 +5,7 @@
   learn.py note "<text>" [--kind like|dislike|rule|fix] [--tag flat,neck]   # feedback worth keeping
   learn.py use <technique> [--desc "..."]       # count a technique each time a video uses it
   learn.py save <technique> <file>... [--desc]  # keep reusable code once a technique is used often
-  learn.py get <technique> <project>            # copy saved code into <project>/src/lib/learned/
+  learn.py get <technique> <project>            # copy saved code into <project>/src/lib/learned/<technique>/
   learn.py forget <id|technique|text> | --all   # the user can always make it forget
   learn.py pause | resume                       # "ห้ามจำ": stop writing until resumed
   learn.py export <file.json> | import <file.json>   # move the notebook to another machine
@@ -36,9 +36,10 @@ def load():
 
 
 def store(d):
-    os.makedirs(HOME, exist_ok=True)
+    os.makedirs(HOME, mode=0o700, exist_ok=True); os.chmod(HOME, 0o700)
     tmp = DB + ".tmp"
-    open(tmp, "w", encoding="utf-8").write(json.dumps(d, ensure_ascii=False, indent=1) + "\n")
+    with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(d, ensure_ascii=False, indent=1) + "\n")
     os.replace(tmp, DB)
 
 
@@ -67,7 +68,8 @@ def cmd_show(a):
         notes = [n for n in notes if n["kind"] in ("rule", "dislike") or q & (words(n["text"]) | set(n.get("tags", [])))]
     print(f"Motion Muse notebook ({HOME}){'  [paused]' if d['paused'] else ''}")
     for n in notes[:a.limit]:
-        print(f"  #{n['id']:<3} {n['kind']:7} {n['text']}" + (f"  (x{n['hits']})" if n.get("hits", 1) > 1 else ""))
+        print(f"  #{n['id']:<3} {n['kind']:7} {n['text']}" + (f"  (x{n['hits']})" if n.get("hits", 1) > 1 else "")
+              + ("  [imported: not binding until the user confirms → learn.py note the same text]" if n.get("imported") else ""))
     if d["uses"]:
         print("techniques used:")
         for k, u in sorted(d["uses"].items(), key=lambda kv: -kv[1]["count"]):
@@ -82,7 +84,7 @@ def cmd_note(a):
     tags = [t.strip().lower() for t in (a.tag or "").split(",") if t.strip()]
     for n in d["notes"]:
         if n["text"].strip().lower() == a.text.strip().lower():
-            n["hits"] = n.get("hits", 1) + 1; n["last"] = today(); n["tags"] = sorted(set(n.get("tags", [])) | set(tags))
+            n["hits"] = n.get("hits", 1) + 1; n["last"] = today(); n.pop("imported", None); n["tags"] = sorted(set(n.get("tags", [])) | set(tags))
             store(d); print(f"seen again #{n['id']} (x{n['hits']})"); return
     n = {"id": d["next"], "kind": a.kind, "text": a.text.strip(), "tags": tags, "added": today(), "last": today(), "hits": 1}
     d["next"] += 1; d["notes"].append(n); store(d); print(f"noted #{n['id']}")
@@ -103,6 +105,8 @@ def cmd_use(a):
 def cmd_save(a):
     d = load(); writable(d)
     k = slug(a.technique); dst = os.path.join(SNIP, k)
+    names = [os.path.basename(f) for f in a.files]
+    if len(set(names)) != len(names): sys.exit("two files share a name; rename one so neither is lost")
     for f in a.files:
         if not os.path.isfile(f): sys.exit(f"no such file: {f}")
         if SECRET.search(open(f, encoding="utf-8", errors="ignore").read()): sys.exit(f"refused: {f} looks like it contains a secret")
@@ -118,9 +122,10 @@ def cmd_save(a):
 def cmd_get(a):
     d = load(); k = slug(a.technique); u = d["uses"].get(k)
     if not u or not u.get("files"): sys.exit(f"nothing saved for {k} (learn.py show)")
-    dst = os.path.join(os.path.abspath(a.project), "src", "lib", "learned"); os.makedirs(dst, exist_ok=True)
-    for f in u["files"]: shutil.copy(os.path.join(SNIP, k, f), os.path.join(dst, f))
-    print(f"copied {', '.join(u['files'])} → {dst}  (import from './lib/learned/...')")
+    dst = os.path.join(os.path.abspath(a.project), "src", "lib", "learned", k); os.makedirs(dst, exist_ok=True)
+    files = [os.path.basename(f) for f in u["files"] if os.path.isfile(os.path.join(SNIP, k, os.path.basename(f)))]
+    for f in files: shutil.copy(os.path.join(SNIP, k, f), os.path.join(dst, f))
+    print(f"copied {', '.join(files)} → {dst}  (import from './lib/learned/{k}/...')")
     if not d["paused"]:
         u["count"] += 1; u["last"] = today(); store(d)
 
@@ -137,7 +142,7 @@ def cmd_forget(a):
         (gone if str(n["id"]) == w.lstrip("#") or (not w.lstrip("#").isdigit() and w.lower() in n["text"].lower()) else keep).append(n)
     d["notes"] = keep
     k = slug(w)
-    if k in d["uses"]:
+    if not gone and k in d["uses"]:
         d["uses"].pop(k); gone.append({"id": k, "text": "technique " + k})
         if os.path.isdir(os.path.join(SNIP, k)): shutil.rmtree(os.path.join(SNIP, k))
     store(d)
@@ -151,8 +156,9 @@ def cmd_pause(a, on):
 def cmd_export(a):
     d = load(); d["snippets"] = {}
     for k, u in d["uses"].items():
-        for f in u.get("files", []):
-            d["snippets"].setdefault(k, {})[f] = open(os.path.join(SNIP, k, f), encoding="utf-8").read()
+        for f in map(os.path.basename, u.get("files", [])):
+            if os.path.isfile(os.path.join(SNIP, k, f)):
+                d["snippets"].setdefault(k, {})[f] = open(os.path.join(SNIP, k, f), encoding="utf-8").read()
     open(a.file, "w", encoding="utf-8").write(json.dumps(d, ensure_ascii=False, indent=1) + "\n"); print(f"exported → {a.file}")
 
 
@@ -161,16 +167,19 @@ def cmd_import(a):
     have = {n["text"].lower() for n in d["notes"]}
     for n in src.get("notes", []):
         if n["text"].lower() not in have:
-            n = dict(n, id=d["next"]); d["next"] += 1; d["notes"].append(n)
+            n = dict(n, id=d["next"], imported=today()); d["next"] += 1; d["notes"].append(n)
     for k, u in src.get("uses", {}).items():
         k = slug(k)
         mine = d["uses"].setdefault(k, {"count": 0, "first": u.get("first", today())})
-        mine["count"] = max(mine["count"], u.get("count", 0)); mine.update({x: u[x] for x in ("desc", "files", "saved") if x in u})
+        mine["count"] = max(mine["count"], u.get("count", 0)); mine.update({x: u[x] for x in ("desc", "saved") if x in u})
     for k, fs in src.get("snippets", {}).items():
         k = slug(k)
         os.makedirs(os.path.join(SNIP, k), exist_ok=True)
         for f, body in fs.items():
+            if SECRET.search(body): print(f"skipped {k}/{f}: looks like it contains a secret"); continue
             open(os.path.join(SNIP, k, os.path.basename(f)), "w", encoding="utf-8").write(body)
+            u = d["uses"].setdefault(k, {"count": 0, "first": today()})
+            u["files"] = sorted(set(u.get("files", [])) | {os.path.basename(f)})
     store(d); print(f"imported {a.file}")
 
 

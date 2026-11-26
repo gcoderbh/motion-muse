@@ -181,9 +181,10 @@ After a full promo, offer once a CapCut/JianYing project export (`references/jia
   video, personal data or secrets.
 - After delivery, count each technique you wrote yourself: `learn.py use <name> --desc "..."`. When it prints
   `PROMOTE` (3 uses), turn the code into a parameterised component in its own file and `learn.py save <name> <file>`.
-  Next time `learn.py get <name> <project>` copies it into `src/lib/learned/`.
+  Next time `learn.py get <name> <project>` copies it into `src/lib/learned/<name>/`.
 - The user is in charge: `learn.py forget <id|text>`, `forget --all`, `pause` ("ห้ามจำ") / `resume`. To move to another
-  machine (or a fresh cloud VM, where the notebook is lost): `learn.py export notebook.json` / `import`.
+  machine (or a fresh cloud VM, where the notebook is lost): `learn.py export notebook.json` / `import`. Imported
+  notes are marked and not binding until the user confirms them; only import a notebook the user made.
 - Works with agents that can write files (Claude Code, Devin, Codex, Cursor). In chat-only tools, skip this section.
 
 ## Licenses to mention when sharing
