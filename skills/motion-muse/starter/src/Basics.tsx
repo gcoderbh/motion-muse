@@ -6,7 +6,7 @@
 //   PromoCard — one product: name, price counting down from the old price, discount badge (made for batch.py)
 import React from 'react';
 import { AbsoluteFill, Audio, CalculateMetadataFunction, Easing, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
-import { BarChart, BarRace, CountUp, Datum, Donut, LineChart, RaceSeries, fmtTH, raceFrames } from './lib/chart';
+import { BarChart, BarRace, CountUp, Datum, Donut, LineChart, RaceSeries, decimals, fmtTH, raceFrames } from './lib/chart';
 import { Line, LyricMode, LyricTrack, parseLRC } from './lib/lyrics';
 import { Cursor, CursorKey, Phone, ZoomTo } from './lib/device';
 import { Brand, BrandIntro, BrandOutro, BrandProvider, Watermark, useBrand } from './lib/brand';
@@ -32,7 +32,8 @@ export const dataReelMetadata: CalculateMetadataFunction<DataReelProps> = ({ pro
 });
 const DataBody: React.FC<DataReelProps> = (p) => {
   const b = useBrand(), { safe, u, landscape } = useFormat();
-  const fmt = (n: number) => fmtTH(n, { unit: p.unit, prefix: p.prefix, compact: p.compact });
+  const dg = decimals(...(p.data ?? []).map((d) => d.value), ...(p.series ?? []).flatMap((s) => s.values));
+  const fmt = (n: number) => fmtTH(n, { unit: p.unit, prefix: p.prefix, compact: p.compact, digits: p.compact ? undefined : dg });
   const colors = [b.colors.primary, b.colors.accent, '#FF5A36', '#3DDC97', '#8C7AC9', '#4BC6E8', '#FF8FB1', '#A8B4C4'];
   const cw = safe.w, ch = safe.h - u(landscape ? 260 : 380), common = { font: b.body, ink: b.colors.ink, fmt, fontSize: u(30), delay: 14 };
   return (
@@ -151,6 +152,7 @@ const CardBody: React.FC<PromoCardProps> = (p) => {
   const f = useCurrentFrame(), { fps } = useVideoConfig(), b = useBrand(), { safe, u, landscape } = useFormat();
   const s = (d: number) => spring({ frame: f - d, fps, config: { damping: 14 } });
   const off = p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+  const money = (n: number) => fmtTH(n, { prefix: '฿', digits: decimals(p.price, p.oldPrice) ? 2 : 0 });
   const strike = interpolate(f, [40, 52], [0, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
     <AbsoluteFill style={{ background: b.colors.bg, fontFamily: b.head, color: b.colors.ink }}>
@@ -162,8 +164,8 @@ const CardBody: React.FC<PromoCardProps> = (p) => {
           <div style={{ fontSize: u(84), fontWeight: 800, lineHeight: 1.3, opacity: s(8) }}>{p.name}</div>
           {p.tagline && <div style={{ fontFamily: b.body, fontSize: u(40), lineHeight: 1.4, opacity: s(14) * 0.75 }}>{p.tagline}</div>}
           <div style={{ marginTop: u(26), display: 'flex', gap: u(26), alignItems: 'baseline', justifyContent: landscape ? 'flex-start' : 'center', opacity: s(20) }}>
-            {off > 0 && <span style={{ position: 'relative', fontSize: u(50), opacity: 0.5 }}>{fmtTH(p.oldPrice!, { prefix: '฿' })}<span style={{ position: 'absolute', left: 0, top: '55%', height: u(5), width: `${strike}%`, background: '#FF3B30' }} /></span>}
-            <CountUp from={p.oldPrice ?? 0} to={p.price} delay={off ? 48 : 20} dur={30} fmt={(n) => fmtTH(n, { prefix: '฿' })} style={{ fontSize: u(120), fontWeight: 800, color: b.colors.primary }} />
+            {off > 0 && <span style={{ position: 'relative', fontSize: u(50), opacity: 0.5 }}>{money(p.oldPrice!)}<span style={{ position: 'absolute', left: 0, top: '55%', height: u(5), width: `${strike}%`, background: '#FF3B30' }} /></span>}
+            <CountUp from={p.oldPrice ?? 0} to={p.price} delay={off ? 48 : 20} dur={30} fmt={money} style={{ fontSize: u(120), fontWeight: 800, color: b.colors.primary }} />
           </div>
         </div>
       </div>

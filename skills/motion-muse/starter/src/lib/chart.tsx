@@ -6,9 +6,17 @@ import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 're
 export type Datum = { label: string; value: number; color?: string };
 export const CHART_COLORS = ['#2F6BFF', '#FF5A36', '#FFD23F', '#3DDC97', '#8C7AC9', '#FF8FB1', '#4BC6E8', '#A8B4C4'];
 
-/** 1234567 → "1,234,567"; compact → "1.2 ล้าน"; unit/prefix added around it ("฿", "%", " คน"). */
-export const fmtTH = (n: number, o: { digits?: number; compact?: boolean; unit?: string; prefix?: string } = {}) =>
-  `${o.prefix ?? ''}${new Intl.NumberFormat('th-TH', { maximumFractionDigits: o.digits ?? 0, minimumFractionDigits: o.digits ?? 0, notation: o.compact ? 'compact' : 'standard' }).format(n)}${o.unit ?? ''}`;
+/** 1234567 → "1,234,567"; compact → "1.2 ล้าน"; unit/prefix added around it ("฿", "%", " คน").
+ *  `digits` fixes the decimals (default 0, compact 1); pass decimals(...values) so 2.5 is not rounded to 3. */
+export const fmtTH = (n: number, o: { digits?: number; compact?: boolean; unit?: string; prefix?: string } = {}) => {
+  const d = o.digits ?? (o.compact ? 1 : 0);
+  return `${o.prefix ?? ''}${new Intl.NumberFormat('th-TH', { maximumFractionDigits: d, minimumFractionDigits: o.compact ? 0 : d, notation: o.compact ? 'compact' : 'standard' }).format(n)}${o.unit ?? ''}`;
+};
+/** Most decimal places among the values, at most 4 (0 for whole numbers, 1 for 2.5, 2 for 49.25). */
+export const decimals = (...ns: (number | null | undefined)[]) => {
+  const d = Math.max(0, ...ns.map((n) => (n == null || Number.isInteger(n) ? 0 : (String(n).split('.')[1] ?? '').length)));
+  return Math.min(d, 4);
+};
 
 type Fmt = (n: number) => string;
 const grow = (f: number, fps: number, delay: number) => spring({ frame: f - delay, fps, config: { damping: 200 }, durationInFrames: 28 });
