@@ -459,7 +459,7 @@ export const FlatCharacter: React.FC<{
   };
   const far = (['L', 'R'] as const).filter((k) => j[k].z < -0.2), near = (['L', 'R'] as const).filter((k) => j[k].z >= -0.2);
   const roll = pose.roll ?? 0, air = pose.air ?? 0, sq = pose.squash ?? 1;
-  const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${(-HIP_Y - HW - 6) * Math.abs(Math.sin(rad(roll)))}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
+  const bodyT = `translate(0 ${-air})${sq !== 1 ? ` scale(${1 / Math.sqrt(sq)} ${sq})` : ''}${roll ? ` translate(0 ${(-HIP_Y - HW - 2 - 6 * Math.abs(ca)) * Math.abs(Math.sin(rad(roll)))}) rotate(${roll} 0 ${HIP_Y})` : ''}`;
   return (
     <g transform={`translate(${x} ${y}) scale(${scale * dir} ${scale})`} opacity={opacity}>
       {shadow && <ellipse cx={0} cy={2} rx={(64 * (look.build ?? 1) * (1 + 0.9 * Math.abs(Math.sin(rad(roll))))) / (1 + air / 220)} ry={11 / (1 + air / 400)} fill="#000" opacity={0.16 / (1 + air / 160)} />}
