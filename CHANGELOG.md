@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `FlatCharacter` now has `finish: 'soft'` by default: two-tone cel shading on the head, limbs, hands and torso, a hair
+  shine, cast shadows from the fringe, chin and collar, and one key light (`light: 'left' | 'right'`) that stays on the
+  same side of the screen when a character is mirrored. Use `finish: 'flat'` for the old single fills.
+- `references/character-design.md`: rules for designing good-looking 2D characters in code (silhouette, proportions,
+  colour, lines, cel shading, faces, posing, outfits, a checklist with a rendered still).
+
 ## 1.6.0
 
 - Flat 2D cartoon explainers: `starter/src/lib/flat.tsx` (`FlatCharacter`: big head, `FLAT_LOOKS` office / rider /

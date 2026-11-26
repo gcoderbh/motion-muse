@@ -1,5 +1,6 @@
 // Flat 2D cartoon people for explainer stories (big head, outfits, many expressions, front view).
 // <svg viewBox="0 0 W H"><FlatCharacter x={600} y={900} look={FLAT_LOOKS.office} pose={flatPose('shocked')} expr="shocked" /></svg>
+// Soft cel shading by default (finish='soft', light='left'); finish='flat' for single fills. Design rules: references/character-design.md
 // (x, y) is the ground point between the feet. Everything is a pure function of props: animate with useCurrentFrame().
 import React from 'react';
 import { interpolate } from 'remotion';
@@ -126,18 +127,28 @@ const shade = (hex: string, k: number) => {
 };
 const edge = (c: string) => shade(c, 0.62);
 const OL = 4;
-const seg = (pts: P[], w: number, col: string, outline = true) => {
+// sd = side the shadow falls on in character space (0 = flat colour, no cel shading)
+const seg = (pts: P[], w: number, col: string, outline = true, sd = 0) => {
   const pp = pts.map((q) => q.join(',')).join(' ');
+  const line = { fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return <g>
-    {outline && <polyline points={pp} fill="none" stroke={edge(col)} strokeWidth={w + OL * 2} strokeLinecap="round" strokeLinejoin="round" />}
-    <polyline points={pp} fill="none" stroke={col} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+    {outline && <polyline points={pp} {...line} stroke={edge(col)} strokeWidth={w + OL * 2} />}
+    <polyline points={pp} {...line} stroke={sd ? shade(col, 0.84) : col} strokeWidth={w} />
+    {sd !== 0 && <polyline points={pp} {...line} stroke={col} strokeWidth={w * 0.6} transform={`translate(${-sd * w * 0.15} ${-w * 0.12})`} />}
   </g>;
 };
 
 // hair is drawn for a round head of radius HEAD_R and stretched to the pebble head
-const Hair: React.FC<{ look: FlatLook; back?: boolean }> = ({ look, back }) => {
-  const r = HEAD_R, c = look.hair, d = shade(c, 0.8);
-  const st = { stroke: edge(c), strokeWidth: OL, strokeLinejoin: 'round' as const };
+const Hair: React.FC<{ look: FlatLook; back?: boolean; shadow?: string; sd?: number }> = ({ look, back, shadow, sd = 0 }) => {
+  const r = HEAD_R;
+  if (shadow && back) return null;
+  const shape = hairShape(look, !!back, shadow);
+  if (back || shadow || !sd || !shape || look.hairStyle === 'bald') return shape;
+  return <g>{shape}<path d={`M${-sd * r * 0.66} ${-r * 0.5} Q${-sd * r * 0.42} ${-r * 0.88} ${-sd * r * 0.02} ${-r * 0.96}`} fill="none" stroke="#fff" strokeOpacity={0.32} strokeWidth={5} strokeLinecap="round" /></g>;
+};
+const hairShape = (look: FlatLook, back: boolean, shadow?: string) => {
+  const r = HEAD_R, c = shadow ?? look.hair, d = shadow ?? shade(c, 0.8);
+  const st = shadow ? { stroke: 'none' } : { stroke: edge(c), strokeWidth: OL, strokeLinejoin: 'round' as const };
   switch (look.hairStyle) {
     case 'spiky': // three soft tufts, not spikes
       return back ? null : <path {...st} d={`M${-r - 2} 6 Q${-r - 6} ${-r * 0.9} ${-r * 0.5} ${-r - 6} Q${-r * 0.3} ${-r - 22} ${-r * 0.02} ${-r - 10} Q${r * 0.25} ${-r - 24} ${r * 0.45} ${-r - 6} Q${r + 8} ${-r * 0.9} ${r + 2} 6 Q${r * 0.85} ${-r * 0.5} ${r * 0.3} ${-r * 0.55} Q${r * 0.1} ${-r * 0.3} ${-r * 0.15} ${-r * 0.55} Q${-r * 0.8} ${-r * 0.55} ${-r - 2} 6 Z`} fill={c} />;
@@ -244,7 +255,7 @@ const torsoPath = (look: FlatLook) => {
   const w0 = 38 * b, w1 = 46 * b, bot = HIP_Y + 14;
   return `M${-w0 + 14} ${hy - 2} Q0 ${hy - 8} ${w0 - 14} ${hy - 2} Q${w0 + 4} ${hy + 2} ${w0 + 4} ${hy + 26} Q${w1 + 2} ${HIP_Y - 20} ${w1} ${bot - 12} Q${w1 - 2} ${bot} ${w1 - 16} ${bot} L${-w1 + 16} ${bot} Q${-w1 + 2} ${bot} ${-w1} ${bot - 12} Q${-w1 - 2} ${HIP_Y - 20} ${-w0 - 4} ${hy + 26} Q${-w0 - 4} ${hy + 2} ${-w0 + 14} ${hy - 2} Z`;
 };
-const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1; uid: string }> = ({ look, badgeFont, dir = 1, uid }) => {
+const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1; uid: string; sd?: number }> = ({ look, badgeFont, dir = 1, uid, sd = 0 }) => {
   const hy = SH_Y * (look.height ?? 1), b = look.build ?? 1;
   const body = torsoPath(look);
   const outer = look.outer ?? look.shirt;
@@ -254,7 +265,10 @@ const Torso: React.FC<{ look: FlatLook; badgeFont?: string; dir?: 1 | -1; uid: s
       <path d={body} fill={main} stroke={edge(main)} strokeWidth={OL} strokeLinejoin="round" />
       <clipPath id={`t${uid}`}><path d={body} /></clipPath>
       <g clipPath={`url(#t${uid})`}>
-        <ellipse cx={46 * b} cy={HIP_Y - 30} rx={26 * b} ry={80} fill="#000" opacity={0.1} />
+        {sd ? <>
+          <ellipse cx={sd * (46 * b + 10)} cy={HIP_Y - 30} rx={28 * b} ry={92} fill={shade(main, 0.85)} />
+          <ellipse cx={0} cy={hy + 4} rx={30} ry={13} fill={shade(main, 0.78)} />
+        </> : <ellipse cx={46 * b} cy={HIP_Y - 30} rx={26 * b} ry={80} fill="#000" opacity={0.1} />}
         {look.outfit === 'suit' && <>
           <path d={`M-20 ${hy - 6} L0 ${hy + 44} L20 ${hy - 6} Z`} fill={look.shirt} />
           {look.tie && <path d={`M-6 ${hy + 4} L6 ${hy + 4} L8 ${hy + 36} L0 ${hy + 46} L-8 ${hy + 36} Z`} fill={look.tie} stroke={edge(look.tie)} strokeWidth={2.5} />}
@@ -296,7 +310,7 @@ const Badge: React.FC<{ look: FlatLook; font?: string; dir: 1 | -1 }> = ({ look,
   </g>;
 };
 
-const Arm: React.FC<{ look: FlatLook; a: ReturnType<typeof flatJoints>['L'] }> = ({ look, a }) => {
+const Arm: React.FC<{ look: FlatLook; a: ReturnType<typeof flatJoints>['L']; sd?: number }> = ({ look, a, sd = 0 }) => {
   const sleeve = look.outfit === 'suit' ? look.outer ?? look.shirt : look.shirt;
   const mid: P = [a.S[0] + (a.E[0] - a.S[0]) * 0.65, a.S[1] + (a.E[1] - a.S[1]) * 0.65];
   const long = look.sleeves === 'long';
@@ -304,9 +318,10 @@ const Arm: React.FC<{ look: FlatLook; a: ReturnType<typeof flatJoints>['L'] }> =
   const th = rad(a.angle + 90);
   return (
     <g>
-      {seg([a.S, a.E, a.H], 17, look.skin)}
-      {long ? seg([a.S, a.E, cuff], 22, sleeve) : seg([a.S, mid], 25, sleeve)}
-      <circle cx={a.H[0]} cy={a.H[1]} r={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+      {seg([a.S, a.E, a.H], 17, look.skin, true, sd)}
+      {long ? seg([a.S, a.E, cuff], 22, sleeve, true, sd) : seg([a.S, mid], 25, sleeve, true, sd)}
+      <circle cx={a.H[0]} cy={a.H[1]} r={13} fill={sd ? shade(look.skin, 0.84) : look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+      {sd !== 0 && <circle cx={a.H[0] - sd * 2.6} cy={a.H[1] - 2.6} r={9.6} fill={look.skin} />}
       <ellipse cx={a.H[0] + Math.sin(th) * 11} cy={a.H[1] + Math.cos(th) * 11} rx={6} ry={6} fill={look.skin} stroke={edge(look.skin)} strokeWidth={3} />
     </g>
   );
@@ -316,9 +331,12 @@ const Arm: React.FC<{ look: FlatLook; a: ReturnType<typeof flatJoints>['L'] }> =
 export const FlatCharacter: React.FC<{
   x: number; y: number; look: FlatLook; pose?: FlatPose; scale?: number; dir?: 1 | -1;
   expr?: FlatExpr; mouth?: number; blink?: number; gaze?: P; opacity?: number; font?: string; shadow?: boolean;
+  /** 'soft' (default): two-tone cel shading, hair shine, cast shadows; 'flat': single fills. light = side the key light comes from. */
+  finish?: 'soft' | 'flat'; light?: 'left' | 'right';
   /** draw a prop in the screen-right hand (phone, sign); gets the hand position and forearm angle */
   holdR?: (pos: P, angle: number) => React.ReactNode; holdL?: (pos: P, angle: number) => React.ReactNode; children?: React.ReactNode;
-}> = ({ x, y, look, pose = FLAT_REST, scale = 1, dir = 1, expr = 'neutral', mouth = 0, blink = 0, gaze = [0, 0], opacity = 1, font, shadow = true, holdR, holdL, children }) => {
+}> = ({ x, y, look, pose = FLAT_REST, scale = 1, dir = 1, expr = 'neutral', mouth = 0, blink = 0, gaze = [0, 0], opacity = 1, font, shadow = true, finish = 'soft', light = 'left', holdR, holdL, children }) => {
+  const sd = finish === 'flat' ? 0 : (light === 'left' ? 1 : -1) * dir;
   const uid = 'fc' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   const j = flatJoints(pose, look);
   const legs = (s: number, lift: number) => {
@@ -326,7 +344,7 @@ export const FlatCharacter: React.FC<{
     const top: P = [hx, HIP_Y + 4 - pose.bob * 0.4], foot: P = [hx + s * pose.spread * 0.6, -10 - lift * 16 - Math.max(0, pose.bob) * 0.6];
     return (
       <g key={s}>
-        {look.outfit === 'dress' ? seg([[top[0] * 0.6, HIP_Y + 40], foot], 14, look.skin) : seg([top, foot], 28, look.pants)}
+        {look.outfit === 'dress' ? seg([[top[0] * 0.6, HIP_Y + 40], foot], 14, look.skin, true, sd) : seg([top, foot], 28, look.pants, true, sd)}
         <path d={`M${foot[0] - 16 + s * 2} ${foot[1] + 10} Q${foot[0] - 16 + s * 2} ${foot[1] - 6} ${foot[0] + s * 4} ${foot[1] - 6} Q${foot[0] + 20 + s * 4} ${foot[1] - 6} ${foot[0] + 20 + s * 4} ${foot[1] + 10} Z`} fill={look.shoes} stroke={edge(look.shoes === '#111' ? '#444444' : look.shoes)} strokeWidth={3} strokeLinejoin="round" transform={s < 0 ? `translate(${2 * foot[0]} 0) scale(-1 1)` : undefined} />
       </g>
     );
@@ -341,23 +359,28 @@ export const FlatCharacter: React.FC<{
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
         <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} back /></g>
       </g>
-      <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} /></g>
+      <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} sd={sd} /></g>
       <g transform={`${torsoT} rotate(${j.neckBend} ${j.neckBase[0]} ${j.neckBase[1]})`}>
         <rect x={-13} y={j.neckBase[1] - NECK_L - 6} width={26} height={NECK_L + 6} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
+        {sd !== 0 && <rect x={-11} y={j.neckBase[1] - NECK_L - 4} width={22} height={18} rx={5} fill={shade(look.skin, 0.76)} />}
       </g>
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
-        <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
-        <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+        <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={sd < 0 ? shade(look.skin, 0.86) : look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
+        <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={sd > 0 ? shade(look.skin, 0.86) : look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <clipPath id={`h${uid}`}><path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} /></clipPath>
-        <ellipse cx={HW * 0.75} cy={HH * 0.3} rx={HW * 0.45} ry={HH} fill="#7A3A1A" opacity={0.08} clipPath={`url(#h${uid})`} />
+        {sd ? <g clipPath={`url(#h${uid})`}>
+          <ellipse cx={sd * HW * 1.12} cy={HH * 0.3} rx={HW * 0.72} ry={HH * 1.02} fill={shade(look.skin, 0.88)} />
+          <g transform={`translate(${sd * 3} 8) scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} shadow={shade(look.skin, 0.8)} /></g>
+          <ellipse cx={-sd * HW * 0.5} cy={-HH * 0.56} rx={14} ry={7} fill="#fff" opacity={0.28} transform={`rotate(${-sd * 22} ${-sd * HW * 0.5} ${-HH * 0.56})`} />
+        </g> : <ellipse cx={HW * 0.75} cy={HH * 0.3} rx={HW * 0.45} ry={HH} fill="#7A3A1A" opacity={0.08} clipPath={`url(#h${uid})`} />}
         <Face look={look} expr={expr} mouth={mouth} blink={blink} gaze={gaze} uid={uid} />
-        <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} /></g>
+        <g transform={`scale(${HW / HEAD_R} ${HH / HEAD_R})`}><Hair look={look} sd={sd} /></g>
         {look.glasses === 'shadesUp' && <g transform={`translate(0 ${-HH * 0.6})`}><path d="M-38 -6 h76 v4 q0 13 -13 13 h-7 q-11 0 -11 -11 h-6 q0 11 -11 11 h-7 q-13 0 -13 -13 Z" fill="#18181C" /><path d="M-28 -3 h8" stroke="#fff" strokeOpacity={0.5} strokeWidth={3} strokeLinecap="round" /></g>}
       </g>
       <g transform={torsoT}><Collar look={look} /><Badge look={look} font={font} dir={dir} /></g>
-      <Arm look={look} a={j.L} />
-      <Arm look={look} a={j.R} />
+      <Arm look={look} a={j.L} sd={sd} />
+      <Arm look={look} a={j.R} sd={sd} />
       {holdL?.(j.L.H, j.L.angle)}
       {holdR?.(j.R.H, j.R.angle)}
       {children}
