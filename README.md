@@ -18,6 +18,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Music | Finds a new free track that fits the content for every video (Mixkit via `find-music.py`, or Pixabay, YouTube Audio Library and others). Never reuses a track, and writes the credits for you |
 | Sound effects | Shotcraft's 149 SFX, free SFX sites, or SFX it synthesizes itself with ffmpeg |
 | Cartoon stories | Cel-shaded 3D cartoon characters with ink outlines (zombie, clerk, aunty, guard, kid, princess, or your own: long hair, skirts and gowns, capes, crowns and tiaras; save a character once with `story.py cast save` and reuse it by name) that stay the same in every shot and turn 360°, with blinking, eyes, brows and talking mouths. Office, shop, street and graveyard sets with Thai signs. Write the script as lines and SFX in a JSON file: `story.py` times the subtitles, SFX and music and makes the storyboard. No voice-over unless you ask |
+| Flat cartoon explainers | Flat 2D big-head people like Thai YouTube story channels: office worker, motorbike-taxi rider, tycoon, auntie, student, vendor or your own mix of hair, outfit, badge, glasses and colours, with 10 expressions, gestures, walking, talking mouths, sweat and shock marks. Bangkok street sets (skyline, skytrain, traffic light with countdown, taxis, scooters, road signs, rooftop at night) and story HUD (floating life-time/price badges, note cards, a bank-app transfer slip). Same `script.json` flow as the 3D stories, 16:9 or 9:16, SVG only so it renders fast |
 | OpenFilm | `story.py openfilm` turns the rendered episode into an [OpenFilm](https://github.com/openfilm/openfilm) project: one track of shots, editable captions, SFX and music tracks, ready to edit in OpenFilm Studio. The repo is also an OpenFilm skill (`openfilm.json`) |
 | ElevenLabs | Optional, and only used after asking you |
 | Delivery | Renders the MP4, checks frames and loudness, then sends the video with a list of the techniques used and the credits |
@@ -33,6 +34,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - หาเพลงฟรีใหม่ที่เข้ากับคลิปทุกครั้ง ไม่ใช้เพลงซ้ำ และลงเครดิตให้
 - โหมดผู้กำกับ: บอกแค่ว่าอยากได้วิดีโอแบบไหน สไตล์ อารมณ์ ฟอนต์ และเรื่องที่จะเล่า สกิลจะวาง storyboard เลือกเครื่องมือที่เล็กที่สุดที่พอ และทำทั้งคลิปด้วยโค้ด: ตัวละคร stickman/เวกเตอร์ ไดอะแกรมวิทยาศาสตร์ ฉาก 2.5D ฉาก 3D พร้อมกล้อง แสงและหมอก โฆษณาสินค้า ไม่ใช้ AI สร้างวิดีโอ และไม่ต้องใช้ Blender
 - คลิปการ์ตูน 3D เล่าเรื่อง แนวตั้ง: ตัวละครการ์ตูนมีเส้นขอบ หน้าตาเหมือนเดิมทุกช็อต หมุนได้ 360° กะพริบตา ขยับปาก มีฉากออฟฟิศ ร้านค้า ถนน สุสาน ป้ายภาษาไทย เขียนบทเป็นไฟล์ JSON แล้วสกิลจัดเวลาซับ SFX และเพลงให้ ไม่มีเสียงพากย์ถ้าไม่ได้ขอ
+- การ์ตูน 2D แบบ flat หัวโต สไตล์ช่องเล่าเรื่องบน YouTube: ตัวละครแต่งชุดได้ (พนักงานออฟฟิศ วินมอไซค์ เสี่ย ป้า นักเรียน แม่ค้า) มี 10 สีหน้า ท่ามือ เดิน ขยับปาก เหงื่อตก ตกใจ ฉากถนนกรุงเทพฯ รถไฟฟ้า ไฟแดงนับถอยหลัง แท็กซี่ ป้ายบอกทาง ดาดฟ้ากลางคืน ป้ายตัวเลขลอยบนหัว การ์ดราคา และสลิปโอนเงิน เรนเดอร์เร็วกว่า 3D มาก
 - ส่งต่อไปแก้ใน OpenFilm Studio ได้ แยกแทร็กช็อต ซับ SFX และเพลง
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
@@ -61,7 +63,7 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
 - `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render / qa), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export)
 - `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `src/lib/` procedural building blocks and `kits/three/` for 3D
-- `examples/`: four code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, toon story zombie-id)
+- `examples/`: five code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, toon story zombie-id, flat cartoon explainer life-time)
 - `skills/toon-story/` + `openfilm.json`: the OpenFilm skill entry
 
 ElevenLabs is optional and is only used after the agent asks you.
