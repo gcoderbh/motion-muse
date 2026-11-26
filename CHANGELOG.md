@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.7.0
+
+- `FlatCharacter` now has `finish: 'soft'` by default: two-tone cel shading on the head, limbs, hands and torso, a hair
+  shine, cast shadows from the fringe, chin and collar, and one key light (`light: 'left' | 'right'`) that stays on the
+  same side of the screen when a character is mirrored. Use `finish: 'flat'` for the old single fills.
+- `references/character-design.md`: rules for designing good-looking 2D characters in code (silhouette, proportions,
+  colour, lines, cel shading, faces, posing, outfits, a checklist with a rendered still).
+- Flat characters turn: `pose.yaw` 0 front, 0.5 three-quarter, 1 side, 2 back (face, ears, hair, badge and arms follow).
+- Two-bone legs (`hipL/hipR`, `kneeL/kneeR`) and presets `sit`, `slump`, `sitFloor`, `lie`, `lieSide`; `FLAT_SEAT`,
+  `flatPlant()` keeps feet on the ground.
+- Physics helpers: `flatStride()` side walk with `FLAT_STRIDE`, `flatJump()` (anticipation, stretch, springy landing),
+  `pose.air` with a shrinking ground shadow, `pose.squash`, `pose.roll`.
+- Guide sections on turning, sitting and lying, physics and weight, and how to invent a pose from a description.
+- `starter/src/lib/slim.tsx`: `SlimCharacter`, a second body with real proportions (about 6 heads), no outlines, one
+  shadow tone, finger hands (`relaxed`, `open`, `fist`, `point`, `thumb`, `peace`, `ok`, `pocket`), a face mask, and hair
+  that is a cap on the skull so it covers the head at every angle. Same `FlatPose` as `FlatCharacter`; `SLIM_LOOKS`,
+  `SLIM_POCKETS`, `slimReach()`, `SlimHead`, `SlimHandShape`, `SLIM_STRIDE` (walk travel per cycle). `FLAT_LEG` is exported.
+
 ## 1.6.0
 
 - Flat 2D cartoon explainers: `starter/src/lib/flat.tsx` (`FlatCharacter`: big head, `FLAT_LOOKS` office / rider /
