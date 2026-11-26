@@ -47,9 +47,11 @@ original lyrics or the user's own song are fine. `LyricReel` takes `audio` (publ
   before the tap, hold, pull out before the next step. One zoom per step.
 - `ScrollShot` scrolls a long screenshot by `{ at, y }` keys. `keyed(f, keys, prop)` eases any value the same way.
 
-Recipe (`AppPromo`): brand intro → per step: caption "1. …" at the top, phone in the middle, cursor travels → zoom
-→ tap → next screen with a whip → outro with the call to action. 2.5–3.5 s per step. Take screenshots at the device
-size (e.g. 1179×2556 for a phone) and crop the status bar out if it shows personal data.
+Recipe (`AppPromo`): brand intro → one continuous shot: the phone stays still, the caption "1. …" at the top
+changes per step, each new screen slides in inside the phone (as the real app would), the finger moves from tap to
+tap → outro. 2.5–3.5 s per step. Calm is the point: no whips, spins or flashes between steps, no zoom out/in on
+every step. Push in gently (`zoom` 1.15–1.3) on at most one step in three, the one that matters. Take screenshots
+at the device size (e.g. 1179×2556 for a phone) and crop the status bar out if it shows personal data.
 
 ## 4. Brand kit (`lib/brand`)
 

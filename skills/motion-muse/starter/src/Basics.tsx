@@ -5,7 +5,7 @@
 //   AppPromo  — brand intro → phone with taps and zooms per screen → outro
 //   PromoCard — one product: name, price counting down from the old price, discount badge (made for batch.py)
 import React from 'react';
-import { AbsoluteFill, Audio, CalculateMetadataFunction, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Audio, CalculateMetadataFunction, Easing, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { BarChart, BarRace, CountUp, Datum, Donut, LineChart, RaceSeries, fmtTH, raceFrames } from './lib/chart';
 import { Line, LyricMode, LyricTrack, parseLRC } from './lib/lyrics';
 import { Cursor, CursorKey, Phone, ZoomTo } from './lib/device';
@@ -74,7 +74,8 @@ const LyricBody: React.FC<LyricReelProps> = (p) => {
 export const LyricReel: React.FC<LyricReelProps> = (p) => <BrandProvider brand={p.brand}><LyricBody {...p} /></BrandProvider>;
 
 // ---------- AppPromo ----------
-/** One step: a screen (image in public/, or the built-in mock when empty), a caption, and where to tap (screen px). */
+/** One step: a screen (image in public/, or the built-in mock when empty), a caption, where to tap (px on a
+ *  400-wide screen) and an optional gentle push-in (`zoom` 1.15–1.3; leave it off on most steps). */
 export type AppStep = { src?: string; caption: string; tap?: [number, number]; zoom?: number; dur?: number };
 export type AppPromoProps = { brand?: Partial<Brand>; steps: AppStep[]; cta?: string };
 const STEP = 90, INTRO = 45, OUTRO = 75;
@@ -91,28 +92,44 @@ const MockScreen: React.FC<{ i: number; w: number }> = ({ i, w }) => {
     </div>
   );
 };
-const StepScene: React.FC<{ step: AppStep; i: number; dur: number }> = ({ step, i, dur }) => {
+/** All steps in one continuous shot: the phone stays put, each new screen slides in inside it like a real app,
+ *  the finger moves from tap to tap, and the camera only pushes in on steps that set `zoom`. */
+const Walkthrough: React.FC<{ steps: AppStep[] }> = ({ steps }) => {
   const f = useCurrentFrame(), { fps, width, height } = useVideoConfig(), b = useBrand(), { safe, u } = useFormat();
-  const pw = Math.min(safe.w * 0.62, (safe.h - u(260)) / 2.05), bz = pw * 0.04, sw = pw - 2 * bz;
+  const pw = Math.min(safe.w * 0.62, (safe.h - u(260)) / 2.05), bz = pw * 0.04, sw = pw - 2 * bz, k = sw / 400;
   const px = width / 2 - pw / 2, py = safe.y + u(230);
-  const tap = step.tap ?? [sw / 2, (pw * 2.05 - 2 * bz) * 0.88];
-  const tx = px + bz + tap[0] * (sw / 400), ty = py + bz + tap[1] * (sw / 400);
-  const z = step.zoom ?? 1.5, at = Math.round(dur * 0.55);
-  const keys: CursorKey[] = [{ at: 10, x: tap[0] * (sw / 400) + sw * 0.25, y: tap[1] * (sw / 400) + sw * 0.5 }, { at: at - 6, x: tap[0] * (sw / 400), y: tap[1] * (sw / 400) }, { at, x: tap[0] * (sw / 400), y: tap[1] * (sw / 400), click: true }];
-  const cap = spring({ frame: f - 4, fps, config: { damping: 200 } });
+  const starts: number[] = []; steps.reduce((a, st) => (starts.push(a), a + (st.dur ?? STEP)), 0);
+  const durOf = (i: number) => steps[i].dur ?? STEP;
+  const tapOf = (i: number): [number, number] => { const t = steps[i].tap ?? [200, (pw * 2.05 - 2 * bz) / k * 0.88]; return [t[0] * k, t[1] * k]; };
+  const tapAt = (i: number) => starts[i] + Math.round(durOf(i) * 0.6);
+  const cur = Math.max(0, starts.filter((st) => f >= st).length - 1);
+  const keys: CursorKey[] = [{ at: 12, x: tapOf(0)[0] + sw * 0.2, y: tapOf(0)[1] + sw * 0.35 }];
+  steps.forEach((_, i) => { keys.push({ at: tapAt(i) - 6, x: tapOf(i)[0], y: tapOf(i)[1] }, { at: tapAt(i), x: tapOf(i)[0], y: tapOf(i)[1], click: true }); });
+  const cx = width / 2, cy = height / 2, zk: { at: number; x: number; y: number; scale: number }[] = [{ at: 0, x: cx, y: cy, scale: 1 }];
+  steps.forEach((st, i) => {
+    if (!st.zoom || st.zoom <= 1) return;
+    const tx = px + bz + tapOf(i)[0], ty = py + bz + tapOf(i)[1], z = st.zoom, end = starts[i] + durOf(i);
+    zk.push({ at: tapAt(i) - 24, x: cx, y: cy, scale: 1 }, { at: tapAt(i) - 4, x: cx + (tx - cx) * 0.6, y: cy + (ty - cy) * 0.6, scale: z }, { at: end - 18, x: cx + (tx - cx) * 0.6, y: cy + (ty - cy) * 0.6, scale: z }, { at: end + 2, x: cx, y: cy, scale: 1 });
+  });
+  const enter = spring({ frame: f, fps, config: { damping: 200 }, durationInFrames: 20 });
+  const slide = (i: number) => (i === 0 ? 1 : interpolate(f, [starts[i], starts[i] + 14], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) }));
+  const screen = (i: number) => (steps[i].src ? <Img src={staticFile(steps[i].src!)} style={{ width: '100%' }} /> : <MockScreen i={i} w={sw} />);
+  const capIn = interpolate(f - starts[cur], [0, 10], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const capOut = cur < steps.length - 1 ? interpolate(f, [starts[cur + 1] - 6, starts[cur + 1]], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) : 1;
   return (
     <AbsoluteFill style={{ background: b.colors.bg }}>
-      <ZoomTo keys={[{ at: 0, x: width / 2, y: height / 2, scale: 1 }, { at: at - 16, x: width / 2, y: height / 2, scale: 1 }, { at: at - 2, x: tx, y: ty, scale: z }, { at: dur - 14, x: tx, y: ty, scale: z }, { at: dur, x: width / 2, y: height / 2, scale: 1 }]}>
-        <div style={{ position: 'absolute', left: px, top: py }}>
+      <ZoomTo keys={zk}>
+        <div style={{ position: 'absolute', left: px, top: py, opacity: enter, transform: `translateY(${(1 - enter) * u(80)}px)` }}>
           <Phone width={pw}>
-            {step.src ? <Img src={staticFile(step.src)} style={{ width: '100%' }} /> : <MockScreen i={i} w={sw} />}
+            {cur > 0 && slide(cur) < 1 && <div style={{ position: 'absolute', inset: 0, transform: `translateX(${-30 * slide(cur)}%)`, filter: `brightness(${1 - 0.25 * slide(cur)})` }}>{screen(cur - 1)}</div>}
+            <div style={{ position: 'absolute', inset: 0, transform: `translateX(${(1 - slide(cur)) * 100}%)`, boxShadow: cur > 0 && slide(cur) < 1 ? '-10px 0 30px rgba(0,0,0,0.15)' : undefined }}>{screen(cur)}</div>
             <Cursor keys={keys} touch size={u(54)} />
           </Phone>
         </div>
       </ZoomTo>
-      <div style={{ position: 'absolute', left: safe.x, top: safe.y, width: safe.w, textAlign: 'center', fontFamily: b.head, fontSize: u(64), fontWeight: 800, lineHeight: 1.35, color: b.colors.ink, opacity: cap, transform: `translateY(${(1 - cap) * u(24)}px)` }}>
+      <div style={{ position: 'absolute', left: safe.x, top: safe.y, width: safe.w, textAlign: 'center', fontFamily: b.head, fontSize: u(64), fontWeight: 800, lineHeight: 1.35, color: b.colors.ink, opacity: Math.min(capIn, capOut), transform: `translateY(${(1 - capIn) * u(16)}px)` }}>
         <span style={{ display: 'inline-block', padding: `${u(10)}px ${u(34)}px`, borderRadius: u(b.radius ?? 28), background: b.colors.bg, boxShadow: `0 ${u(8)}px ${u(30)}px rgba(0,0,0,0.12)` }}>
-          <span style={{ color: b.colors.primary }}>{i + 1}.</span> {step.caption}
+          <span style={{ color: b.colors.primary }}>{cur + 1}.</span> {steps[cur].caption}
         </span>
       </div>
     </AbsoluteFill>
@@ -120,9 +137,9 @@ const StepScene: React.FC<{ step: AppStep; i: number; dur: number }> = ({ step, 
 };
 export const AppPromo: React.FC<AppPromoProps> = (p) => (
   <BrandProvider brand={p.brand}>
-    <Timeline scenes={[
-      { dur: INTRO, el: <BrandIntro dur={INTRO + 10} />, out: { kind: 'push', dur: 12 } },
-      ...p.steps.map((s, i) => ({ dur: s.dur ?? STEP, el: <StepScene step={s} i={i} dur={s.dur ?? STEP} />, out: { kind: 'whip' as const, dur: 12, dir: (i % 2 ? -1 : 1) as 1 | -1 } })),
+    <Timeline sfx={false} scenes={[
+      { dur: INTRO, el: <BrandIntro dur={INTRO} /> },
+      { dur: p.steps.reduce((a, s) => a + (s.dur ?? STEP), 0), el: <Walkthrough steps={p.steps} /> },
       { dur: OUTRO, el: <BrandOutro cta={p.cta ?? 'โหลดฟรีวันนี้'} /> },
     ]} />
   </BrandProvider>
@@ -163,5 +180,5 @@ export const DEMO_DATA: DataReelProps = { title: 'คนไทยใช้แอ
 export const DEMO_RACE: DataReelProps = { title: 'ยอดขายรายไตรมาส', sub: 'ล้านบาท', kind: 'race', source: 'ตัวเลขสมมติเพื่อสาธิต', periods: ['Q1', 'Q2', 'Q3', 'Q4'],
   series: [{ label: 'ชานม', values: [12, 18, 22, 25] }, { label: 'กาแฟ', values: [20, 21, 19, 24] }, { label: 'น้ำผลไม้', values: [8, 14, 25, 28] }, { label: 'โซดา', values: [15, 12, 10, 9] }, { label: 'ชาเขียว', values: [5, 9, 13, 20] }] };
 export const DEMO_LYRIC: LyricReelProps = { mode: 'karaoke', title: 'ตัวอย่างเนื้อเพลง', lrc: '[00:00.60]วันนี้ฟ้าสดใส\n[00:03.20]เดินไปด้วยกันนะ\n[00:05.80]ไม่ต้องรีบร้อนอะไร\n[00:08.40]แค่มีเธออยู่ตรงนี้\n[00:11.00]' };
-export const DEMO_APP: AppPromoProps = { steps: [{ caption: 'เปิดแอป เลือกเมนู' }, { caption: 'กดสั่งได้ในแตะเดียว', tap: [200, 230] }, { caption: 'รอรับที่ร้านได้เลย' }] };
+export const DEMO_APP: AppPromoProps = { steps: [{ caption: 'เปิดแอป เลือกเมนู' }, { caption: 'กดสั่งได้ในแตะเดียว', tap: [200, 230], zoom: 1.25 }, { caption: 'รอรับที่ร้านได้เลย' }] };
 export const DEMO_CARD: PromoCardProps = { name: 'ชาไทยเย็น', tagline: 'หวานน้อยได้ ไม่ใส่นมข้นก็ได้', price: 39, oldPrice: 55 };
