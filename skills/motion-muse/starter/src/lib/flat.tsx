@@ -107,7 +107,7 @@ export const flatJoints = (p: FlatPose, look: FlatLook = base) => {
     return { S: rot(S), E: rot(E), H: rot(Hd), angle: sh + el };
   };
   const neck = rot([0, SH_Y * hgt]);
-  const head = rot([0, SH_Y * hgt - HH - 18]);
+  const head = rot([0, SH_Y * hgt - HH - 10]);
   return { neck, head, headTop: [head[0], head[1] - HH - 14] as P, L: arm(-1, p.shL, p.elL), R: arm(1, p.shR, p.elR), hip: rot([0, HIP_Y]) };
 };
 
@@ -336,7 +336,7 @@ export const FlatCharacter: React.FC<{
       </g>
       <g transform={torsoT}><Torso look={look} badgeFont={font} dir={dir} uid={uid} /></g>
       <g transform={`translate(${j.head[0]} ${j.head[1]}) rotate(${tilt})`}>
-        <rect x={-13} y={HH - 16} width={26} height={44} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
+        <rect x={-13} y={HH - 16} width={26} height={36} rx={6} fill={shade(look.skin, 0.9)} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={-HW + 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <ellipse cx={HW - 2} cy={8} rx={10} ry={13} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
         <path d={`M${-HW} -4 Q${-HW} ${-HH} 0 ${-HH} Q${HW} ${-HH} ${HW} -4 Q${HW} ${HH} 0 ${HH} Q${-HW} ${HH} ${-HW} -4 Z`} fill={look.skin} stroke={edge(look.skin)} strokeWidth={OL} />
