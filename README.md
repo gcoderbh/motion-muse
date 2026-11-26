@@ -18,8 +18,13 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Music | Finds a new free track that fits the content for every video (Mixkit via `find-music.py`, or Pixabay, YouTube Audio Library and others). Never reuses a track, and writes the credits for you |
 | Sound effects | Shotcraft's 149 SFX, free SFX sites, or SFX it synthesizes itself with ffmpeg |
 | Cartoon stories | Cel-shaded 3D cartoon characters with ink outlines (zombie, clerk, aunty, guard, kid, princess, or your own: long hair, skirts and gowns, capes, crowns and tiaras; save a character once with `story.py cast save` and reuse it by name) that stay the same in every shot and turn 360°, with blinking, eyes, brows and talking mouths. Office, shop, street and graveyard sets with Thai signs. Write the script as lines and SFX in a JSON file: `story.py` times the subtitles, SFX and music and makes the storyboard. No voice-over unless you ask |
+| Flat cartoon explainers | Flat 2D big-head people like Thai YouTube story channels: office worker, motorbike-taxi rider, tycoon, auntie, student, vendor or your own mix of hair, outfit, badge, glasses and colours, with 10 expressions, gestures, walking, talking mouths, sweat and shock marks. Bangkok street sets (skyline, skytrain, traffic light with countdown, taxis, scooters, road signs, rooftop at night) and story HUD (floating life-time/price badges, note cards, a bank-app transfer slip). Same `script.json` flow as the 3D stories, 16:9 or 9:16, SVG only so it renders fast |
 | OpenFilm | `story.py openfilm` turns the rendered episode into an [OpenFilm](https://github.com/openfilm/openfilm) project: one track of shots, editable captions, SFX and music tracks, ready to edit in OpenFilm Studio. The repo is also an OpenFilm skill (`openfilm.json`) |
 | ElevenLabs | Optional, and only used after asking you |
+| Product ads | Lathe-turned cans and bottles with a Thai label wrapped at the true 2πR/H ratio, metal/glass/ice materials, a key light that swings and warms up, window-blind gobo shadows, AgX tone mapping, and closed-form physics (drops, bounces, splashes, pours, floating ice) with camera pulses on impacts |
+| Faster checks | `render --draft` renders at half resolution (3D scenes about 2× faster) with its own cache, so review rounds are quick and only the final is full size |
+| Every platform | One storyboard renders 9:16, 1:1 and 16:9 (`--formats`). Layout helpers keep text out of TikTok/Reels/Shorts UI, Studio shows the safe-zone guides, and QA writes a sheet with the UI zones in red |
+| Thumbnails | `director.py cover` picks a sharp, still frame and adds the Thai title inside the safe zone |
 | Delivery | Renders the MP4, checks frames and loudness, then sends the video with a list of the techniques used and the credits |
 
 ## ภาษาไทย
@@ -33,6 +38,12 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - หาเพลงฟรีใหม่ที่เข้ากับคลิปทุกครั้ง ไม่ใช้เพลงซ้ำ และลงเครดิตให้
 - โหมดผู้กำกับ: บอกแค่ว่าอยากได้วิดีโอแบบไหน สไตล์ อารมณ์ ฟอนต์ และเรื่องที่จะเล่า สกิลจะวาง storyboard เลือกเครื่องมือที่เล็กที่สุดที่พอ และทำทั้งคลิปด้วยโค้ด: ตัวละคร stickman/เวกเตอร์ ไดอะแกรมวิทยาศาสตร์ ฉาก 2.5D ฉาก 3D พร้อมกล้อง แสงและหมอก โฆษณาสินค้า ไม่ใช้ AI สร้างวิดีโอ และไม่ต้องใช้ Blender
 - คลิปการ์ตูน 3D เล่าเรื่อง แนวตั้ง: ตัวละครการ์ตูนมีเส้นขอบ หน้าตาเหมือนเดิมทุกช็อต หมุนได้ 360° กะพริบตา ขยับปาก มีฉากออฟฟิศ ร้านค้า ถนน สุสาน ป้ายภาษาไทย เขียนบทเป็นไฟล์ JSON แล้วสกิลจัดเวลาซับ SFX และเพลงให้ ไม่มีเสียงพากย์ถ้าไม่ได้ขอ
+- โฆษณาสินค้า: ฉลากไทยพันรอบกระป๋องไม่บิด วัสดุโลหะ แก้ว น้ำแข็ง ไฟที่ขยับและเปลี่ยนสี เงาระแนง และฟิสิกส์ของตก เด้ง กระเซ็น เท ลอย
+- เรนเดอร์ร่างครึ่งความละเอียดไว้ตรวจงานก่อน ฉาก 3D เร็วขึ้นราว 2 เท่า
+- storyboard เดียวออกได้ทั้ง 9:16, 1:1 และ 16:9 วางข้อความไม่ให้ทับ UI ของ TikTok/Reels/Shorts และทำภาพปกพร้อมหัวข้อไทยให้
+- การ์ตูน 2D แบบ flat หัวโต สไตล์ช่องเล่าเรื่องบน YouTube: ตัวละครแต่งชุดได้ (พนักงานออฟฟิศ วินมอไซค์ เสี่ย ป้า นักเรียน แม่ค้า) มี 10 สีหน้า ท่ามือ เดิน ขยับปาก เหงื่อตก ตกใจ ฉากถนนกรุงเทพฯ รถไฟฟ้า ไฟแดงนับถอยหลัง แท็กซี่ ป้ายบอกทาง ดาดฟ้ากลางคืน ป้ายตัวเลขลอยบนหัว การ์ดราคา และสลิปโอนเงิน เรนเดอร์เร็วกว่า 3D มาก
+- จำสิ่งที่ผู้ใช้ชอบหรือเคยติไว้ในเครื่องของผู้ใช้เอง (`~/.motion-muse`) อ่านทุกครั้งก่อนเริ่มงาน เทคนิคที่ใช้ครบ 3 ครั้งจะถูกเก็บเป็นโค้ดไว้ใช้ซ้ำ สั่งให้ลืมหรือหยุดจำได้
+- ตัวละคร 2D มีเงาสองโทน ผมมีเงาวาว และมีเงาตกกระทบ มีหลักการออกแบบให้ AI อ่าน แล้วสร้างตัวละครใหม่ที่สวยได้เองโดยไม่ต้องใช้ภาพวาด
 - ส่งต่อไปแก้ใน OpenFilm Studio ได้ แยกแทร็กช็อต ซับ SFX และเพลง
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 
@@ -55,13 +66,15 @@ Video Shotcraft, Remotion skills, guanmo-ai/awesome-ai-motion, gongnyang/awesome
 - `references/director.md`: brief → capability router → storyboard → scene-cached render; library and font tables
 - `references/footage-editing.md`: editing real footage: shot choice, rhythm, speed ramps, reframing, colour, talking heads, Thai captions, audio mix
 - `references/toon-story.md`: cartoon story episodes: script format, characters, sets, camera for 9:16
+- `references/character-design.md`: how to make 2D characters look designed: silhouette, proportions, colour, line weight, cel shading, faces, poses, turning (front/side/back), sitting and lying, physics and weight, and the slim no-outline body (`lib/slim`)
 - `references/toon-characters.md`: new characters and outfits, from a reference picture, and the saved character library (`characters/`)
 - `references/openfilm.md`: exporting to OpenFilm and using Motion Muse from OpenFilm
 - `references/sound-sources.md`: free music/SFX sources and their licenses, a table matching music to content, and how to make your own sound
 - `references/motion-sources.md`: where to get effects and techniques, and their licenses
-- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render / qa), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export)
-- `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `src/lib/` procedural building blocks and `kits/three/` for 3D
-- `examples/`: four code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, toon story zombie-id)
+- `references/flat-story.md`: flat 2D episodes: side and three-quarter views, indoor sets, mouths from a recorded voice, 2D camera moves, more cartoon FX, long episodes, thumbnails
+- `scripts/`: `setup.sh` (install check), `find-music.py` (finds an unused matching track), `beat-grid.py` (BPM and beat grid), `synth-sfx.sh` (generates SFX), `find-footage.py` (free b-roll), `footage-scan.py` (shot detection and analysis), `transcribe.py` (Thai captions from speech), `auto-edit.py` (beat-synced first cut), `director.py` (route / init / check / render with `--draft` and `--formats` / qa / cover), `thai-fonts.sh` (Thai Google Fonts), `story.py` (script → timeline/storyboard/subtitles, and OpenFilm export), `learn.py` (notebook on the user's machine: rules, dislikes, techniques used often, saved code)
+- `starter/`: a working 15 s 9:16 Thai reel, plus `transitions.tsx` (12 ready transitions with SFX) a `TransitionsDemo` that shows each one, `footage.tsx` with the `FootageReel` composition for footage edits, `Cover.tsx` for thumbnails, `src/lib/` procedural building blocks and `kits/three/` for 3D
+- `examples/`: six code-only test films (stickman zombie-biology explainer, 3D apocalyptic horror with an observer camera, minimalist luxury product ad, cold-brew can ad in three formats, toon story zombie-id, flat cartoon explainer life-time)
 - `skills/toon-story/` + `openfilm.json`: the OpenFilm skill entry
 
 ElevenLabs is optional and is only used after the agent asks you.

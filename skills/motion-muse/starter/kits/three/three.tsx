@@ -13,11 +13,13 @@ import { Pose } from './pose';
 type V3 = [number, number, number];
 
 /** Full-frame 3D stage: background, fog, tone mapping, shadows. */
-export const Stage3D: React.FC<{ children: React.ReactNode; background?: string; fog?: [string, number, number]; exposure?: number; shadows?: boolean; env?: boolean; fov?: number; tone?: 'aces' | 'none' }> = ({ children, background = '#0B0D12', fog, exposure = 1, shadows = true, env = false, fov = 40, tone = 'aces' }) => {
+export const Stage3D: React.FC<{ children: React.ReactNode; background?: string; fog?: [string, number, number]; exposure?: number; shadows?: boolean; env?: boolean; fov?: number; tone?: 'aces' | 'agx' | 'none' }> = ({ children, background = '#0B0D12', fog, exposure = 1, shadows = true, env = false, fov = 40, tone = 'aces' }) => {
   const { width, height } = useVideoConfig();
+  // follow --scale (draft renders): R3F clamps dpr to >= 1 by default, which would keep drafts at full resolution
+  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   return (
-    <ThreeCanvas width={width} height={height} shadows={shadows} camera={{ fov, near: 0.1, far: 200, position: [0, 2, 8] }}
-      gl={{ antialias: true, toneMapping: tone === 'none' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping, toneMappingExposure: exposure, preserveDrawingBuffer: true }}>
+    <ThreeCanvas width={width} height={height} dpr={dpr} shadows={shadows} camera={{ fov, near: 0.1, far: 200, position: [0, 2, 8] }}
+      gl={{ antialias: true, toneMapping: tone === 'none' ? THREE.NoToneMapping : tone === 'agx' ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping, toneMappingExposure: exposure, preserveDrawingBuffer: true }}>
       <color attach="background" args={[background]} />
       {fog && <fog attach="fog" args={fog} />}
       {env && <RoomEnv />}
@@ -138,3 +140,88 @@ export const StudioLights: React.FC<{ key_?: number; rim?: number; fill?: number
     <ambientLight intensity={0.08} />
   </group>
 );
+
+// ---------- Product / packshot helpers ----------
+
+/** Colour of a light at a colour temperature in kelvin (1000–12000): 2700 tungsten, 3500 dawn, 5600 day, 7500 shade. */
+export const kelvin = (k: number) => {
+  const t = k / 100;
+  const r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+  const g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+  const b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
+  const c = (v: number) => Math.min(255, Math.max(0, v)) / 255;
+  return new THREE.Color(c(r), c(g), c(b));
+};
+
+/** Key light that travels around the subject while its temperature shifts (e.g. back-right dawn → front warm day).
+ *  progress 0..1 from the frame; angles in radians around +y, 0 = in front of the camera axis. */
+export const KeyLight: React.FC<{ progress: number; from?: number; to?: number; radius?: number; height?: number; k0?: number; k1?: number; intensity?: number; target?: V3; map?: THREE.Texture | null; angle?: number }> = ({ progress, from = 2.4, to = 0.5, radius = 5, height = 4, k0 = 3200, k1 = 5200, intensity = 60, target = [0, 0.8, 0], map = null, angle = 0.5 }) => {
+  const a = from + (to - from) * progress;
+  const light = useMemo(() => new THREE.SpotLight(), []);
+  useLayoutEffect(() => {
+    light.position.set(Math.sin(a) * radius, height, Math.cos(a) * radius);
+    light.target.position.set(...target);
+    light.target.updateMatrixWorld();
+    light.color.copy(kelvin(k0 + (k1 - k0) * progress));
+    light.intensity = intensity; light.angle = angle; light.penumbra = 0.8; light.castShadow = true;
+    light.shadow.mapSize.set(1024, 1024); light.shadow.bias = -0.0004;
+    light.map = map;
+  });
+  return <><primitive object={light} /><primitive object={light.target} /></>;
+};
+
+/** A texture drawn with Canvas 2D (labels, gobo patterns, roughness/bump maps). Thai text shapes correctly because
+ *  Chrome draws it; load the font with useThaiFont first and pass `ready` so the label redraws once the font is in. */
+export const useCanvasTexture = (w: number, h: number, draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, deps: unknown[] = [], color = true) => {
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const t = new THREE.CanvasTexture(c);
+    t.anisotropy = 8; if (color) t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, [w, h, color]);
+  useLayoutEffect(() => {
+    const c = tex.image as HTMLCanvasElement, ctx = c.getContext('2d')!;
+    ctx.clearRect(0, 0, w, h); draw(ctx, w, h); tex.needsUpdate = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tex, ...deps]);
+  useLayoutEffect(() => () => tex.dispose(), [tex]);
+  return tex;
+};
+
+/** Pixel size of a label that wraps a cylinder without stretching: width / height = 2πR / H. */
+export const labelSize = (radius: number, height: number, px = 2000) => ({ w: Math.round((px * 2 * Math.PI * radius) / height), h: px });
+
+/** Label wrapped around a cylinder (can, jar, bottle body). The texture's left/right edge (the seam) sits at the back
+ *  (away from the camera at rot = 0); the texture's horizontal centre faces the camera. Pass maps from useCanvasTexture. */
+export const LabelWrap: React.FC<{ radius: number; height: number; y?: number; map: THREE.Texture; roughnessMap?: THREE.Texture; bumpMap?: THREE.Texture; bumpScale?: number; roughness?: number; metalness?: number; segments?: number }> = ({ radius, height, y = 0, map, roughnessMap, bumpMap, bumpScale = 0.6, roughness = 0.6, metalness = 0, segments = 128 }) => (
+  // vertex = (r sinθ, y, r cosθ), θ = thetaStart + u·2π: thetaStart = π puts u = 0 at -z (back) and u = 0.5 at +z (camera)
+  <mesh position={[0, y, 0]} castShadow receiveShadow>
+    <cylinderGeometry args={[radius * 1.002, radius * 1.002, height, segments, 1, true, Math.PI, Math.PI * 2]} />
+    <meshStandardMaterial map={map} roughnessMap={roughnessMap} bumpMap={bumpMap} bumpScale={bumpScale} roughness={roughness} metalness={metalness} />
+  </mesh>
+);
+
+/** Material presets that read well in software WebGL (no transmission passes). Spread into a meshPhysicalMaterial. */
+export const MAT = {
+  /** clear glass: Fresnel-like edges come from clearcoat + env reflections; keep depthWrite off so contents show */
+  glass: { color: '#F4F7F8', roughness: 0.03, metalness: 0, transparent: true, opacity: 0.22, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 2.2, depthWrite: false, side: THREE.DoubleSide },
+  aluminium: { color: '#D9DCE0', roughness: 0.28, metalness: 1, envMapIntensity: 1.4 },
+  brushed: { color: '#C9CDD2', roughness: 0.45, metalness: 1, envMapIntensity: 1.2 },
+  gold: { color: '#C8A46A', roughness: 0.22, metalness: 1, envMapIntensity: 1.5 },
+  paper: { color: '#FFFFFF', roughness: 0.85, metalness: 0 },
+  satinInk: { roughness: 0.35, metalness: 0, clearcoat: 0.3 },
+  ice: { color: '#EAF6FF', roughness: 0.12, metalness: 0, transparent: true, opacity: 0.55, clearcoat: 1, envMapIntensity: 1.8, depthWrite: false },
+  liquid: { roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2 },
+} as const;
+
+/** Window-blind gobo: a canvas texture of slats for a SpotLight `map` (pass it to KeyLight map= or spotLight.map).
+ *  The light projects the pattern as soft stripes of sun across the backdrop; nothing extra is visible to the camera. */
+export const useBlindsGobo = (slats = 9, open = 0.55, skew = 0.18, soft = 6) =>
+  useCanvasTexture(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+    ctx.filter = `blur(${soft}px)`; ctx.fillStyle = '#fff';
+    const step = h / slats;
+    ctx.save(); ctx.translate(w / 2, h / 2); ctx.transform(1, skew, 0, 1, 0, 0); ctx.translate(-w / 2, -h / 2);
+    for (let i = -2; i < slats + 2; i++) ctx.fillRect(-w, i * step, w * 3, step * open);
+    ctx.restore();
+  }, [slats, open, skew, soft], false);

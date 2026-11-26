@@ -1,6 +1,6 @@
 // Thai typography: font registry + loader + kinetic text components that keep vowels and tone marks attached.
 // Get font files with: bash "$SKILL_DIR/scripts/thai-fonts.sh" public/fonts Kanit "IBM Plex Sans Thai" ...
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { continueRender, delayRender, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 
 export type ThaiFont = { family: string; mood: string; files: Record<number, string> };
@@ -24,6 +24,7 @@ export const THAI_FONTS: Record<string, ThaiFont> = {
 };
 
 const loaded = new Set<string>();
+const ready = new Map<string, Promise<unknown>>();
 /** Load a Thai font family from public/fonts (blocks rendering until ready). Returns a CSS font-family string. */
 export const useThaiFont = (name: keyof typeof THAI_FONTS | string): string => {
   const f = THAI_FONTS[name];
@@ -35,9 +36,22 @@ export const useThaiFont = (name: keyof typeof THAI_FONTS | string): string => {
     const jobs = variable
       ? [new FontFace(f.family, `url('${staticFile(`fonts/${Object.values(f.files)[0]}`)}')`, { weight: `${Math.min(...Object.keys(f.files).map(Number))} ${Math.max(...Object.keys(f.files).map(Number))}` })]
       : Object.entries(f.files).map(([w, file]) => new FontFace(f.family, `url('${staticFile(`fonts/${file}`)}')`, { weight: w }));
-    Promise.all(jobs.map((ff) => ff.load().then((l) => document.fonts.add(l)))).then(() => continueRender(handle)).catch((e) => { console.error(`font ${name}`, e); continueRender(handle); });
+    const p = Promise.all(jobs.map((ff) => ff.load().then((l) => document.fonts.add(l))));
+    ready.set(name, p.catch(() => undefined));
+    p.then(() => continueRender(handle)).catch((e) => { console.error(`font ${name}`, e); continueRender(handle); });
   }
   return `'${f.family}', 'Prompt', sans-serif`;
+};
+
+/** Like useThaiFont, plus `ok` once the font is usable: Canvas 2D (3D labels, textures) must wait for it before drawing. */
+export const useThaiFontReady = (name: keyof typeof THAI_FONTS | string) => {
+  const family = useThaiFont(name);
+  const [ok, setOk] = useState(false);
+  useEffect(() => {
+    const h = delayRender(`font ready ${name}`);
+    (ready.get(name) ?? Promise.resolve()).then(() => { setOk(true); continueRender(h); });
+  }, [name]);
+  return { family, ok };
 };
 
 const seg = (text: string, by: 'word' | 'grapheme') => {

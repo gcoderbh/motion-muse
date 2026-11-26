@@ -1,0 +1,13 @@
+{
+  "title": "ตื่นก่อน cold brew (product kit + multi-format test)",
+  "comp": "ColdBrew",
+  "fps": 30, "width": 1080, "height": 1920,
+  "brief": "Short cold-brew can ad: Thai label wrapped on the can, dawn key light, window-blind gobo, ice that bounces, safe-zone text, 9:16 + 1:1 + 16:9",
+  "style": { "look": "cream studio, morning sun through blinds, AgX", "palette": ["#EFE6D8", "#3B2416", "#C8874A", "#FFF7EA"], "thaiFont": "Anuphan", "music": "relaxed jazz, Mixkit 'Chill Bro'" },
+  "caps": ["3d", "product", "thai-type"],
+  "scenes": [
+    { "id": "dawn", "dur": 93, "caps": ["3d", "product", "thai-type"], "files": ["src/cold-brew/ColdBrew.tsx"], "shot": "Can turns to camera while the key light swings from back-right to front and warms up", "motion": "turntable, KeyLight sweep 3200K→5400K, slow dolly-in", "text": "เช้านี้ ตื่นก่อน", "textY": 0.16, "out": "focus" },
+    { "id": "ice", "dur": 70, "caps": ["3d", "product"], "files": ["src/cold-brew/ColdBrew.tsx"], "shot": "Three ice cubes drop beside the can and bounce", "motion": "physics bounce(), camera pulse() on every impact, SFX on impacts", "text": "เย็น สดชื่น", "textY": 0.16, "out": "cut" },
+    { "id": "pack", "dur": 93, "caps": ["3d", "product", "thai-type"], "files": ["src/cold-brew/ColdBrew.tsx"], "shot": "Packshot: blinds shadow across the backdrop, brand and CTA in the safe zone", "motion": "slow orbit, gobo drift, settle() on the title", "text": "ตื่นก่อน โคลด์บรูว์ / ลองเลย", "textY": 0.16 }
+  ]
+}
