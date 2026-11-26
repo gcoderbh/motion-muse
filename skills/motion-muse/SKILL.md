@@ -64,10 +64,11 @@ python3 "$SKILL_DIR/scripts/director.py" init ~/videos/<slug> --caps <caps>    #
 python3 "$SKILL_DIR/scripts/director.py" check src/<slug>/storyboard.json      # scene table to show the user
 python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/storyboard.json   # per-scene cached render + mix + QA
 ```
-- Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`, `physics` (fall, bounce, settle, float, pour, splash, impact pulses), `layout` + `SafeGuides` (platform safe zones, one layout for every aspect ratio); `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`), `starter/kits/three/toon.tsx` for cel-shaded 3D cartoon characters and sets (`--caps toon`), `story.tsx` for dialogue subtitles, SFX and music on one timeline.
+- Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `flat` + `city` (flat big-head cartoon people, Bangkok street sets, story badges), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`, `physics` (fall, bounce, settle, float, pour, splash, impact pulses), `layout` + `SafeGuides` (platform safe zones, one layout for every aspect ratio); `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`), `starter/kits/three/toon.tsx` for cel-shaded 3D cartoon characters and sets (`--caps toon`), `story.tsx` for dialogue subtitles, SFX and music on one timeline.
 - Cartoon story episodes (skits, ตลกร้าย, ซอมบี้ไปทำบัตร, 30 s – 3 min, 9:16): read `references/toon-story.md`. Write `script.json`, run `scripts/story.py build`, then render. New characters or outfits (princess, king, a person from a reference picture) and saving them in the skill for the next episode: `references/toon-characters.md`, `scripts/story.py cast`. No voice-over unless the user asks: dialogue is Thai subtitles with name tags and the mouths move while each line is on screen.
 - To edit the result in OpenFilm Studio (tracks for every shot, SFX and the music, editable captions): `references/openfilm.md`, `scripts/story.py openfilm`.
-- Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice).
+- Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D).
+- Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
 - Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
 - Product ads (cans, bottles, jars, packshots): `director.md` section 8 (label wrap, materials, moving key light, gobo, AgX, physics).
 - Steps 2–7 below still apply: gallery references, seam plan and transitions, fresh music, SFX, QA, delivery.
@@ -180,7 +181,7 @@ After a full promo, offer once a CapCut/JianYing project export (`references/jia
 | `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `lib/*` building blocks |
 | `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx` |
 | `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
-| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id |
+| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time |
 
 ## Licenses to mention when sharing
 

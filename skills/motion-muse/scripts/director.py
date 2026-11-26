@@ -21,6 +21,7 @@ RV = "4.0.484"
 CAPS = {
     "thai-type":    (r"thai|ไทย|typograph|ตัวอักษร|ฟอนต์|font|title|ข้อความ", "CSS + lib/typography (Intl.Segmenter)", [], [], "pick a font from THAI_FONTS by mood; scripts/thai-fonts.sh"),
     "character-2d": (r"stick ?man|stickman|ก้างปลา|cartoon|การ์ตูน|character|ตัวละคร|mascot|vector", "SVG + lib/characters + lib/pose", [], [], "Stickman / VectorCharacter, gaits, key poses, talking"),
+    "flat":         (r"flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|หัวโต|big.?head|การ์ตูน ?2 ?(d|มิติ)|2 ?d (cartoon|explainer|story)|explainer story|youtube explainer|เวลาชีวิต", "SVG + lib/flat + lib/city + lib/story + scripts/story.py", [], [], "FlatCharacter (big head, outfits, expressions), Bangkok street sets, TimeBadge/NoteCard/TransferSlip; examples/life-time"),
     "diagram":      (r"explain|อธิบาย|diagram|ไดอะแกรม|science|วิทยา|biology|ชีว|education|สอน|infographic|how .* works|chart|กราฟ", "SVG + lib/diagram", [], [], "Draw, Arrow, Callout, Flow, Ecg, Blob, Virus"),
     "data-viz":     (r"data|ข้อมูล|statistic|สถิติ|chart|graph|map|แผนที่", "SVG + d3 (scales/shapes only)", ["d3@7", "@types/d3@7"], [], "use d3 for maths, render with React; never d3 transitions"),
     "parallax":     (r"parallax|2\.5d|layer|landscape|วิว|ฉากหลัง|side.?scroll|storybook", "CSS transforms + lib/parallax", [], [], "Layer depth, Ridge, Skyline, FogBand"),
@@ -39,12 +40,12 @@ ALWAYS = ["thai-type"]
 def caps_for(text):
     t = text.lower()
     found = [c for c, (rx, *_rest) in CAPS.items() if re.search(rx, t)]
-    if "toon" in found and re.search(r"stick ?man|stickman|ก้างปลา|vector|2d|2 มิติ", t) and not re.search(r"3 ?d|3 ?มิติ|สามมิติ|toon|cel.?shad", t):
+    if "toon" in found and re.search(r"stick ?man|stickman|ก้างปลา|vector|flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|2 ?d|2 ?มิติ", t) and not re.search(r"3 ?d|3 ?มิติ|สามมิติ|(?<!car)toon|cel.?shad", t):
         found = [c for c in found if c != "toon"]
     if "toon" in found:
         if "3d" not in found:
             found.append("3d")
-        if not re.search(r"stick ?man|stickman|ก้างปลา|vector|2d|2 มิติ", t):
+        if not re.search(r"stick ?man|stickman|ก้างปลา|vector|flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|2 ?d|2 ?มิติ", t):
             found = [c for c in found if c != "character-2d"]
         if not re.search(r"footage|ฟุตเทจ|b-?roll|interview|สัมภาษณ์", t):
             found = [c for c in found if c != "footage"]
