@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0
+
+- `director.py render --draft`: half-resolution render with its own cache and `-draft` output, for quick review rounds.
+- `director.py render --formats 9:16,1:1,16:9` (or `WxH`): one storyboard → one MP4 per size, separate scene caches, shared audio mix.
+- `director.py cover`: picks a sharp, still frame for the thumbnail; with `--title` renders the new `Cover` composition (Thai title inside the safe zone).
+- QA writes `<video>.safe.jpg` with the platform UI zones in red and warns about scenes whose `textY` is outside the safe band.
+- `lib/layout.ts` (`useFormat`: safe box, `u()`, `pick()`), `lib/SafeGuides.tsx` (Studio-only guides), `lib/physics.ts` (projectile, bounce, settle, buoyancy, fill/glug, crown, pulse).
+- `three.tsx` product kit: `tone="agx"`, `kelvin`, `KeyLight`, `useCanvasTexture`, `labelSize`, `LabelWrap`, `MAT`, `useBlindsGobo`; `typography.tsx` `useThaiFontReady`.
+- `examples/cold-brew`; `director.md` sections 7 (layout, safe zones, formats) and 8 (product ads); SKILL.md render/QA now points to `director.py`, new file table and shorter description.
+
 ## 1.7.0
 
 - `FlatCharacter` now has `finish: 'soft'` by default: two-tone cel shading on the head, limbs, hands and torso, a hair

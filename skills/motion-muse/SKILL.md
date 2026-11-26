@@ -1,6 +1,6 @@
 ---
 name: motion-muse
-description: One-call video editing skill that combines Video Shotcraft, the Remotion skills, the guanmo-ai awesome-ai-motion gallery and the gongnyang motion effect library to make motion-rich videos with Thai text, beat-synced cuts, royalty-free music and SFX, rendered locally with Remotion, acts as a code-first universal video director (natural-language brief → capability router → storyboard → stickman/vector characters, 2.5D parallax, procedural 3D with @remotion/three, scientific diagrams, cinematic light/atmosphere, product ads, scene-level cached renders; no AI video generators, no Blender), edits real footage (shot detection, beat-synced auto cut, speed ramps, vertical reframe, colour match, Thai captions from speech), with a transition library and pro editing rules so clips do not look AI-made. Checks and installs its own dependencies. ElevenLabs voice/music only after asking the user first.
+description: One-call, code-first video director and editor (Remotion + Three.js + FFmpeg; no AI video generators, no Blender). Turns a natural-language brief or the user's footage into a finished, motion-rich MP4 with Thai typography, beat-synced cuts, designed transitions, fresh royalty-free music and SFX. Covers motion graphics, kinetic Thai text, stickman/vector cartoons, 2.5D parallax, procedural 3D, product ads, explainers and diagrams, toon story episodes with subtitles, footage editing (auto cut, speed ramps, vertical reframe, captions from speech), 9:16/1:1/16:9 from one storyboard, draft renders, safe zones, thumbnails and an OpenFilm export. Built on Video Shotcraft, the Remotion skills and the guanmo-ai awesome-ai-motion gallery. Installs its own dependencies. ElevenLabs only after asking the user.
 ---
 
 # Motion Muse (Shotcraft + Remotion + awesome-ai-motion)
@@ -64,12 +64,13 @@ python3 "$SKILL_DIR/scripts/director.py" init ~/videos/<slug> --caps <caps>    #
 python3 "$SKILL_DIR/scripts/director.py" check src/<slug>/storyboard.json      # scene table to show the user
 python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/storyboard.json   # per-scene cached render + mix + QA
 ```
-- Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `flat` + `city` (flat big-head cartoon people, Bangkok street sets, story badges), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`; `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`), `starter/kits/three/toon.tsx` for cel-shaded 3D cartoon characters and sets (`--caps toon`), `story.tsx` for dialogue subtitles, SFX and music on one timeline.
+- Building blocks in `starter/src/lib/`: `characters` + `pose` (stickman / vector characters, gaits, key poses), `flat` + `city` (flat big-head cartoon people, Bangkok street sets, story badges), `diagram`, `parallax`, `atmosphere`, `typography` (Thai font registry + kinetic text), `noise`, `physics` (fall, bounce, settle, float, pour, splash, impact pulses), `layout` + `SafeGuides` (platform safe zones, one layout for every aspect ratio); `starter/kits/three/three.tsx` for 3D (copied by `init --caps 3d`), `starter/kits/three/toon.tsx` for cel-shaded 3D cartoon characters and sets (`--caps toon`), `story.tsx` for dialogue subtitles, SFX and music on one timeline.
 - Cartoon story episodes (skits, ตลกร้าย, ซอมบี้ไปทำบัตร, 30 s – 3 min, 9:16): read `references/toon-story.md`. Write `script.json`, run `scripts/story.py build`, then render. New characters or outfits (princess, king, a person from a reference picture) and saving them in the skill for the next episode: `references/toon-characters.md`, `scripts/story.py cast`. No voice-over unless the user asks: dialogue is Thai subtitles with name tags and the mouths move while each line is on screen.
 - To edit the result in OpenFilm Studio (tracks for every shot, SFX and the music, editable captions): `references/openfilm.md`, `scripts/story.py openfilm`.
 - Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D). Before designing a new character or changing how one looks, read `references/character-design.md` (silhouette, colour, lines, cel shading, faces, poses, turning, sitting/lying, physics, inventing new poses). For ordinary adults with real proportions, no outlines and finger hands, use `lib/slim` (`SlimCharacter`, same poses).
-- Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
+- Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
 - Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
+- Product ads (cans, bottles, jars, packshots): `director.md` section 8 (label wrap, materials, moving key light, gobo, AgX, physics).
 - Steps 2–7 below still apply: gallery references, seam plan and transitions, fresh music, SFX, QA, delivery.
 
 ## 2. Pick techniques
@@ -151,23 +152,39 @@ Tell the user that commercial use depends on their ElevenLabs plan. If the answe
 
 ```bash
 npx tsc --noEmit -p .
-npx remotion render src/index.ts <CompositionId> out/video.mp4
-ffmpeg -loglevel error -y -i out/video.mp4 -vf "select='not(mod(n\,40))',scale=270:-1,tile=6x2" -frames:v 1 out/sheet.jpg
-ffmpeg -i out/video.mp4 -af volumedetect -f null - 2>&1 | grep -E "mean|max"
+python3 "$SKILL_DIR/scripts/director.py" render . src/<slug>/storyboard.json --draft     # half resolution, about 2× faster per 3D scene: check this first
+python3 "$SKILL_DIR/scripts/director.py" render . src/<slug>/storyboard.json [--formats 9:16,1:1,16:9]
+python3 "$SKILL_DIR/scripts/director.py" qa out/<file>.mp4          # any MP4 (e.g. FootageReel): metadata, loudness, black frames, sheets
 ```
-Run the checklist in `references/editing-craft.md` section 6 (and section 9 of `footage-editing.md` for footage). Look at `out/sheet.jpg` and single frames around each cut. Fix clipping, overflow, leftover text and unreadable Thai, then render again.
-Check that an audio stream exists and max volume is not above 0 dB.
-For full promos, run Shotcraft's independent final review (`references/final-review.md`).
+`render` renders scene by scene with a cache, mixes and normalises the audio (-14 LUFS), then runs QA: motion per scene, duration, loudness/true peak, black stretches, `out/<Comp>.sheet.jpg` and `out/<Comp>.safe.jpg` (app-UI zones in red). Details: `references/director.md` section 6.
+Look at both sheets and at single frames around each cut. Fix clipping, overflow, text in the red zones, leftover text, unreadable Thai and static shots, then render again (unchanged scenes come from the cache).
+Run the checklist in `references/editing-craft.md` section 6 (and section 9 of `footage-editing.md` for footage). For full promos, run Shotcraft's independent final review (`references/final-review.md`).
 If the video has BGM, also offer a version with SFX only.
 
 ## 7. Deliver
 
-Send `out/video.mp4` to the user (as an attachment if you work on a remote machine).
+Send the final MP4 (and the other formats if rendered) to the user, as attachments if you work on a remote machine.
+Make a cover for the platform upload: `director.py cover out/<Comp>.mp4 --title "หัวข้อ\\nบรรทัดสอง" --font Prompt` picks a sharp, still frame (or `--at 6.5`) and puts the Thai title on a card inside the safe zone (the card hides text already in the frame; `--card` colour) → `out/<Comp>.cover.jpg` (needs `Cover` in `Root.tsx`; the starter has it).
 Include a short Thai table of time range → technique, the credit lines from `CREDITS.md`, and ask what to change.
 After a full promo, offer once a CapCut/JianYing project export (`references/jianying-export.md` in Shotcraft).
+
+## Files
+
+| Path | Use |
+|---|---|
+| `scripts/setup.sh` | dependency check / install (step 0) |
+| `scripts/director.py` | `route`, `init`, `check`, `render` (`--draft`, `--formats`), `qa`, `cover` |
+| `scripts/story.py` | toon story `build`, `cast`, `openfilm` |
+| `scripts/find-music.py`, `beat-grid.py`, `synth-sfx.sh` | fresh music + credits, beat grid, simple SFX |
+| `scripts/footage-scan.py`, `find-footage.py`, `transcribe.py`, `auto-edit.py` | footage pipeline |
+| `scripts/thai-fonts.sh` | fetch any of the 15 Thai OFL fonts |
+| `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `lib/*` building blocks |
+| `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx` |
+| `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
+| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time |
 
 ## Licenses to mention when sharing
 
 - This skill's own files: MIT. Shotcraft: Apache-2.0. awesome-ai-motion and motion-cards repo code: MIT; gallery works belong to their authors.
 - Remotion is free for individuals and companies with up to 3 employees; larger companies need a license (https://www.remotion.dev/license).
-- Prompt font: SIL OFL 1.1.
+- Thai fonts (Prompt, Anuphan, IBM Plex Sans Thai, …): SIL OFL 1.1.

@@ -5,8 +5,9 @@ scene-level cached rendering, assembly and QA. Code-first only (no AI video gene
   director.py route "brief text"                 # capabilities → smallest toolset (+ --json)
   director.py init  <project> --caps 3d,diagram  # project from the starter; installs only what the caps need
   director.py check <storyboard.json>            # validate scenes, print the storyboard table
-  director.py render <project> <storyboard.json> [--force] [--gl swangle]   # per-scene render + cache + assemble + QA
-  director.py qa <video.mp4> [--storyboard sb.json]
+  director.py render <project> <storyboard.json> [--force] [--gl swangle] [--draft] [--formats 9:16,1:1,16:9]
+  director.py qa <video.mp4> [--storyboard sb.json]   # also writes <video>.safe.jpg with the app-UI zones shaded
+  director.py cover <video.mp4> [--project P --title "..." --font Prompt]   # pick the best frame → thumbnail
 """
 import argparse, hashlib, json, os, re, shutil, subprocess, sys
 
@@ -108,7 +109,8 @@ def cmd_init(a):
     # the transition SFX Timeline plays (Shotcraft keeps them in sub-folders; the bundled BGM is not copied)
     sfx = {f: os.path.join(dp, f) for r in (os.path.join(SKILLS_DIR, "video-shotcraft", "assets", "audio", "sfx"), os.path.join(TEMPLATE, "public", "audio"))
            for dp, _, fs in os.walk(r) for f in fs}
-    for f in set(re.findall(r"file: '([^']+)'", open(os.path.join(P, "src", "transitions.tsx")).read())):
+    starter_sfx = [os.path.basename(l.strip()) for l in open(os.path.join(SKILL, "starter", "audio.txt")) if l.startswith("sfx/")]  # used by starter + examples
+    for f in set(re.findall(r"file: '([^']+)'", open(os.path.join(P, "src", "transitions.tsx")).read())) | set(starter_sfx):
         if f in sfx and not os.path.exists(os.path.join(P, "public", "audio", f)):
             shutil.copy(sfx[f], os.path.join(P, "public", "audio"))
         elif f not in sfx:
@@ -167,13 +169,21 @@ def run(cmd, **kw):
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
+def vsize(path):
+    """Display size of the first video stream (ffmpeg auto-rotates frames, so swap for 90/270° phone video)."""
+    st = json.loads(run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_streams", "-of", "json", path]).stdout)["streams"][0]
+    rot = st.get("tags", {}).get("rotate") or next((d["rotation"] for d in st.get("side_data_list", []) if "rotation" in d), 0)
+    w, h = int(st["width"]), int(st["height"])
+    return (h, w) if abs(int(float(rot))) % 180 == 90 else (w, h)
+
+
 def motion_score(path):
     """Mean absolute frame difference (0-255) at 6 fps; ~0 means a static slide."""
     r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", "fps=6,scale=96:-2,format=gray", "-f", "rawvideo", "-"], capture_output=True)
     raw = r.stdout
     w = 96; h = None
-    probe = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", path]).stdout.strip().split(",")
-    if len(probe) == 2: h = round(96 * int(probe[1]) / int(probe[0]) / 2) * 2
+    vw, vh = vsize(path)
+    h = round(96 * vh / vw / 2) * 2
     n = w * (h or 96)
     fr = [raw[i:i + n] for i in range(0, len(raw) - n + 1, n)]
     if len(fr) < 2: return 0.0
@@ -182,9 +192,32 @@ def motion_score(path):
     return round(sum(diffs) / len(diffs), 2), round(still, 2)
 
 
+def fmt_size(sb, f):
+    """'1:1' / '16:9' / '1080x1350' → (w, h); ratios keep the storyboard's short side."""
+    if "x" in f:
+        w, h = (int(v) for v in f.split("x")); return w, h
+    rw, rh = (float(v) for v in f.split(":")); short = min(sb["width"], sb["height"])
+    w, h = (short, short * rh / rw) if rw <= rh else (short * rw / rh, short)
+    return int(round(w / 2) * 2), int(round(h / 2) * 2)
+
+
 def cmd_render(a):
-    P = os.path.abspath(a.project); sb = load_sb(a.storyboard)
+    sb = load_sb(a.storyboard)
+    formats = [f.strip() for f in (a.formats or "").split(",") if f.strip()] or [None]
+    outs = []
+    for f in formats:
+        w, h = fmt_size(sb, f) if f else (sb["width"], sb["height"])
+        tag = "" if (w, h) == (sb["width"], sb["height"]) else f"-{w}x{h}"
+        if len(formats) > 1: print(f"\n=== {f}  {w}x{h} ===")
+        outs.append(render_one(a, sb, w, h, tag))
+    if len(outs) > 1: print("\nformats:", *outs, sep="\n  ")
+
+
+def render_one(a, sb, W, H, tag):
+    P = os.path.abspath(a.project)
     fps = sb["fps"]
+    scale = 0.5 if a.draft else 1
+    tag += "-draft" if a.draft else ""
     caps = {c for s in sb["scenes"] for c in s.get("caps", [])}
     gl = a.gl or os.environ.get("MOTION_MUSE_GL") or ("swangle" if caps & {"3d", "toon"} else None)
     src = os.path.join(P, "src")
@@ -195,9 +228,10 @@ def cmd_render(a):
     lib += [os.path.join(src, f) for f in ("transitions.tsx", "theme.ts", "index.ts", "Root.tsx") if os.path.isfile(os.path.join(src, f))]
     pub = os.path.join(P, "public")  # assets (music, sfx, fonts, footage) by size+mtime, so a replaced file invalidates
     assets = {os.path.relpath(os.path.join(dp, f), pub): [os.path.getsize(os.path.join(dp, f)), int(os.path.getmtime(os.path.join(dp, f)))]
-              for dp, _, fs in os.walk(pub) for f in fs}
-    fmt = {k: sb[k] for k in ("fps", "width", "height")}
-    sdir = os.path.join(P, "out", "scenes", sb["comp"]); os.makedirs(sdir, exist_ok=True)
+              for dp, _, fs in os.walk(pub) for f in fs if os.path.relpath(dp, pub).split(os.sep)[0] != "cover"}  # `cover` writes there
+    fmt = {"fps": fps, "width": W, "height": H, "scale": scale}
+    sdir = os.path.join(P, "out", "scenes", sb["comp"] + tag); os.makedirs(sdir, exist_ok=True)
+    size = [] if (W, H) == (sb["width"], sb["height"]) else [f"--width={W}", f"--height={H}"]
     parts, t, rendered, cached = [], 0, 0, 0
     for i, s in enumerate(sb["scenes"]):
         a0, a1 = t, t + s["dur"] - 1
@@ -212,7 +246,8 @@ def cmd_render(a):
         else:
             for old in os.listdir(sdir):
                 if old.startswith(f"{i:02d}-{s['id']}-"): os.remove(os.path.join(sdir, old))
-            cmd = ["npx", "remotion", "render", "src/index.ts", sb["comp"], out, f"--frames={a0}-{a1}", "--muted", "--timeout=120000", "--log=error"]
+            cmd = ["npx", "remotion", "render", "src/index.ts", sb["comp"], out, f"--frames={a0}-{a1}", "--muted", "--timeout=120000", "--log=error"] + size
+            if scale != 1: cmd.append(f"--scale={scale}")
             if sb.get("props"): cmd.append("--props=" + json.dumps(sb["props"], ensure_ascii=False))
             if gl: cmd.append(f"--gl={gl}")
             if a.concurrency: cmd.append(f"--concurrency={a.concurrency}")
@@ -227,22 +262,23 @@ def cmd_render(a):
         parts.append(out); t += s["dur"]
     lst = os.path.join(sdir, "concat.txt")
     open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
-    video = os.path.join(P, "out", f"{sb['comp']}.video.mp4")
+    video = os.path.join(P, "out", f"{sb['comp']}{tag}.video.mp4")
     r = run(["ffmpeg", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", video])
     if r.returncode: sys.exit(r.stderr)
     audio = os.path.join(P, "out", f"{sb['comp']}.audio.wav")
-    akey = sha(lib, {"comp": sb["comp"], "total": t, "fmt": fmt, "assets": assets})
+    akey = sha(lib, {"comp": sb["comp"], "total": t, "fps": fps, "assets": assets})  # the mix does not depend on frame size
     astamp = audio + ".key"
     stale = a.force or not os.path.exists(audio) or not os.path.exists(astamp) or open(astamp).read() != akey
     if stale:
         r = run(["npx", "remotion", "render", "src/index.ts", sb["comp"], audio, "--codec=wav", "--log=error", "--timeout=120000"] + ([f"--gl={gl}"] if gl else []) + (["--props=" + json.dumps(sb["props"], ensure_ascii=False)] if sb.get("props") else []), cwd=P)
         if r.returncode: sys.exit(f"FAIL audio:\n{r.stderr[-2000:]}")
         open(astamp, "w").write(akey)
-    final = os.path.join(P, "out", f"{sb['comp']}.mp4")
+    final = os.path.join(P, "out", f"{sb['comp']}{tag}.mp4")
     r = run(["ffmpeg", "-loglevel", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart", final])
     if r.returncode: sys.exit(r.stderr)
-    print(f"\n{rendered} scenes rendered, {cached} from cache → {final}")
+    print(f"\n{rendered} scenes rendered, {cached} from cache → {final}" + ("  (DRAFT: half resolution, for checking only)" if a.draft else ""))
     a.video = final; cmd_qa(a, sb)
+    return final
 
 
 def cmd_qa(a, sb=None):
@@ -263,6 +299,73 @@ def cmd_qa(a, sb=None):
     sheet = os.path.splitext(v)[0] + ".sheet.jpg"
     run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", "fps=1,scale=240:-2,tile=8x3", "-frames:v", "1", sheet])
     print("contact sheet:", sheet, "(look at it: text inside the frame, nothing clipped, every scene moving)")
+    W, H = vsize(v)
+    z = safe_zone(W, H)
+    boxes = ",".join(f"drawbox=x={x}:y={y}:w={w}:h={h}:color=red@0.45:t=fill" for x, y, w, h in z["ui"])
+    safe = os.path.splitext(v)[0] + ".safe.jpg"
+    run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", f"fps=1,{boxes},scale=240:-2,tile=8x3", "-frames:v", "1", safe])
+    print(f"safe-zone sheet: {safe} ({z['name']}: red = covered by app UI; no title, caption, logo or CTA may sit in red)")
+    if sb and sb.get("scenes"):
+        bad = [s["id"] for s in sb["scenes"] if s.get("text") and s.get("textY") is not None and not (z["top"] <= s["textY"] <= 1 - z["bottom"])]
+        if bad: print("WARN text outside the safe zone in:", ", ".join(bad))
+
+
+SAFE = {"vertical": (0.12, 0.25, 0.06, 0.13), "feed": (0.06, 0.1, 0.06, 0.06), "landscape": (0.08, 0.12, 0.06, 0.06)}  # = lib/layout.ts
+
+
+def safe_zone(W, H):
+    name = "vertical" if H / W > 1.5 else "landscape" if W / H > 1.3 else "feed"
+    t, b, l, r = SAFE[name]
+    ui = [(0, 0, W, int(H * t)), (0, int(H * (1 - b)), W, int(H * b)), (0, 0, int(W * l), H), (int(W * (1 - r)), 0, int(W * r), H)]
+    return {"name": f"{name} {W}x{H}", "ui": ui, "top": t, "bottom": b}
+
+
+def frames_gray(path, fps, w=96):
+    vw, vh = vsize(path)
+    h = round(w * vh / vw / 2) * 2
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", f"fps={fps},scale={w}:{h},format=gray", "-f", "rawvideo", "-"], capture_output=True).stdout
+    n = w * h
+    return [raw[i:i + n] for i in range(0, len(raw) - n + 1, n)], w, h
+
+
+def cmd_cover(a):
+    """Best still for a thumbnail: sharp (edge energy), contrasty, not mid-transition (low change vs neighbours)."""
+    v = os.path.abspath(a.video)
+    dur = float(json.loads(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", v]).stdout)["format"]["duration"])
+    base = os.path.splitext(v)[0]
+    frame = base + ".cover-frame.jpg"
+    tmp = base + ".cover-frame.tmp.jpg"  # keep the previous cover frame until a new one exists
+    if os.path.exists(tmp): os.remove(tmp)
+    if a.at is not None:
+        best = min(max(a.at, 0), max(0, dur - 0.1))  # ffmpeg returns nothing when -ss lands inside the last frame
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-ss", f"{best:.3f}", "-i", v, "-frames:v", "1", "-q:v", "2", tmp])
+    else:
+        fr, w, h = frames_gray(v, 4)
+        scores = []
+        for i, f in enumerate(fr):
+            mean = sum(f) / len(f); con = (sum((p - mean) ** 2 for p in f[::3]) / len(f[::3])) ** 0.5
+            edge = sum(abs(f[j] - f[j + 1]) for j in range(0, len(f) - 1, 2)) / (len(f) / 2)
+            ch = max((sum(abs(x - y) for x, y in zip(f[::4], fr[k][::4])) / len(f[::4]) for k in (i - 1, i + 1) if 0 <= k < len(fr)), default=0)
+            t = i / 4
+            edge_ok = 0.6 <= t <= dur - 0.3
+            scores.append((edge * con / (1 + ch * 0.8) * (1 if edge_ok else 0.2), t, i))
+        _, best, idx = max(scores)
+        # same fps filter as the scoring pass, so the exported frame is exactly the one that won
+        r = run(["ffmpeg", "-loglevel", "error", "-y", "-i", v, "-vf", f"fps=4,select=eq(n\\,{idx})", "-frames:v", "1", "-q:v", "2", tmp])
+    if r.returncode or not os.path.exists(tmp): sys.exit(f"FAIL no frame at {best:.2f}s\n{r.stderr}")
+    os.replace(tmp, frame)
+    print(f"cover frame at {best:.2f}s → {frame}")
+    if not a.title: return
+    P = os.path.abspath(a.project or os.path.dirname(os.path.dirname(v)))
+    pr = vsize(v)
+    os.makedirs(os.path.join(P, "public", "cover"), exist_ok=True)
+    shutil.copy(frame, os.path.join(P, "public", "cover", "frame.jpg"))
+    props = {"image": "cover/frame.jpg", "title": a.title.replace("\\n", "\n"), "sub": a.sub, "font": a.font, "place": a.place, "card": a.card, "width": int(pr[0]), "height": int(pr[1])}
+    out = base + ".cover.jpg"
+    r = run(["npx", "remotion", "still", "src/index.ts", "Cover", out, "--props=" + json.dumps({k: x for k, x in props.items() if x is not None}, ensure_ascii=False), "--log=error"], cwd=P)
+    if r.returncode:
+        sys.exit(f"FAIL cover still (is Cover registered in src/Root.tsx? copy starter/src/Cover.tsx and its <Composition id=\"Cover\">):\n{r.stderr[-1500:]}")
+    print("cover →", out)
 
 
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -270,6 +373,7 @@ sp = ap.add_subparsers(dest="cmd", required=True)
 r = sp.add_parser("route"); r.add_argument("brief", nargs="?", default=""); r.add_argument("--caps"); r.add_argument("--json", action="store_true"); r.set_defaults(fn=cmd_route)
 i = sp.add_parser("init"); i.add_argument("project"); i.add_argument("--caps"); i.set_defaults(fn=cmd_init)
 c = sp.add_parser("check"); c.add_argument("storyboard"); c.set_defaults(fn=cmd_check)
-re_ = sp.add_parser("render"); re_.add_argument("project"); re_.add_argument("storyboard"); re_.add_argument("--force", action="store_true"); re_.add_argument("--gl"); re_.add_argument("--concurrency", type=int); re_.set_defaults(fn=cmd_render)
+re_ = sp.add_parser("render"); re_.add_argument("project"); re_.add_argument("storyboard"); re_.add_argument("--force", action="store_true"); re_.add_argument("--gl"); re_.add_argument("--concurrency", type=int); re_.add_argument("--draft", action="store_true", help="half resolution, own cache: fast check before the full render"); re_.add_argument("--formats", help="e.g. 9:16,1:1,16:9 or 1080x1350; the composition must lay out from useVideoConfig()"); re_.set_defaults(fn=cmd_render)
 q = sp.add_parser("qa"); q.add_argument("video"); q.add_argument("--storyboard"); q.set_defaults(fn=lambda a: cmd_qa(a))
+cv = sp.add_parser("cover"); cv.add_argument("video"); cv.add_argument("--at", type=float); cv.add_argument("--project"); cv.add_argument("--title", help="Thai title; \\n for a new line"); cv.add_argument("--sub"); cv.add_argument("--font", default="Prompt"); cv.add_argument("--place", choices=["top", "center", "bottom"], default="top"); cv.add_argument("--card", help="title card colour, e.g. 'rgba(255,255,255,0.8)'"); cv.set_defaults(fn=cmd_cover)
 a = ap.parse_args(); a.fn(a)
