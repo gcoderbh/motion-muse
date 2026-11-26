@@ -142,7 +142,7 @@ export const FoodSpot: React.FC<FoodSpotProps> = (props) => {
         { dur: OUTRO, el: <Outro p={p} used={used} /> },
       ]} />
       <Grain opacity={0.03} />
-      {p.music && <Audio src={staticFile(p.music)} volume={(fr) => 0.5 * interpolate(fr, [0, 20, total - 40, total], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />}
+      {p.music && <Audio src={staticFile(p.music)} volume={(fr) => 0.9 * interpolate(fr, [0, 20, total - 40, total], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />}
     </AbsoluteFill>
   );
 };
