@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0
+## 2.1.1
 
 Handmade look, ideas studied from code-only films and rewritten from scratch (no code, characters or style copied).
 
