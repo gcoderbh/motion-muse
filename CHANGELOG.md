@@ -22,6 +22,15 @@ Handmade look, ideas studied from code-only films and rewritten from scratch (no
 - `examples/paper-plane` (`PaperPlane`, 22.5 s, 9 bars at 96 bpm) and router capability `handmade`
   (`init --caps handmade` copies it, synthesizes the SFX and fetches Mali). `references/handmade.md`.
 
+## 2.0.1
+
+- Characters from a reference image: `charref.py prep` (1000×1000 reference, labelled grid, edges, palette) and
+  `charref.py compare` (side by side, overlay, reference edges in red); `lib/refchar` (`RefCharacter`) turns one
+  front-view JSON spec to any head angle with blink, gaze, brows and mouth shapes. `init --caps refchar` copies
+  `examples/ref-character` with two samples, `nin` and `bob` (`RefSheet` / `RefMatch`, prop `char`). Rights rules in
+  `references/character-from-reference.md`.
+- `setup.sh` reports NumPy.
+
 ## 2.0.0
 
 First major release: everything from 1.10.0 (charts, lyric/quote videos, app demos, brand kits, CSV batches,
