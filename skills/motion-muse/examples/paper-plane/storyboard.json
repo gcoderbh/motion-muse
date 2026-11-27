@@ -2,7 +2,7 @@
   "title": "ส่งถึงเธอ (paper plane across the soi)",
   "comp": "PaperPlane",
   "fps": 30, "width": 1080, "height": 1920,
-  "music": { "bpm": 96, "beats": 4, "offset": 0, "file": "audio/synth/bed.wav" },
+  "music": { "bpm": 96, "beats": 4, "offset": 0, "file": "audio/paper-plane/bed.wav" },
   "motif": { "name": "paper plane", "what": "folded by her, crosses the soi, read by him, sent back: the only thing that moves between the two windows" },
   "scenes": [
     { "id": "fold", "bars": 1.5, "caps": ["character-2d", "handmade"], "shot": "close: she folds a note at her window", "motion": "fingers fold on the beats, she looks down then turns her head toward his window", "motif": "folded in her hands" },

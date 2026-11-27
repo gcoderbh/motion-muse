@@ -131,11 +131,10 @@ def cmd_init(a):
         root = os.path.join(P, "src", "Root.tsx")
         r = open(root, encoding="utf-8").read()
         if "PaperPlane" not in r and "  </>" in r:
-            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { PaperPlane, TOTAL as PAPER_PLANE_TOTAL } from './paper-plane/PaperPlane';", 1)
-            r = r.replace("  </>", '    <Composition id="PaperPlane" component={PaperPlane} durationInFrames={PAPER_PLANE_TOTAL} fps={30} width={1080} height={1920} />\n  </>', 1)
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { PaperPlane, FPS as PAPER_PLANE_FPS, TOTAL as PAPER_PLANE_TOTAL } from './paper-plane/PaperPlane';", 1)
+            r = r.replace("  </>", '    <Composition id="PaperPlane" component={PaperPlane} durationInFrames={PAPER_PLANE_TOTAL} fps={PAPER_PLANE_FPS} width={1080} height={1920} />\n  </>', 1)
             open(root, "w", encoding="utf-8").write(r)
-        if not os.path.exists(os.path.join(P, "public", "audio", "synth", "bed.wav")):
-            run(["bash", os.path.join(SKILL, "scripts", "synth-sfx.sh"), os.path.join(P, "public", "audio", "synth"), "96", "9"])
+        run(["bash", os.path.join(SKILL, "scripts", "synth-sfx.sh"), os.path.join(P, "public", "audio", "paper-plane"), "96", "9"])  # its own folder: the bed must match its 96 bpm
         run(["bash", os.path.join(SKILL, "scripts", "thai-fonts.sh"), os.path.join(P, "public", "fonts"), "Mali"])
     if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
         cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")

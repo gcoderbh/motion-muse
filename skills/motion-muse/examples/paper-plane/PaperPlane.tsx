@@ -1,7 +1,7 @@
 // "ส่งถึงเธอ": two neighbours across a soi and one paper plane. A worked example of the handmade kit:
 // shots cut on bar lines (lib/meter), one motif carried across every cut (lib/motif), heads that turn
 // smoothly (lib/head), ink lines and gouache washes (lib/ink), synthesized SFX on the beats (synth-sfx.sh).
-// Setup: bash "$SKILL_DIR/scripts/synth-sfx.sh" public/audio/synth 96 9 && bash "$SKILL_DIR/scripts/thai-fonts.sh" public/fonts Mali
+// Setup: bash "$SKILL_DIR/scripts/synth-sfx.sh" public/audio/paper-plane 96 9 && bash "$SKILL_DIR/scripts/thai-fonts.sh" public/fonts Mali
 import React from 'react';
 import { AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Handmade, Ink, DryBrush, Paper, Wash, spline, type Pt } from '../lib/ink';
@@ -12,7 +12,8 @@ import { useThaiFont } from '../lib/typography';
 import sb from './storyboard.json';
 
 const W = 1080, H = 1920;
-export const M = meter({ bpm: sb.music.bpm, fps: sb.fps, beats: sb.music.beats });
+export const FPS = sb.fps;
+export const M = meter({ bpm: sb.music.bpm, fps: sb.fps, beats: sb.music.beats, offset: sb.music.offset ?? 0 });
 export const SHOTS = barTimeline(M, sb.scenes.map((s) => [s.id, s.bars] as [string, number]));
 export const TOTAL = SHOTS[SHOTS.length - 1].from + SHOTS[SHOTS.length - 1].dur;
 const S = Object.fromEntries(SHOTS.map((s) => [s.id, s])) as Record<string, { from: number; dur: number }>;
@@ -272,7 +273,7 @@ export const PaperPlane: React.FC = () => {
       <Paper width={width} height={height} grain={0.12} color="transparent" seed={23} />
       <MotifLayer keys={KEYS} width={width} height={height}>{(p, f) => <Plane p={p} f={f} font={font} />}</MotifLayer>
       <Audio src={staticFile(sb.music.file)} volume={0.55} />
-      {SFX.map(([fr, name, v], i) => <Sequence key={i} from={fr} durationInFrames={60} layout="none"><Audio src={staticFile(`audio/synth/${name}.wav`)} volume={v} /></Sequence>)}
+      {SFX.map(([fr, name, v], i) => <Sequence key={i} from={fr} durationInFrames={60} layout="none"><Audio src={staticFile(`audio/paper-plane/${name}.wav`)} volume={v} /></Sequence>)}
     </AbsoluteFill>
   );
 };
