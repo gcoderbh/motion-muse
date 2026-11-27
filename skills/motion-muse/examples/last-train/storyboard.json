@@ -1,0 +1,25 @@
+{
+  "title": "ขบวนสุดท้าย (LAST TRAIN) — code-only action trailer",
+  "comp": "LastTrain",
+  "fps": 24, "width": 1920, "height": 1080,
+  "music": { "bpm": 120, "beats": 4, "offset": 0, "file": "audio/trailer/score.wav" },
+  "motif": { "name": "the briefcase", "what": "the case with the red countdown she carries through the whole night" },
+  "style": { "look": "2.39 scope, rain and neon, teal/orange grade, anamorphic streaks, grain", "thaiFont": "Kanit + Chakra Petch" },
+  "scenes": [
+    { "id": "open", "bars": 2, "caps": ["canvas", "thai-type"], "shot": "neon hotel sign in a puddle, boot splashes down", "motif": "unseen: the countdown ticks in the score" },
+    { "id": "aerial", "bars": 3, "caps": ["3d"], "shot": "3D flyover of the city in rain, helicopter searchlight, skytrain" },
+    { "id": "eye", "bars": 1, "caps": ["canvas"], "shot": "extreme close-up eye, neon in the cornea, lightning" },
+    { "id": "card1", "bars": 1, "caps": ["thai-type"], "text": "เธอมีเวลาหนึ่งชั่วโมง" },
+    { "id": "case", "bars": 1, "caps": ["canvas"], "shot": "brushed aluminium case, latches snap, 59:59", "motif": "introduced" },
+    { "id": "roof", "bars": 2, "caps": ["canvas"], "shot": "rooftop run, slow-motion leap, lightning", "motif": "in her hand" },
+    { "id": "card2", "bars": 0.5, "caps": ["thai-type"], "text": "ทั้งเมืองตามล่าเธอ" },
+    { "id": "glass", "bars": 1.5, "caps": ["3d"], "shot": "she crashes through a window, shards hang in slow motion", "motif": "in her hand" },
+    { "id": "highway", "bars": 2, "caps": ["3d"], "shot": "expressway chase, SUVs scrape the barrier" },
+    { "id": "card3", "bars": 0.5, "caps": ["thai-type"], "text": "ไม่มีทางถอย" },
+    { "id": "blast", "bars": 1.5, "caps": ["canvas"], "shot": "car explodes, she dives at camera", "motif": "in her hand" },
+    { "id": "train", "bars": 2, "caps": ["3d"], "shot": "she drops onto the last skytrain", "motif": "in her hand" },
+    { "id": "montage", "bars": 2, "caps": ["canvas", "3d"], "shot": "accelerating cuts", "motif": "countdown flashes" },
+    { "id": "silence", "bars": 1, "caps": ["thai-type"], "text": "ถ้าพลาดขบวนนี้..." },
+    { "id": "title", "bars": 3, "caps": ["thai-type", "canvas"], "text": "ขบวนสุดท้าย / LAST TRAIN / เร็วๆ นี้", "motif": "the countdown hits 00:00 in the score" }
+  ]
+}
