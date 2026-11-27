@@ -14,7 +14,7 @@ front design gives every head angle, blinks, gaze, brows and mouth shapes.
 
 ## Steps
 
-1. `python3 "$SKILL_DIR/scripts/charref.py" prep <image> work/ref` → `ref.png`, `grid.png` and `edges.png` (labelled
+1. Needs NumPy (`pip install numpy`; `setup.sh` reports it). `python3 "$SKILL_DIR/scripts/charref.py" prep <image> work/ref` → `ref.png`, `grid.png` and `edges.png` (labelled
    50 px grid) and `palette.json`. Look at `grid.png` and write down: head centre and size, eye line, nose, mouth and
    chin heights, hair outline, signature items, and the head angle (yaw/roll) of the pose.
 2. Copy `examples/ref-character` (`init --caps refchar`) and author `<name>.json`. Draw it **front-on** around
