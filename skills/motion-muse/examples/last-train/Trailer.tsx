@@ -33,7 +33,7 @@ const shotEl = (id: string): React.ReactNode => ({
 
 const Montage: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
-    {CUTS.map(([id, src], i) => (
+    {CUTS.map(([id, src], i) => cutLen(i) > 0 && (
       <Sequence key={i} from={MONTAGE_STARTS[i]} durationInFrames={cutLen(i)}>
         <Sequence from={-src}>{shotEl(id)}</Sequence>
       </Sequence>
