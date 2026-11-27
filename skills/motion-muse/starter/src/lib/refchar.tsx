@@ -86,10 +86,13 @@ export const RefCharacter: React.FC<{ spec: RCSpec; pose?: RCPose; x?: number; y
     .sort((a, b) => ORDER.indexOf(a.p.layer ?? 'head') - ORDER.indexOf(b.p.layer ?? 'head') || a.i - b.i);
 
   // eye centre lines for blinking
+  // one box per side over every eye part (white, outline, lower lash), so all of them close to the same line
   const eyeBox: Record<string, [number, number, number]> = {};
-  for (const p of spec.parts) if (p.role === 'eyeL' || p.role === 'eyeR') {
-    const ys = cmdsOf(p).flatMap((c) => c.p.filter((_, k) => k % 2)); const xs = cmdsOf(p).flatMap((c) => c.p.filter((_, k) => !(k % 2)));
-    eyeBox[p.role.slice(-1)] = [(Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...ys) - Math.min(...ys), (Math.min(...xs) + Math.max(...xs)) / 2];
+  for (const side of ['L', 'R']) {
+    const cs = spec.parts.filter((p) => p.role === `eye${side}`).flatMap(cmdsOf);
+    if (!cs.length) continue;
+    const ys = cs.flatMap((c) => c.p.filter((_, k) => k % 2)); const xs = cs.flatMap((c) => c.p.filter((_, k) => !(k % 2)));
+    eyeBox[side] = [(Math.min(...ys) + Math.max(...ys)) / 2, Math.max(...ys) - Math.min(...ys), (Math.min(...xs) + Math.max(...xs)) / 2];
   }
   const els = parts.map(({ p, i }) => {
     const id = `${uid}-${p.id ?? i}`;
