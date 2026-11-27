@@ -31,6 +31,7 @@ CAPS = {
     "brand":        (r"brand|แบรนด์|logo|โลโก้|intro|outro|อินโทร|เอาท์โทร|ร้าน|shop|company|บริษัท|template|เทมเพลต", "CSS + lib/brand", [], [], "Brand JSON, BrandProvider, BrandIntro/Outro, LowerThird, Watermark; basics.md section 4"),
     "batch":        (r"csv|batch|หลายคลิป|ทีละหลาย|ทุกสาขา|ทุกเมนู|ทุกสินค้า|spreadsheet|excel|ชีต", "scripts/batch.py", [], [], "one video per row: batch.py <project> <Comp> rows.csv --base brand.json --still first; basics.md section 5"),
     "parallax":     (r"parallax|2\.5d|layer|landscape|วิว|ฉากหลัง|side.?scroll|storybook", "CSS transforms + lib/parallax", [], [], "Layer depth, Ridge, Skyline, FogBand"),
+    "refchar":      (r"(จาก|ตาม|เหมือน|แบบ) ?(รูป|ภาพ|เรฟ)|reference (image|picture|photo)|from (a|this|my) (picture|photo|image|reference)|ref (pic|image)|ดีไซน์ตัวละคร|ออกแบบตัวละคร|character design", "SVG + lib/refchar (RefCharacter) + scripts/charref.py", [], [], "prep the reference grid, author a front-view spec, compare with charref.py, iterate; rights rules in references/character-from-reference.md"),
     "3d":           (r"\b3d\b|สามมิติ|three|camera|กล้อง|environment|world|ฉาก 3|product.*(render|3d)|cinematic", "@remotion/three + React Three Fiber + lib/three", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx"], "frame-driven only (no useFrame); --gl=swangle without a GPU"),
     "toon":         (r"toon|cel.?shad|การ์ตูน ?3 ?d|3d cartoon|cartoon story|เล่าเรื่อง|ตลกร้าย|skit|sketch|episode|ตอน(ที่)?|ซอมบี้|zombie", "lib/toon (cel shading, ink outlines, 360° characters, sets) + lib/story + scripts/story.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/toon.tsx"], "references/toon-story.md; subtitles + SFX + music, voice only if asked; --gl=swangle without a GPU"),
     "atmosphere":   (r"horror|สยอง|น่ากลัว|fog|หมอก|cinematic|ภาพยนตร์|mood|light|แสง|rain|ฝน|dust|apocalyp|ล่มสลาย|dark", "CSS/SVG + lib/atmosphere", [], [], "GodRays, Fog, Particles, Glow, Vignette, Letterbox"),
@@ -124,6 +125,14 @@ def cmd_init(a):
         if "FoodSpot" not in r and "  </>" in r:
             r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { DEMO_FOOD_SPOT, FoodSpot, foodSpotMetadata } from './food-spot/FoodSpot';", 1)
             r = r.replace("  </>", '    <Composition id="FoodSpot" component={FoodSpot} defaultProps={DEMO_FOOD_SPOT} calculateMetadata={foodSpotMetadata} durationInFrames={600} fps={30} width={1080} height={1920} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
+    if "refchar" in caps and not os.path.exists(os.path.join(P, "src", "ref-character")):
+        shutil.copytree(os.path.join(SKILL, "examples", "ref-character"), os.path.join(P, "src", "ref-character"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "RefSheet" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { RefMatch, RefSheet } from './ref-character/Comps';", 1)
+            r = r.replace("  </>", '    <Composition id="RefSheet" component={RefSheet} durationInFrames={1} fps={30} width={2000} height={1000} />\n    <Composition id="RefMatch" component={RefMatch} defaultProps={{ pose: { yaw: 0 }, x: 0, y: 0, scale: 1 }} durationInFrames={1} fps={30} width={1000} height={1000} />\n  </>', 1)
             open(root, "w", encoding="utf-8").write(r)
     if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
         cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")
