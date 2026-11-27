@@ -17,12 +17,12 @@ FONT = next((f for f in ["/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/us
 
 def ff(*a): r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *a], capture_output=True, text=True); r.returncode and sys.exit(r.stderr)
 def pixels(path, w=S, h=S):
-    """Fit into w×h and flatten transparency onto white, so hidden RGB under alpha never counts."""
-    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", f"format=rgba,scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black@0", "-f", "rawvideo", "-pix_fmt", "rgba", "-"], capture_output=True)
+    """Fit into w×h and flatten transparency onto white."""
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-vf", f"format=rgba,premultiply=inplace=1,scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black@0", "-f", "rawvideo", "-pix_fmt", "rgba", "-"], capture_output=True)
     if r.returncode: sys.exit(r.stderr.decode())
     x = np.frombuffer(r.stdout, np.uint8).reshape(h, w, 4).astype(np.float32)
     a = x[..., 3:] / 255
-    return x[..., :3] * a + 255 * (1 - a)
+    return x[..., :3] + 255 * (1 - a)  # premultiplied before scaling, so hidden colours never bleed into edges
 def write_png(x, path):
     r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{x.shape[1]}x{x.shape[0]}", "-i", "-", path], input=np.clip(x, 0, 255).astype(np.uint8).tobytes(), capture_output=True)
     if r.returncode: sys.exit(r.stderr.decode())
