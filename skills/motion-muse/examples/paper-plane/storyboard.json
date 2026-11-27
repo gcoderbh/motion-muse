@@ -1,0 +1,15 @@
+{
+  "title": "ส่งถึงเธอ (paper plane across the soi)",
+  "comp": "PaperPlane",
+  "fps": 30, "width": 1080, "height": 1920,
+  "music": { "bpm": 96, "beats": 4, "offset": 0, "file": "audio/synth/bed.wav" },
+  "motif": { "name": "paper plane", "what": "folded by her, crosses the soi, read by him, sent back: the only thing that moves between the two windows" },
+  "scenes": [
+    { "id": "fold", "bars": 1.5, "caps": ["character-2d", "handmade"], "shot": "close: she folds a note at her window", "motion": "fingers fold on the beats, she looks down then turns her head toward his window", "motif": "folded in her hands" },
+    { "id": "throw", "bars": 1, "caps": ["handmade"], "shot": "wide: two shophouses facing across the soi", "motion": "buildings ink in, the plane leaves her window in an arc", "motif": "launched", "out": "cut" },
+    { "id": "soi", "bars": 2, "caps": ["handmade"], "shot": "high: over the soi, wires, a noodle cart, a cat", "motion": "the street draws itself on as the plane glides through, slow pan", "motif": "gliding left to right" },
+    { "id": "catch", "bars": 1.5, "caps": ["character-2d", "handmade"], "shot": "medium: him at his window", "motion": "his head follows the plane in (continuous turn) and he catches it on the downbeat", "motif": "caught" },
+    { "id": "read", "bars": 1, "caps": ["thai-type", "handmade"], "shot": "insert: the note unfolds", "motion": "the plane opens flat, the handwriting draws on", "text": "ข้าวเย็นกินด้วยกันไหม?", "motif": "unfolded as a note" },
+    { "id": "reply", "bars": 2, "caps": ["character-2d", "thai-type", "handmade"], "shot": "wide: both windows", "motion": "he throws it back, it lands with her, the title inks in on the last bar", "text": "ส่งถึงเธอ", "motif": "home again" }
+  ]
+}
