@@ -16,6 +16,9 @@ Handmade look, ideas studied from code-only films and rewritten from scratch (no
   QA prints `frames got/want`.
 - `synth-sfx.sh <dir> [bpm] [bars] [root-hz]`: handmade set (pencil, brush, paper, fold, knock, thud, pluck, bell, flutter)
   and a tempo `bed.wav`.
+- `examples/last-train` (`LastTrain`, 48 s action trailer, 1920×1080 @ 24 fps, 120 bpm): `City3D` / `NightSky` night city,
+  `fx` (scope, grade, grain, shake, RGB split, flash, rain, flares, 2D `tower`), silhouette `figure`, numpy `score.py`.
+  Router capability `trailer` (`init --caps trailer`), `references/trailer.md`.
 - `examples/paper-plane` (`PaperPlane`, 22.5 s, 9 bars at 96 bpm) and router capability `handmade`
   (`init --caps handmade` copies it, synthesizes the SFX and fetches Mali). `references/handmade.md`.
 

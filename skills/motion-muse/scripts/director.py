@@ -26,6 +26,7 @@ CAPS = {
     "diagram":      (r"explain|อธิบาย|diagram|ไดอะแกรม|science|วิทยา|biology|ชีว|education|สอน|how .* works", "SVG + lib/diagram", [], [], "Draw, Arrow, Callout, Flow, Ecg, Blob, Virus"),
     "chart":        (r"chart|graph|กราฟ|ชาร์ต|data|ข้อมูล|statistic|สถิติ|ตัวเลข|ยอดขาย|เปอร์เซ็นต์|percent|ranking|อันดับ|race|infographic", "SVG + lib/chart (Basics DataReel/BarRace)", [], [], "BarChart, LineChart, Donut, BarRace, CountUp, fmtTH; references/basics.md section 1"),
     "data-viz":     (r"map|แผนที่|จังหวัด|scale|scatter|d3", "SVG + d3 (scales/shapes only)", ["d3@7", "@types/d3@7"], [], "use d3 for maths, render with React; never d3 transitions"),
+    "trailer":      (r"trailer|ตัวอย่างหนัง|ทีเซอร์|teaser|แอ็?คชั่น|action|ไล่ล่า|chase|ระเบิด|explosion|blockbuster|หนังโรง", "@remotion/three + lib/three + Canvas 2D + examples/last-train (city3d, fx, figure, score.py)", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx"], "energetic edit allowed: impacts, flash frames, RGB split, shake; 2.39 scope; 3D night city (City3D, NightSky); score.py writes the whole score + SFX on the bar grid; references/trailer.md"),
     "place":        (r"3 ?d ?map|map ?3 ?d|แผนที่ ?3 ?(d|มิติ)|แผนที่สามมิติ|place guide|สถานที่|ร้านอาหาร|ร้านดัง|ร้านเด็ด|restaurant|food spot|cafe|คาเฟ่|landmark|แลนด์มาร์ก|ปักหมุด|ปักพิกัด|พิกัด|เที่ยว|travel guide|รีวิวร้าน|ที่กิน|ซูมแผนที่", "@remotion/three + lib/map3d (OpenStreetMap) + scripts/place.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/map3d.tsx"], "place.py fetch → place.json + CREDITS.md + PERMISSIONS.md; FoodSpot in src/food-spot; never download TikTok/YouTube/IG/FB, ask the owner for the file; references/place-guide.md"),
     "lyrics":       (r"lyric|เนื้อเพลง|karaoke|คาราโอเกะ|quote|คำคม|คำพูด|caption|ซับ|lrc", "CSS + lib/lyrics (Basics LyricReel)", [], [], "LyricTrack karaoke/pop/quote, parseLRC, fromCaptions; basics.md section 2"),
     "device":       (r"\bapp\b|แอป|website|เว็บ|demo|เดโม|screen ?record|หน้าจอ|ui|tutorial|วิธีใช้|saas|mockup", "CSS + lib/device (Basics AppPromo)", [], [], "Phone, Laptop, Browser, Cursor, ZoomTo, ScrollShot; basics.md section 3"),
@@ -136,6 +137,16 @@ def cmd_init(a):
             open(root, "w", encoding="utf-8").write(r)
         run(["bash", os.path.join(SKILL, "scripts", "synth-sfx.sh"), os.path.join(P, "public", "audio", "paper-plane"), "96", "9"])  # its own folder: the bed must match its 96 bpm
         run(["bash", os.path.join(SKILL, "scripts", "thai-fonts.sh"), os.path.join(P, "public", "fonts"), "Mali"])
+    if "trailer" in caps and not os.path.exists(os.path.join(P, "src", "last-train")):
+        shutil.copytree(os.path.join(SKILL, "examples", "last-train"), os.path.join(P, "src", "last-train"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "LastTrain" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { LastTrain, FPS as LAST_TRAIN_FPS, TOTAL as LAST_TRAIN_TOTAL } from './last-train/Trailer';", 1)
+            r = r.replace("  </>", '    <Composition id="LastTrain" component={LastTrain} durationInFrames={LAST_TRAIN_TOTAL} fps={LAST_TRAIN_FPS} width={1920} height={1080} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
+        run([sys.executable, os.path.join(P, "src", "last-train", "score.py")])
+        run(["bash", os.path.join(SKILL, "scripts", "thai-fonts.sh"), os.path.join(P, "public", "fonts"), "Kanit", "Chakra Petch"])
     if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
         cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")
         have = json.load(open(cast, encoding="utf-8")) if os.path.isfile(cast) else {}
