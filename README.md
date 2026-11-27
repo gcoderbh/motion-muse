@@ -27,6 +27,7 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 | Thumbnails | `director.py cover` picks a sharp, still frame and adds the Thai title inside the safe zone |
 | Everyday videos | Animated charts (bars, line, donut, bar chart race, count-up numbers in Thai format), lyric and quote videos timed to the song or speech (karaoke fill, word pop, quote card; from `.lrc` or speech-to-text), app and website demos (phone, laptop and browser frames, a cursor that taps, zooms to each tap), and a brand kit (colours, Thai fonts, logo, intro, outro, lower third, watermark) shared by every video |
 | Place guides | `place.py` + `FoodSpot`: a 3D OpenStreetMap city, camera flies down to the restaurant and drops a pin, open-licence Commons photos and clips with on-screen credits, `CREDITS.md`, and a Thai permission request for clips from TikTok/YouTube (never downloaded) |
+| Handmade look | Shots cut on the song's bars (`"bars"` in the storyboard), 2D heads that turn smoothly to any angle from one face design, tapered ink lines, dry brush, watercolour/gouache washes, paper texture and line boil on twos, one motif carried across every cut (`MotifLayer`), and a set of formula-made SFX (pencil, paper, fold, knock, pluck, bell, flutter) plus a tempo bed. Example: `examples/paper-plane` |
 | Batches | `batch.py` renders one video or cover per CSV row (20 products → 20 clips), with shared brand props and every format |
 | Delivery | Renders the MP4, checks frames and loudness, then sends the video with a list of the techniques used and the credits |
 
@@ -51,6 +52,8 @@ Agent skill that turns one request into a finished, motion-rich MP4 with Thai te
 - กราฟขยับ (แท่ง เส้น วงกลม กราฟแท่งแข่งกัน ตัวเลขนับขึ้นแบบไทย) คลิปเนื้อเพลงหรือคำคมที่ตัวหนังสือขึ้นตามเสียง คลิปแนะนำแอปหรือเว็บในกรอบมือถือ/laptop มีเคอร์เซอร์กดและซูมตาม
 - เทมเพลตแบรนด์: สี ฟอนต์ โลโก้ intro outro ป้ายชื่อ และลายน้ำ ทุกคลิปออกมาเป็นชุดเดียวกัน
 - คลิปแนะนำร้านหรือสถานที่: แผนที่ 3D จาก OpenStreetMap กล้องบินซูมลงไปปักหมุด ดึงรูปและคลิปที่มีสัญญาอนุญาตเปิดจาก Wikimedia Commons ใส่เครดิตบนจอและในไฟล์ `CREDITS.md` ส่วนคลิปจาก TikTok หรือ YouTube จะไม่โหลดเอง แต่ร่างข้อความขออนุญาตเจ้าของให้ แล้วใช้ไฟล์ที่เจ้าของส่งมา
+- งานแนววาดมือ: ตั้งความยาวช็อตเป็นห้องเพลง หัวตัวละคร 2D หมุนได้ลื่นทุกองศาจากหน้าที่ออกแบบครั้งเดียว เส้นหมึกปลายแหลม พู่กันแห้ง สีน้ำ เนื้อกระดาษ มีของชิ้นเดียวพาเรื่องข้ามทุกช็อต และเสียงประกอบที่สร้างจากสูตร (ดินสอ กระดาษ พับ เคาะไม้ ดีด กระดิ่ง) ตัวอย่างอยู่ใน `examples/paper-plane`
+- QA นับเฟรมทุกช็อตเทียบกับ storyboard กันช็อตหายหรือขาด
 - ใส่ข้อมูลเป็นไฟล์ CSV แล้วได้คลิปแถวละหนึ่งคลิป เช่น เมนู 20 อย่างได้ 20 คลิป
 - ElevenLabs ใช้เฉพาะตอนที่ถามคุณก่อน
 

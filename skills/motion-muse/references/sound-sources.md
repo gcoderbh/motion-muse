@@ -66,6 +66,8 @@ Mixkit listings can also be used directly: `--path mood/<mood>` (e.g. `mood/chee
 | Stable Audio Open | https://huggingface.co/stabilityai/stable-audio-open-1.0 | Stability AI Community License; needs a GPU |
 | Meta MusicGen (AudioCraft) | https://github.com/facebookresearch/audiocraft | Model weights are CC BY-NC 4.0: **non-commercial only** |
 
+`synth-sfx.sh <dir> <bpm> <bars> [root-hz]` also writes a handmade set (`pencil`, `brush`, `paper`, `fold`, `knock`, `thud`, `pluck`, `bell`, `flutter`) and a `bed.wav` pulse in that tempo; `pluck`/`bell` are tuned to `root-hz`. Edit the formulas to make new sounds. Details: `references/handmade.md` section 5.
+
 ## 5. Mixing checklist
 
 - BGM at about -18 to -14 LUFS under voice; SFX on the hit frame, not before.
