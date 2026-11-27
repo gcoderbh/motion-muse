@@ -20,7 +20,10 @@ const CUTS: [string, number, number][] = [
   ['roof', 50, 12], ['case', 38, 12], ['highway', 60, 8], ['blast', 12, 8], ['glass', 30, 6], ['train', 30, 6], ['eye', 30, 4], ['roof', 62, 4],
   ['highway', 80, 4], ['blast', 22, 4], ['case', 44, 4], ['train', 50, 3], ['glass', 46, 3], ['blast', 30, 3], ['roof', 52, 3], ['highway', 50, 3], ['train', 70, 3], ['case', 46, 3], ['eye', 24, 3],
 ];
-const MONTAGE_STARTS = CUTS.reduce<number[]>((a, c, i) => [...a, i ? a[i - 1] + CUTS[i - 1][2] : 0], []);
+// cut lengths are written for a 96-frame montage; rescale so a tempo change still fills the scene exactly
+const MONTAGE_DUR = SHOTS.find((s) => s.id === 'montage')!.dur;
+const MONTAGE_STARTS = CUTS.map((_, i) => Math.round((CUTS.slice(0, i).reduce((a, c) => a + c[2], 0) * MONTAGE_DUR) / 96));
+const cutLen = (i: number) => (i < CUTS.length - 1 ? MONTAGE_STARTS[i + 1] : MONTAGE_DUR) - MONTAGE_STARTS[i];
 
 const shotEl = (id: string): React.ReactNode => ({
   open: <Open />, aerial: <Aerial />, eye: <Eye />, case: <Case />, roof: <Roof />, glass: <Glass />, highway: <Highway />, blast: <Blast />, train: <Train />,
@@ -30,8 +33,8 @@ const shotEl = (id: string): React.ReactNode => ({
 
 const Montage: React.FC = () => (
   <AbsoluteFill style={{ background: '#000' }}>
-    {CUTS.map(([id, src, len], i) => (
-      <Sequence key={i} from={MONTAGE_STARTS[i]} durationInFrames={len}>
+    {CUTS.map(([id, src], i) => (
+      <Sequence key={i} from={MONTAGE_STARTS[i]} durationInFrames={cutLen(i)}>
         <Sequence from={-src}>{shotEl(id)}</Sequence>
       </Sequence>
     ))}

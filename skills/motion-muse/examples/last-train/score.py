@@ -131,10 +131,11 @@ add(band(2.0, 2000, 7000) * 0.2 * np.exp(-tt(2.0) / 0.8), fr("highway", 46), 1.0
 add(explosion(), fr("blast", 6), 1.1)
 add(screech(4.0), starts["train"], 1.0, 0.2)
 # montage: a hit on every cut
-cuts = [12, 12, 8, 8, 6, 6, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3]
+cuts = [12, 12, 8, 8, 6, 6, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3]  # same as CUTS in Trailer.tsx, written for 96 frames
+mdur = next(s["bars"] for s in sb["scenes"] if s["id"] == "montage") * BAR
 c = 0
 for i, n in enumerate(cuts):
-    add(sub_hit(0.5, 90, 40) if i % 2 else taiko(), starts["montage"] + c / FPS, 0.55); c += n
+    add(sub_hit(0.5, 90, 40) if i % 2 else taiko(), starts["montage"] + c / 96 * mdur, 0.55); c += n
 add(riser(BAR * 2), starts["montage"], 0.9)
 # hard cut to silence: then two heartbeats
 i0 = int(silence_at * SR); L[i0:i0 + int(BAR * SR)] *= 0; R[i0:i0 + int(BAR * SR)] *= 0
