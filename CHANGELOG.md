@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.0.0
+
+First major release: everything from 1.10.0 (charts, lyric/quote videos, app demos, brand kits, CSV batches,
+calm transitions by default) and the place guides below ship together.
+
+- Place guides: `scripts/place.py fetch` geocodes (Nominatim), pulls buildings / roads / water / parks (Overpass,
+  mirrors tried in turn) as metres around the pin, and fetches open-licence photos and clips from Wikimedia Commons
+  (CC0, PD, CC BY, CC BY-SA; geotagged + text search), cuts clips to MP4 and writes `place.json`, `CREDITS.md` and
+  `PERMISSIONS.md`. Social links (TikTok, YouTube, IG, FB, Google Maps) are refused; `place.py permission` prints a
+  Thai request to the owner.
+- `kits/three/map3d.tsx`: `CityMap` (extruded OSM blocks, rise-in, highlighted building), `MapPin`, `flyTo` (log
+  zoom), `screenOf`, `MapLights`, `MAP_STYLES`, `OsmCredit`. `Stage3D` takes `far`.
+- `examples/food-spot` `FoodSpot`: fly-in + pin card, credited photos (slow Ken Burns), one clip, end card with
+  address and all credits; calm edit. Router capability `place` (`init --caps place` copies it and registers it).
+- `references/place-guide.md`.
+
+## 1.10.0
+
+- `lib/chart`: `BarChart` (vertical / horizontal, stagger, highlight), `LineChart` (self-drawing, value on the tip),
+  `Donut`, `BarRace` + `raceFrames`, `CountUp`, `fmtTH` (Thai number format, compact "ล้าน").
+- `lib/lyrics`: `LyricTrack` (`karaoke` grapheme fill, `pop` words, `quote` card), `parseLRC`, `fromCaptions`
+  (transcribe.py word times).
+- `lib/device`: `Phone`, `Laptop`, `Browser`, `Cursor` (pointer or finger, click ripple), `ZoomTo`, `ScrollShot`, `keyed`.
+- `lib/brand`: `Brand` JSON, `BrandProvider` / `useBrand`, `Logo`, `BrandIntro`, `BrandOutro`, `LowerThird`, `Watermark`.
+- `Basics.tsx` compositions `DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard` (JSON props, all formats).
+- `scripts/batch.py`: one video or still per CSV/JSON row, dotted columns nest, `--base` shared props, `--formats`,
+  bundles once, skips finished files, `report.csv`. `examples/batch-menu`.
+- Calm transitions by default (`editing-craft.md` section 0, SKILL.md step 2.5, pacing table, checklist): mostly hard cuts,
+  at most one soft transition per 10 s, none between steps, slow rare camera pushes; flashy counts only if the user asks.
+  `AppPromo` is one continuous shot: screens slide inside a still phone, optional gentle `zoom` per step.
+- `references/basics.md`; router capabilities `chart`, `lyrics`, `device`, `brand`, `batch` (`data-viz` is now maps / d3 scales).
+
 ## 1.9.0
 
 - `references/flat-story.md`: guidance (no example code) for flat 2D episodes: side / three-quarter views with a `turn`

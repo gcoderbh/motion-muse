@@ -22,8 +22,14 @@ CAPS = {
     "thai-type":    (r"thai|ไทย|typograph|ตัวอักษร|ฟอนต์|font|title|ข้อความ", "CSS + lib/typography (Intl.Segmenter)", [], [], "pick a font from THAI_FONTS by mood; scripts/thai-fonts.sh"),
     "character-2d": (r"stick ?man|stickman|ก้างปลา|cartoon|การ์ตูน|character|ตัวละคร|mascot|vector", "SVG + lib/characters + lib/pose", [], [], "Stickman / VectorCharacter, gaits, key poses, talking"),
     "flat":         (r"flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|หัวโต|big.?head|การ์ตูน ?2 ?(d|มิติ)|2 ?d (cartoon|explainer|story)|explainer story|youtube explainer|เวลาชีวิต", "SVG + lib/flat + lib/city + lib/story + scripts/story.py", [], [], "FlatCharacter (big head, outfits, expressions), Bangkok street sets, TimeBadge/NoteCard/TransferSlip; examples/life-time"),
-    "diagram":      (r"explain|อธิบาย|diagram|ไดอะแกรม|science|วิทยา|biology|ชีว|education|สอน|infographic|how .* works|chart|กราฟ", "SVG + lib/diagram", [], [], "Draw, Arrow, Callout, Flow, Ecg, Blob, Virus"),
-    "data-viz":     (r"data|ข้อมูล|statistic|สถิติ|chart|graph|map|แผนที่", "SVG + d3 (scales/shapes only)", ["d3@7", "@types/d3@7"], [], "use d3 for maths, render with React; never d3 transitions"),
+    "diagram":      (r"explain|อธิบาย|diagram|ไดอะแกรม|science|วิทยา|biology|ชีว|education|สอน|how .* works", "SVG + lib/diagram", [], [], "Draw, Arrow, Callout, Flow, Ecg, Blob, Virus"),
+    "chart":        (r"chart|graph|กราฟ|ชาร์ต|data|ข้อมูล|statistic|สถิติ|ตัวเลข|ยอดขาย|เปอร์เซ็นต์|percent|ranking|อันดับ|race|infographic", "SVG + lib/chart (Basics DataReel/BarRace)", [], [], "BarChart, LineChart, Donut, BarRace, CountUp, fmtTH; references/basics.md section 1"),
+    "data-viz":     (r"map|แผนที่|จังหวัด|scale|scatter|d3", "SVG + d3 (scales/shapes only)", ["d3@7", "@types/d3@7"], [], "use d3 for maths, render with React; never d3 transitions"),
+    "place":        (r"3 ?d ?map|map ?3 ?d|แผนที่ ?3 ?(d|มิติ)|แผนที่สามมิติ|place guide|สถานที่|ร้านอาหาร|ร้านดัง|ร้านเด็ด|restaurant|food spot|cafe|คาเฟ่|landmark|แลนด์มาร์ก|ปักหมุด|ปักพิกัด|พิกัด|เที่ยว|travel guide|รีวิวร้าน|ที่กิน|ซูมแผนที่", "@remotion/three + lib/map3d (OpenStreetMap) + scripts/place.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/map3d.tsx"], "place.py fetch → place.json + CREDITS.md + PERMISSIONS.md; FoodSpot in src/food-spot; never download TikTok/YouTube/IG/FB, ask the owner for the file; references/place-guide.md"),
+    "lyrics":       (r"lyric|เนื้อเพลง|karaoke|คาราโอเกะ|quote|คำคม|คำพูด|caption|ซับ|lrc", "CSS + lib/lyrics (Basics LyricReel)", [], [], "LyricTrack karaoke/pop/quote, parseLRC, fromCaptions; basics.md section 2"),
+    "device":       (r"\bapp\b|แอป|website|เว็บ|demo|เดโม|screen ?record|หน้าจอ|ui|tutorial|วิธีใช้|saas|mockup", "CSS + lib/device (Basics AppPromo)", [], [], "Phone, Laptop, Browser, Cursor, ZoomTo, ScrollShot; basics.md section 3"),
+    "brand":        (r"brand|แบรนด์|logo|โลโก้|intro|outro|อินโทร|เอาท์โทร|ร้าน|shop|company|บริษัท|template|เทมเพลต", "CSS + lib/brand", [], [], "Brand JSON, BrandProvider, BrandIntro/Outro, LowerThird, Watermark; basics.md section 4"),
+    "batch":        (r"csv|batch|หลายคลิป|ทีละหลาย|ทุกสาขา|ทุกเมนู|ทุกสินค้า|spreadsheet|excel|ชีต", "scripts/batch.py", [], [], "one video per row: batch.py <project> <Comp> rows.csv --base brand.json --still first; basics.md section 5"),
     "parallax":     (r"parallax|2\.5d|layer|landscape|วิว|ฉากหลัง|side.?scroll|storybook", "CSS transforms + lib/parallax", [], [], "Layer depth, Ridge, Skyline, FogBand"),
     "3d":           (r"\b3d\b|สามมิติ|three|camera|กล้อง|environment|world|ฉาก 3|product.*(render|3d)|cinematic", "@remotion/three + React Three Fiber + lib/three", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx"], "frame-driven only (no useFrame); --gl=swangle without a GPU"),
     "toon":         (r"toon|cel.?shad|การ์ตูน ?3 ?d|3d cartoon|cartoon story|เล่าเรื่อง|ตลกร้าย|skit|sketch|episode|ตอน(ที่)?|ซอมบี้|zombie", "lib/toon (cel shading, ink outlines, 360° characters, sets) + lib/story + scripts/story.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/toon.tsx"], "references/toon-story.md; subtitles + SFX + music, voice only if asked; --gl=swangle without a GPU"),
@@ -42,6 +48,11 @@ def caps_for(text):
     found = [c for c, (rx, *_rest) in CAPS.items() if re.search(rx, t)]
     if "toon" in found and re.search(r"stick ?man|stickman|ก้างปลา|vector|flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|2 ?d|2 ?มิติ", t) and not re.search(r"3 ?d|3 ?มิติ|สามมิติ|(?<!car)toon|cel.?shad", t):
         found = [c for c in found if c != "toon"]
+    if "place" in found:
+        if "3d" not in found:
+            found.append("3d")
+        if not re.search(r"จังหวัด|choropleth|scatter|d3|province", t):
+            found = [c for c in found if c != "data-viz"]
     if "toon" in found:
         if "3d" not in found:
             found.append("3d")
@@ -106,6 +117,14 @@ def cmd_init(a):
         shutil.copytree(os.path.join(SKILL, "starter", "src"), os.path.join(P, "src"))
     for k in kits:
         shutil.copy(os.path.join(SKILL, "starter", "kits", k), os.path.join(P, "src", "lib", os.path.basename(k)))
+    if "three/map3d.tsx" in kits and not os.path.exists(os.path.join(P, "src", "food-spot")):
+        shutil.copytree(os.path.join(SKILL, "examples", "food-spot"), os.path.join(P, "src", "food-spot"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "FoodSpot" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { DEMO_FOOD_SPOT, FoodSpot, foodSpotMetadata } from './food-spot/FoodSpot';", 1)
+            r = r.replace("  </>", '    <Composition id="FoodSpot" component={FoodSpot} defaultProps={DEMO_FOOD_SPOT} calculateMetadata={foodSpotMetadata} durationInFrames={600} fps={30} width={1080} height={1920} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
     if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
         cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")
         have = json.load(open(cast, encoding="utf-8")) if os.path.isfile(cast) else {}

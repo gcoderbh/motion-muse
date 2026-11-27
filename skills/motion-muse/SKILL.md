@@ -1,6 +1,6 @@
 ---
 name: motion-muse
-description: One-call, code-first video director and editor (Remotion + Three.js + FFmpeg; no AI video generators, no Blender). Turns a natural-language brief or the user's footage into a finished, motion-rich MP4 with Thai typography, beat-synced cuts, designed transitions, fresh royalty-free music and SFX. Covers motion graphics, kinetic Thai text, stickman/vector cartoons, 2.5D parallax, procedural 3D, product ads, explainers and diagrams, toon story episodes with subtitles, footage editing (auto cut, speed ramps, vertical reframe, captions from speech), 9:16/1:1/16:9 from one storyboard, draft renders, safe zones, thumbnails and an OpenFilm export. Built on Video Shotcraft, the Remotion skills and the guanmo-ai awesome-ai-motion gallery. Installs its own dependencies. ElevenLabs only after asking the user.
+description: One-call, code-first video director and editor (Remotion + Three.js + FFmpeg; no AI video generators, no Blender). Turns a natural-language brief or the user's footage into a finished, motion-rich MP4 with Thai typography, beat-synced cuts, designed transitions, fresh royalty-free music and SFX. Covers motion graphics, kinetic Thai text, stickman/vector cartoons, 2.5D parallax, procedural 3D, product ads, restaurant / place guides on a 3D OpenStreetMap with credited open-licence media, explainers and diagrams, toon story episodes with subtitles, footage editing (auto cut, speed ramps, vertical reframe, captions from speech), 9:16/1:1/16:9 from one storyboard, draft renders, safe zones, thumbnails and an OpenFilm export. Built on Video Shotcraft, the Remotion skills and the guanmo-ai awesome-ai-motion gallery. Installs its own dependencies. ElevenLabs only after asking the user.
 ---
 
 # Motion Muse (Shotcraft + Remotion + awesome-ai-motion)
@@ -73,6 +73,8 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 - To edit the result in OpenFilm Studio (tracks for every shot, SFX and the music, editable captions): `references/openfilm.md`, `scripts/story.py openfilm`.
 - Flat 2D cartoon explainers (big-head people, Thai street scenes, life-time/price badges, like Thai YouTube story channels, 16:9 or 9:16): `lib/flat` + `lib/city` with the same `script.json` → `story.py build` flow as toon stories; copy `examples/life-time`. Stay 2D (no `--gl`, renders much faster than 3D). Before designing a new character or changing how one looks, read `references/character-design.md` (silhouette, colour, lines, cel shading, faces, poses, turning, sitting/lying, physics, inventing new poses). For ordinary adults with real proportions, no outlines and finger hands, use `lib/slim` (`SlimCharacter`, same poses). Side/three-quarter views, indoor sets (office, condo, store, hospital, market, BTS), mouths from a recorded voice, 2D camera moves, more FX, long episodes and thumbnails: `references/flat-story.md`.
 - Worked examples to copy from: `examples/zombie-biology` (SVG cartoon explainer), `examples/apocalypse-observer` (3D horror, third-person camera), `examples/luxury-product` (3D product ad, Thai sans), `examples/cold-brew` (can with a wrapped Thai label, moving key light, blinds gobo, bouncing ice, 3 formats), `examples/zombie-id` (toon story: zombie goes to get an ID card, 8 shots, 52 s, subtitles + SFX + music, no voice), `examples/life-time` (flat 2D explainer: life-time transferred like PromptPay, 6 shots, 33 s, 16:9).
+- Everyday jobs: animated charts (bars, line, donut, bar race, count-up), lyric / quote / word-by-word caption videos, app and website demos (phone, laptop, browser, cursor, zoom), brand kits (colours, fonts, logo, intro, outro) and one video per CSV row: read `references/basics.md` and start from the compositions in `starter/src/Basics.tsx` (`DataReel`, `BarRace`, `LyricReel`, `AppPromo`, `PromoCard`); batches with `scripts/batch.py`.
+- Place guides (แนะนำร้านอาหาร, คาเฟ่, ที่เที่ยว, landmark): read `references/place-guide.md`. `scripts/place.py fetch` builds the 3D map from OpenStreetMap and fetches open-licence photos / clips from Wikimedia Commons with `CREDITS.md`; `init --caps place` adds `lib/map3d` and the `FoodSpot` composition (fly-in, pin, credited photos and clip, end card). Never download TikTok / YouTube / Instagram / Facebook / Google Maps media: tell the user to ask the owner for the file (`place.py permission` writes the Thai request) and credit it once they confirm permission.
 - Pick the Thai font by mood (`director.md` section 4) and fetch it with `scripts/thai-fonts.sh`.
 - Product ads (cans, bottles, jars, packshots): `director.md` section 8 (label wrap, materials, moving key light, gobo, AgX, physics).
 - Steps 2–7 below still apply: gallery references, seam plan and transitions, fresh music, SFX, QA, delivery.
@@ -84,7 +86,7 @@ Read `references/motion-sources.md`, then:
 2. Look up the matching effect in `motion-cards` for timing and easing values.
 3. Build it from the matching Shotcraft shot card (`references/shots/<category>/*.md`). Read the whole card and the demo TSX it points to, and keep any "known pitfall" parameters.
 4. Plan one main motion per shot, cut only on beats, and hold the end card for at least 1 s.
-5. Read `references/editing-craft.md` and write the seam plan table: for every cut, the relation between the two shots, the transition kind and why. Use hard cuts for most seams and 4–6 different designed transitions; prefer match cuts when two shots share a shape or color. The 12 kinds in `transitions.tsx` are only a base set: design 2–4 custom seams from this video's content for the most important cuts (guide section 2b).
+5. Read `references/editing-craft.md` and write the seam plan table: for every cut, the relation between the two shots, the transition kind and why. **Default is calm (guide section 0): unless the user asks for a flashy or transition-heavy edit, use hard cuts for almost every seam, at most one soft transition (`push`, `focus`, `leak`, `wipe`, `iris`) per 10 s, no transitions between steps of a sequence (keep the frame still and change what is inside), and slow, rare camera pushes.** Prefer match cuts when two shots share a shape or color. Design 1–2 custom seams from this video's content for the key moments (guide section 2b). Only when the user asks for more energy: 4–6 transition kinds and 2–4 custom seams.
 
 ## 3. Build the Remotion project
 
@@ -199,14 +201,17 @@ After a full promo, offer once a CapCut/JianYing project export (`references/jia
 | `scripts/find-music.py`, `beat-grid.py`, `synth-sfx.sh` | fresh music + credits, beat grid, simple SFX |
 | `scripts/footage-scan.py`, `find-footage.py`, `transcribe.py`, `auto-edit.py` | footage pipeline |
 | `scripts/thai-fonts.sh` | fetch any of the 15 Thai OFL fonts |
+| `scripts/place.py` | place guides: `fetch` (geocode, OSM 3D map data, open-licence Commons photos/clips, CREDITS.md, PERMISSIONS.md), `permission` (Thai request to a clip owner) |
+| `scripts/batch.py` | one video (or still) per CSV/JSON row, shared `--base` props, `--formats`, report.csv |
 | `scripts/learn.py` | the user's notebook: `show`, `note`, `use`, `save` / `get`, `forget`, `pause`, `export` / `import` (section 8) |
-| `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `lib/*` building blocks |
-| `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx` |
-| `references/` | `director.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `flat-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
-| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time |
+| `starter/src/` | `transitions.tsx` (Timeline + 12 kinds), `footage.tsx`, `Cover.tsx`, `Basics.tsx` (data, lyric, app demo, product card), `lib/*` building blocks (`chart`, `lyrics`, `device`, `brand`, …) |
+| `starter/kits/three/` | `three.tsx` (stage, camera, lathe, lights, product kit), `toon.tsx`, `map3d.tsx` (OSM city, pin, fly-in, credits) |
+| `references/` | `director.md`, `basics.md`, `place-guide.md`, `editing-craft.md`, `footage-editing.md`, `toon-story.md`, `flat-story.md`, `toon-characters.md`, `openfilm.md`, `motion-sources.md` |
+| `examples/` | zombie-biology, apocalypse-observer, luxury-product, cold-brew, zombie-id, life-time, batch-menu, food-spot |
 
 ## Licenses to mention when sharing
 
 - This skill's own files: MIT. Shotcraft: Apache-2.0. awesome-ai-motion and motion-cards repo code: MIT; gallery works belong to their authors.
 - Remotion is free for individuals and companies with up to 3 employees; larger companies need a license (https://www.remotion.dev/license).
 - Thai fonts (Prompt, Anuphan, IBM Plex Sans Thai, …): SIL OFL 1.1.
+- Map data: © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright). Commons media: the licence and author listed in each `CREDITS.md`.
