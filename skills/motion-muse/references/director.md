@@ -61,6 +61,8 @@ python3 "$SKILL_DIR/scripts/director.py" check src/<slug>/storyboard.json   # va
 
 Rules: every scene has a `motion` (real movement: characters walk, camera travels, things draw on; never a static slide with a fade), scene lengths vary, the composition reads `dur` from the storyboard so plan and render cannot drift. Show the scene table to the user with the plan.
 
+With music, add `"music": { "bpm": 96, "beats": 4 }` and write scene lengths as `"bars": 1.5` instead of `"dur"` (cuts land on bar lines; `check` prints lengths in bars and warns about off-beat cuts). Add a `"motif"` (one object carried through the film) and a `"motif"` line per scene; `check` warns when it drops out. Both: `references/handmade.md`.
+
 ## 4. Thai typography
 
 `useThaiFont(name)` loads a family from `public/fonts` and returns the CSS family; fetch files with `bash "$SKILL_DIR/scripts/thai-fonts.sh" public/fonts "<Family>"...` (all SIL OFL). Pick by mood:
@@ -94,6 +96,7 @@ python3 "$SKILL_DIR/scripts/director.py" render ~/videos/<slug> src/<slug>/story
 - Renders each scene's frame range separately to `out/scenes/<Comp>/NN-id-<hash>.mp4`. The hash covers the scene's code (by default the whole composition folder; list a scene's own files in `"files": ["src/<slug>/Hook.tsx"]` to scope it), `src/lib`, `transitions.tsx`, and the storyboard entries of the scene and its neighbours (transitions overlap them). Put each scene in its own file and list it, and editing one scene re-renders only that scene. `--force` re-renders all.
 - 3D scenes render with `--gl=swangle` automatically (software WebGL; `angle` fails on CPU-only machines). Override with `--gl` or `MOTION_MUSE_GL`.
 - Audio is rendered once for the full timeline, then normalised (-14 LUFS, -1.5 dBTP) and muxed.
+- Every scene clip's frame count is checked against the storyboard (a wrong cached clip is re-rendered, a wrong new one stops the render), and QA prints `frames got/want` for the final video.
 - QA prints per-scene motion score (flags static scenes), duration vs storyboard, loudness/true peak, black stretches, and writes a contact sheet plus `<video>.safe.jpg` with the platform UI zones shaded red. Scenes with `"textY"` (0..1, top of the text) outside the safe band are warned about. Look at both sheets and fix anything clipped, unreadable, static or under the red, then re-run (cached scenes are reused).
 - `--draft`: renders at half resolution (`--scale=0.5`) into its own cache and `out/<Comp>-draft.mp4`. Use it for every review round; render full size once at the end. 3D scenes render about 2× faster (measured: 8.5 s cold-brew ad, 31–39 s vs 72–83 s per scene on 8 CPU cores without GPU).
 - `--formats 9:16,1:1,16:9` (or `1080x1350`): renders the same composition at each size (keeping the storyboard's short side) → `out/<Comp>-<W>x<H>.mp4`, each with its own scene cache. The audio mix is shared. Only works if the composition lays itself out from `useVideoConfig()` (section 7).

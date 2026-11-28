@@ -45,6 +45,7 @@ if [ -d "$T" ]; then
 fi
 echo "on demand: director.py init installs @remotion/three / d3 / gsap / lottie only when a video needs them; scripts/thai-fonts.sh fetches extra Thai fonts"
 python3 -c "import librosa" 2>/dev/null && echo "OK   librosa" || echo "optional: pip install librosa (better beat analysis; scripts/beat-grid.py works without it)"
+python3 -c "import numpy" 2>/dev/null && echo "OK   numpy" || echo "optional: pip install numpy (scripts/charref.py for characters from a reference image, trailer score)"
 python3 -c "import faster_whisper" 2>/dev/null && echo "OK   faster-whisper" || echo "optional: pip install faster-whisper (Thai captions from speech in footage; only needed for scripts/transcribe.py)"
 
 [ "$ok" = 1 ] && echo "READY: $SKILLS_DIR" || { echo "Setup finished with errors (see FAIL lines)."; exit 1; }

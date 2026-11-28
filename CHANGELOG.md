@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.1.1
+
+Handmade look, ideas studied from code-only films and rewritten from scratch (no code, characters or style copied).
+
+- `lib/meter`: musical time in frames (`meter`, `at(bar, beat)`, `snap`, `phase`, `pulse`, `barTimeline`). Storyboards take
+  `"music": { "bpm", "beats" }` and scene `"bars"`; `director.py check` prints lengths in bars and warns about off-beat cuts.
+- `lib/head` `TurnHead`: a 2D cartoon head designed once front-on and projected for any yaw / pitch / roll, with 6 hair
+  styles, 8 expressions, blink, talk, gaze, jaw width and a cel shadow that follows the turn.
+- `lib/ink`: `Ink` (tapered pressure strokes, draw-on), `DryBrush`, `Wash`, `Paper`, `Handmade` (wobble, boil on twos,
+  gouache grain), `spline`, `onTwos`, seeded `rng`.
+- `lib/motif`: `MotifLayer` / `motifAt` carry one object across cuts on the film timeline (`ease`, `linear`, `arc`, `hold`);
+  storyboard `"motif"` with per-scene lines, `check` warns when it drops out.
+- `director.py render` checks every scene clip's frame count (re-renders a wrong cached clip, stops on a wrong new one);
+  QA prints `frames got/want`.
+- `synth-sfx.sh <dir> [bpm] [bars] [root-hz]`: handmade set (pencil, brush, paper, fold, knock, thud, pluck, bell, flutter)
+  and a tempo `bed.wav`.
+- `examples/last-train` (`LastTrain`, 48 s action trailer, 1920×1080 @ 24 fps, 120 bpm): `City3D` / `NightSky` night city,
+  `fx` (scope, grade, grain, shake, RGB split, flash, rain, flares, 2D `tower`), silhouette `figure`, numpy `score.py`.
+  Router capability `trailer` (`init --caps trailer`), `references/trailer.md`.
+- `examples/paper-plane` (`PaperPlane`, 22.5 s, 9 bars at 96 bpm) and router capability `handmade`
+  (`init --caps handmade` copies it, synthesizes the SFX and fetches Mali). `references/handmade.md`.
+
+## 2.0.1
+
+- Characters from a reference image: `charref.py prep` (1000×1000 reference, labelled grid, edges, palette) and
+  `charref.py compare` (side by side, overlay, reference edges in red); `lib/refchar` (`RefCharacter`) turns one
+  front-view JSON spec to any head angle with blink, gaze, brows and mouth shapes. `init --caps refchar` copies
+  `examples/ref-character` with two samples, `nin` and `bob` (`RefSheet` / `RefMatch`, prop `char`). Rights rules in
+  `references/character-from-reference.md`.
+- `setup.sh` reports NumPy.
+
 ## 2.0.0
 
 First major release: everything from 1.10.0 (charts, lyric/quote videos, app demos, brand kits, CSV batches,

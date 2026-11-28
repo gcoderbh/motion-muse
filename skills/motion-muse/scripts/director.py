@@ -9,7 +9,7 @@ scene-level cached rendering, assembly and QA. Code-first only (no AI video gene
   director.py qa <video.mp4> [--storyboard sb.json]   # also writes <video>.safe.jpg with the app-UI zones shaded
   director.py cover <video.mp4> [--project P --title "..." --font Prompt]   # pick the best frame → thumbnail
 """
-import argparse, hashlib, json, os, re, shutil, subprocess, sys
+import argparse, hashlib, json, math, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(HERE)
@@ -22,15 +22,18 @@ CAPS = {
     "thai-type":    (r"thai|ไทย|typograph|ตัวอักษร|ฟอนต์|font|title|ข้อความ", "CSS + lib/typography (Intl.Segmenter)", [], [], "pick a font from THAI_FONTS by mood; scripts/thai-fonts.sh"),
     "character-2d": (r"stick ?man|stickman|ก้างปลา|cartoon|การ์ตูน|character|ตัวละคร|mascot|vector", "SVG + lib/characters + lib/pose", [], [], "Stickman / VectorCharacter, gaits, key poses, talking"),
     "flat":         (r"flat[ -]?(2 ?d|cartoon|style|design|illustration|vector|explainer|character|people)|flat[ ,]+([a-z-]+[ ,]+){0,2}(style|look|design|illustration|cartoon)|(การ์ตูน|สไตล์|แบบ|ภาพ|ตัวละคร) ?แบน|หัวโต|big.?head|การ์ตูน ?2 ?(d|มิติ)|2 ?d (cartoon|explainer|story)|explainer story|youtube explainer|เวลาชีวิต", "SVG + lib/flat + lib/city + lib/story + scripts/story.py", [], [], "FlatCharacter (big head, outfits, expressions), Bangkok street sets, TimeBadge/NoteCard/TransferSlip; examples/life-time"),
+    "handmade":     (r"hand.?drawn|hand.?made|handmade|วาดมือ|ลายมือ|ลายเส้น|เส้นหมึก|หมึก|\bink\b|brush|พู่กัน|watercolou?r|สีน้ำ|gouache|สีโปสเตอร์|paper cut|กระดาษ|crayon|ดินสอ|pencil|storybook|นิทาน|อบอุ่น|ไม่เหมือน ?ai|not ai", "SVG + lib/ink + lib/head + lib/motif", [], [], "Handmade wrapper (wobble, boil on twos, gouache), Ink/DryBrush/Wash/Paper, TurnHead (any yaw/pitch/roll), MotifLayer, lib/meter bars; synth-sfx.sh handmade set; examples/paper-plane; references/handmade.md"),
     "diagram":      (r"explain|อธิบาย|diagram|ไดอะแกรม|science|วิทยา|biology|ชีว|education|สอน|how .* works", "SVG + lib/diagram", [], [], "Draw, Arrow, Callout, Flow, Ecg, Blob, Virus"),
     "chart":        (r"chart|graph|กราฟ|ชาร์ต|data|ข้อมูล|statistic|สถิติ|ตัวเลข|ยอดขาย|เปอร์เซ็นต์|percent|ranking|อันดับ|race|infographic", "SVG + lib/chart (Basics DataReel/BarRace)", [], [], "BarChart, LineChart, Donut, BarRace, CountUp, fmtTH; references/basics.md section 1"),
     "data-viz":     (r"map|แผนที่|จังหวัด|scale|scatter|d3", "SVG + d3 (scales/shapes only)", ["d3@7", "@types/d3@7"], [], "use d3 for maths, render with React; never d3 transitions"),
+    "trailer":      (r"trailer|ตัวอย่างหนัง|ทีเซอร์|teaser|แอ็?คชั่น|action (movie|film|scene|trailer)|ไล่ล่า|(?<![a-z])(car|rooftop|foot|police) chases?(?![a-z])|(?<![a-z])chase (scenes?|sequences?)|ระเบิด|explosion|blockbuster|หนังโรง", "@remotion/three + lib/three + Canvas 2D + examples/last-train (city3d, fx, figure, score.py)", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx"], "energetic edit allowed: impacts, flash frames, RGB split, shake; 2.39 scope; 3D night city (City3D, NightSky); score.py writes the whole score + SFX on the bar grid; references/trailer.md"),
     "place":        (r"3 ?d ?map|map ?3 ?d|แผนที่ ?3 ?(d|มิติ)|แผนที่สามมิติ|place guide|สถานที่|ร้านอาหาร|ร้านดัง|ร้านเด็ด|restaurant|food spot|cafe|คาเฟ่|landmark|แลนด์มาร์ก|ปักหมุด|ปักพิกัด|พิกัด|เที่ยว|travel guide|รีวิวร้าน|ที่กิน|ซูมแผนที่", "@remotion/three + lib/map3d (OpenStreetMap) + scripts/place.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/map3d.tsx"], "place.py fetch → place.json + CREDITS.md + PERMISSIONS.md; FoodSpot in src/food-spot; never download TikTok/YouTube/IG/FB, ask the owner for the file; references/place-guide.md"),
     "lyrics":       (r"lyric|เนื้อเพลง|karaoke|คาราโอเกะ|quote|คำคม|คำพูด|caption|ซับ|lrc", "CSS + lib/lyrics (Basics LyricReel)", [], [], "LyricTrack karaoke/pop/quote, parseLRC, fromCaptions; basics.md section 2"),
     "device":       (r"\bapp\b|แอป|website|เว็บ|demo|เดโม|screen ?record|หน้าจอ|ui|tutorial|วิธีใช้|saas|mockup", "CSS + lib/device (Basics AppPromo)", [], [], "Phone, Laptop, Browser, Cursor, ZoomTo, ScrollShot; basics.md section 3"),
     "brand":        (r"brand|แบรนด์|logo|โลโก้|intro|outro|อินโทร|เอาท์โทร|ร้าน|shop|company|บริษัท|template|เทมเพลต", "CSS + lib/brand", [], [], "Brand JSON, BrandProvider, BrandIntro/Outro, LowerThird, Watermark; basics.md section 4"),
     "batch":        (r"csv|batch|หลายคลิป|ทีละหลาย|ทุกสาขา|ทุกเมนู|ทุกสินค้า|spreadsheet|excel|ชีต", "scripts/batch.py", [], [], "one video per row: batch.py <project> <Comp> rows.csv --base brand.json --still first; basics.md section 5"),
     "parallax":     (r"parallax|2\.5d|layer|landscape|วิว|ฉากหลัง|side.?scroll|storybook", "CSS transforms + lib/parallax", [], [], "Layer depth, Ridge, Skyline, FogBand"),
+    "refchar":      (r"(จาก|ตาม|เหมือน|แบบ) ?(รูป|ภาพ|เรฟ)|reference (image|picture|photo)|from (a|this|my) (picture|photo|image|reference)|ref (pic|image)|ดีไซน์ตัวละคร|ออกแบบตัวละคร|character design", "SVG + lib/refchar (RefCharacter) + scripts/charref.py", [], [], "prep the reference grid, author a front-view spec, compare with charref.py, iterate; rights rules in references/character-from-reference.md"),
     "3d":           (r"\b3d\b|สามมิติ|three|camera|กล้อง|environment|world|ฉาก 3|product.*(render|3d)|cinematic", "@remotion/three + React Three Fiber + lib/three", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx"], "frame-driven only (no useFrame); --gl=swangle without a GPU"),
     "toon":         (r"toon|cel.?shad|การ์ตูน ?3 ?d|3d cartoon|cartoon story|เล่าเรื่อง|ตลกร้าย|skit|sketch|episode|ตอน(ที่)?|ซอมบี้|zombie", "lib/toon (cel shading, ink outlines, 360° characters, sets) + lib/story + scripts/story.py", [f"@remotion/three@{RV}", "three@0.178.0", "@react-three/fiber@9.3.0", "@types/three@0.178.0"], ["three/three.tsx", "three/toon.tsx"], "references/toon-story.md; subtitles + SFX + music, voice only if asked; --gl=swangle without a GPU"),
     "atmosphere":   (r"horror|สยอง|น่ากลัว|fog|หมอก|cinematic|ภาพยนตร์|mood|light|แสง|rain|ฝน|dust|apocalyp|ล่มสลาย|dark", "CSS/SVG + lib/atmosphere", [], [], "GodRays, Fog, Particles, Glow, Vignette, Letterbox"),
@@ -125,6 +128,36 @@ def cmd_init(a):
             r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { DEMO_FOOD_SPOT, FoodSpot, foodSpotMetadata } from './food-spot/FoodSpot';", 1)
             r = r.replace("  </>", '    <Composition id="FoodSpot" component={FoodSpot} defaultProps={DEMO_FOOD_SPOT} calculateMetadata={foodSpotMetadata} durationInFrames={600} fps={30} width={1080} height={1920} />\n  </>', 1)
             open(root, "w", encoding="utf-8").write(r)
+    if "handmade" in caps and not os.path.exists(os.path.join(P, "src", "paper-plane")):
+        shutil.copytree(os.path.join(SKILL, "examples", "paper-plane"), os.path.join(P, "src", "paper-plane"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "PaperPlane" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { PaperPlane, FPS as PAPER_PLANE_FPS, TOTAL as PAPER_PLANE_TOTAL } from './paper-plane/PaperPlane';", 1)
+            r = r.replace("  </>", '    <Composition id="PaperPlane" component={PaperPlane} durationInFrames={PAPER_PLANE_TOTAL} fps={PAPER_PLANE_FPS} width={1080} height={1920} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
+        run(["bash", os.path.join(SKILL, "scripts", "synth-sfx.sh"), os.path.join(P, "public", "audio", "paper-plane"), "96", "9"])  # its own folder: the bed must match its 96 bpm
+        run(["bash", os.path.join(SKILL, "scripts", "thai-fonts.sh"), os.path.join(P, "public", "fonts"), "Mali"])
+    if "trailer" in caps and not os.path.exists(os.path.join(P, "src", "last-train")):
+        shutil.copytree(os.path.join(SKILL, "examples", "last-train"), os.path.join(P, "src", "last-train"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "LastTrain" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { LastTrain, FPS as LAST_TRAIN_FPS, TOTAL as LAST_TRAIN_TOTAL } from './last-train/Trailer';", 1)
+            r = r.replace("  </>", '    <Composition id="LastTrain" component={LastTrain} durationInFrames={LAST_TRAIN_TOTAL} fps={LAST_TRAIN_FPS} width={1920} height={1080} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
+        run(["bash", os.path.join(SKILL, "scripts", "thai-fonts.sh"), os.path.join(P, "public", "fonts"), "Kanit", "Chakra Petch"])
+    if "trailer" in caps and not os.path.exists(os.path.join(P, "public", "audio", "trailer", "score.wav")):
+        r = run([sys.executable, os.path.join(P, "src", "last-train", "score.py")])
+        if r.returncode: print(f"WARN trailer score not written (LastTrain needs public/audio/trailer/score.wav): {r.stderr.strip()[-300:]}\n     fix: pip install numpy, then python3 src/last-train/score.py")
+    if "refchar" in caps and not os.path.exists(os.path.join(P, "src", "ref-character")):
+        shutil.copytree(os.path.join(SKILL, "examples", "ref-character"), os.path.join(P, "src", "ref-character"))
+        root = os.path.join(P, "src", "Root.tsx")
+        r = open(root, encoding="utf-8").read()
+        if "RefSheet" not in r and "  </>" in r:
+            r = r.replace("import { Composition } from 'remotion';", "import { Composition } from 'remotion';\nimport { RefMatch, RefSheet } from './ref-character/Comps';", 1)
+            r = r.replace("  </>", '    <Composition id="RefSheet" component={RefSheet} durationInFrames={1} fps={30} width={2000} height={1000} />\n    <Composition id="RefMatch" component={RefMatch} defaultProps={{ pose: { yaw: 0 }, x: 0, y: 0, scale: 1 }} durationInFrames={1} fps={30} width={1000} height={1000} />\n  </>', 1)
+            open(root, "w", encoding="utf-8").write(r)
     if "three/toon.tsx" in kits:  # saved characters (story.py cast save) come with the toon kit; the project's own win
         cast, lib = os.path.join(P, "src", "lib", "cast.json"), os.path.join(SKILL, "characters", "cast.json")
         have = json.load(open(cast, encoding="utf-8")) if os.path.isfile(cast) else {}
@@ -158,6 +191,19 @@ def load_sb(path):
     for k in ("comp", "fps", "width", "height", "scenes"):
         if k not in sb: errs.append(f"missing '{k}'")
     ids = set()
+    mu = sb.get("music")
+    if mu and any("bars" in s for s in sb.get("scenes", [])):
+        # musical time → frames, same rounding as lib/meter.ts (Math.round, first scene from 0)
+        bar = 60 / mu["bpm"] * sb.get("fps", 30) * mu.get("beats", 4)
+        at = lambda b: math.floor(mu.get("offset", 0) + b * bar + 0.5)
+        b = 0
+        for s in sb["scenes"]:
+            if "bars" in s:
+                a0 = 0 if b == 0 else at(b)
+                s["dur"] = at(b + s["bars"]) - a0
+                b += s["bars"]
+            else:
+                b += s.get("dur", 0) / bar
     for i, s in enumerate(sb.get("scenes", [])):
         if not s.get("id") or s["id"] in ids: errs.append(f"scene {i}: missing or duplicate id")
         ids.add(s.get("id"))
@@ -180,6 +226,27 @@ def cmd_check(a):
     print(f"\ntotal {t / fps:.1f}s, {len(lens)} scenes")
     if len(set(lens)) == 1 and len(lens) > 2: print("WARN: every scene has the same length (looks generated); vary them")
     if any(not s.get("motion") for s in sb["scenes"]): print("WARN: a scene has no 'motion': every scene needs real movement")
+    mu = sb.get("music")
+    if mu:
+        bar = 60 / mu["bpm"] * fps * mu.get("beats", 4); beat = bar / mu.get("beats", 4); off = mu.get("offset", 0)
+        t, lens_b, off_beat = 0, [], []
+        for s in sb["scenes"]:
+            if t and abs((t - off) / beat - round((t - off) / beat)) * beat > 1.01: off_beat.append(f"{s['id']} ({t}f)")
+            lens_b.append(round(s["dur"] / bar * 4) / 4); t += s["dur"]
+        print(f"music {mu['bpm']} bpm {mu.get('beats', 4)}/4: bar = {bar:.2f} frames; scene lengths in bars:", ", ".join(f"{x:g}" for x in lens_b), f"(total {t / bar:.2f} bars)")
+        if off_beat: print("WARN: these cuts are not on a beat (±1 frame):", ", ".join(off_beat), "— use \"bars\" or snap the durations")
+        if len(set(lens_b)) == 1 and len(lens_b) > 2: print("WARN: every scene is the same number of bars; mix ½, 1, 1½ and 2")
+    mo = sb.get("motif")
+    sc = sb["scenes"]
+    if mo:
+        has = [bool(s.get("motif")) for s in sc]
+        print(f"motif: {mo.get('name', mo) if isinstance(mo, dict) else mo} in {sum(has)}/{len(sc)} scenes")
+        if not has[0]: print("WARN: the motif is not in the first scene: introduce it early")
+        if not has[-1]: print("WARN: the motif is not in the last scene: end on it (changed, answered, or come home)")
+        gap = max((sum(1 for _ in g) for k, g in __import__("itertools").groupby(has) if not k), default=0)
+        if gap > 2: print(f"WARN: {gap} scenes in a row without the motif: bring back an echo of it (a shadow, a sound, a poster)")
+    elif len(sc) >= 5:
+        print("NOTE: no \"motif\": one object or sound carried through every scene ties the film together (director.md §3b)")
     pk, _ = plan(sorted({c for s in sb["scenes"] for c in s.get("caps", [])}))
     print("toolset:", ", ".join(sorted({CAPS[c][1] for s in sb["scenes"] for c in s.get("caps", [])})))
     print("npm:", " ".join(pk) or "nothing extra")
@@ -203,6 +270,13 @@ def vsize(path):
     rot = st.get("tags", {}).get("rotate") or next((d["rotation"] for d in st.get("side_data_list", []) if "rotation" in d), 0)
     w, h = int(st["width"]), int(st["height"])
     return (h, w) if abs(int(float(rot))) % 180 == 90 else (w, h)
+
+
+def nframes(path):
+    """Exact number of video frames (counts packets, does not trust the container's duration)."""
+    r = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", path])
+    try: return int(r.stdout.strip().split(",")[0])
+    except ValueError: return -1
 
 
 def motion_score(path):
@@ -269,7 +343,7 @@ def render_one(a, sb, W, H, tag):
         files = own + (shared if all(n.get("files") for n in nb) else lib)
         key = sha(files, {"comp": sb["comp"], "range": [a0, a1], "scenes": nb, "props": sb.get("props"), "fmt": fmt, "assets": assets})
         out = os.path.join(sdir, f"{i:02d}-{s['id']}-{key}.mp4")
-        if os.path.exists(out) and not a.force:
+        if os.path.exists(out) and not a.force and nframes(out) == s["dur"]:
             cached += 1; print(f"CACHED {s['id']} frames {a0}-{a1}")
         else:
             for old in os.listdir(sdir):
@@ -284,6 +358,9 @@ def render_one(a, sb, W, H, tag):
             if r.returncode:
                 sys.exit(f"FAIL {s['id']}:\n{r.stderr[-3000:]}")
             rendered += 1
+            n = nframes(out)
+            if n != s["dur"]:
+                os.remove(out); sys.exit(f"FAIL {s['id']}: rendered {n} frames, storyboard says {s['dur']} (frames {a0}-{a1})")
         m, still = motion_score(out)
         flag = "  WARN static" if m < 0.4 or still > 1.0 else ""
         print(f"   motion {m}  longest still {still}s{flag}")
@@ -316,7 +393,9 @@ def cmd_qa(a, sb=None):
     info = json.loads(d)
     print("streams:", ", ".join(f"{s.get('codec_name')} {s.get('width', '')}x{s.get('height', '')}".strip() for s in info["streams"]), f"duration {float(info['format']['duration']):.2f}s")
     if sb:
-        exp = sum(s["dur"] for s in sb["scenes"]) / sb["fps"]
+        want = sum(s["dur"] for s in sb["scenes"]); got = nframes(v)
+        print(f"frames {got}/{want}" + (" OK" if got == want else f"  WARN {got - want:+d} frames vs storyboard: a scene was dropped, doubled or cut short"))
+        exp = want / sb["fps"]
         if abs(exp - float(info["format"]["duration"])) > 0.2: print(f"WARN duration differs from storyboard ({exp:.2f}s)")
     lo = run(["ffmpeg", "-nostats", "-i", v, "-af", "ebur128=peak=true", "-f", "null", "-"]).stderr
     I = re.findall(r"I:\s+(-?[\d.]+) LUFS", lo); TP = re.findall(r"Peak:\s+(-?[\d.]+) dBFS", lo)
